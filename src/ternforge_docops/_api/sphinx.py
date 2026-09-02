@@ -30,6 +30,11 @@ def _configure_graph(app: Sphinx, config: Config) -> None:
     if config.needs_from_toml is None:
         config.needs_from_toml = str(graph_config_path())
     config.nb_execution_mode = "off"
+    if config.html_theme == "alabaster":
+        config.html_theme = "pydata_sphinx_theme"
+    if "simplepdf_file_name" in config.values and config.simplepdf_file_name is None:
+        config.simplepdf_file_name = "release-dossier.pdf"
+    config.myst_fence_as_directive = set(config.myst_fence_as_directive) | {"mermaid"}
     if "auto_examples/*.ipynb" not in config.exclude_patterns:
         config.exclude_patterns.append("auto_examples/*.ipynb")
     config.tr_extra_options = [
