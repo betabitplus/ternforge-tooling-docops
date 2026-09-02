@@ -53,6 +53,11 @@ def test_sphinx_extension_builds_current_graph(tmp_path: Path) -> None:
    :file: evidence.xml
    :auto_suites:
    :auto_cases:
+
+Verification matrix
+-------------------
+
+.. ternforge-verification-matrix::
 """,
         encoding="utf-8",
     )
@@ -72,5 +77,9 @@ def test_sphinx_extension_builds_current_graph(tmp_path: Path) -> None:
         check=True,
     )
 
-    assert (output / "index.html").is_file()
+    index = (output / "index.html").read_text(encoding="utf-8")
     assert (output / "needs.json").is_file()
+    assert "Product requirements" in index
+    assert "REQ_DOCOPS" in index
+    assert "✓ 1/1" in index
+    assert "MISSING" not in index

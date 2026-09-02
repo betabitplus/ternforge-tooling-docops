@@ -23,5 +23,8 @@ from ternforge_docops._internal.resources import (
     stale_resources as stale_resources,
     sync_resources as sync_resources,
 )
+from ternforge_docops._internal.sphinx import (
+    register_verification_view as register_verification_view,
+)
 
 DocOpsConfig = _Config

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 from sphinx_needs.api import add_field
 
-from ternforge_docops._internal import graph_config_path
+from ternforge_docops._internal import graph_config_path, register_verification_view
 
 if TYPE_CHECKING:
     from sphinx.application import Sphinx
@@ -66,6 +66,7 @@ def setup(app: Sphinx) -> dict[str, Any]:
     """Register the shared Ternforge documentation stack."""
     for extension in _EXTENSIONS:
         app.setup_extension(extension)
+    register_verification_view(app)
     app.connect("config-inited", _configure_graph, priority=5)
     app.connect("config-inited", _ensure_source_url_field, priority=12)
     return {
