@@ -1,0 +1,255 @@
+/* Shared Ternforge DocOps presentation for PyData Sphinx Theme. */
+html[data-theme="dark"] {
+  --sn-color-bg-gray: var(--pst-color-surface);
+  --sn-color-bg-lightgray: var(--pst-color-background);
+  --sn-color-border-lightgray: var(--pst-color-border);
+  --sn-color-need-border: var(--pst-color-border);
+  --sn-color-need-row-border: var(--pst-color-border);
+  --sn-color-need-bg: var(--pst-color-surface);
+  --sn-color-need-bg-head: var(--pst-color-background);
+  --sn-color-complete-bg-head: var(--pst-color-background);
+  --sn-color-complete-bg-foot: var(--pst-color-background);
+  --sn-color-datatable-label: var(--pst-color-text-base);
+  --sn-color-datatable-btn-border: var(--pst-color-border);
+}
+
+html[data-theme="dark"] table.need,
+html[data-theme="dark"] table.need td,
+html[data-theme="dark"] table.need th {
+  color: var(--pst-color-text-base);
+}
+
+html[data-theme="dark"] table.need a {
+  color: var(--pst-color-link);
+}
+
+.portal-intro {
+  max-width: 74ch;
+  font-size: 1.08rem;
+}
+
+.sd-card.portal-card {
+  height: 100%;
+}
+
+.sd-card.portal-card .sd-card-title {
+  font-size: 1.05rem;
+}
+
+.portal-metric {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.portal-muted {
+  color: var(--pst-color-text-muted);
+}
+
+.portal-actions .sd-btn {
+  margin: 0.2rem 0.35rem 0.2rem 0;
+}
+
+.graphviz,
+.needflow {
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.graphviz svg {
+  min-width: 48rem;
+  max-width: none;
+  height: auto;
+}
+
+.portal-result-pass {
+  color: var(--pst-color-success);
+  font-weight: 700;
+}
+
+.portal-result-fail {
+  color: var(--pst-color-danger);
+  font-weight: 700;
+}
+
+.portal-source-path {
+  font-family: var(--pst-font-family-monospace);
+  font-size: 0.9rem;
+}
+
+html[data-theme="dark"] .sd-card {
+  background: var(--pst-color-surface);
+  border-color: var(--pst-color-border);
+}
+
+.test-portal-frame {
+  width: 100%;
+  min-height: 82vh;
+  border: 1px solid var(--pst-color-border);
+  border-radius: 0.5rem;
+  background: var(--pst-color-background);
+}
+
+.cell.tag_exp-evidence {
+  margin: 0.75rem 0 2.25rem;
+}
+
+.cell.tag_exp-evidence > .cell_output {
+  margin-top: 0.5rem;
+}
+
+.cell.tag_exp-evidence .output {
+  margin: 0;
+}
+
+.exp-panel {
+  margin: 0.8rem 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--pst-color-border);
+  border-radius: 0.55rem;
+  color: var(--pst-color-on-surface);
+  background: var(--pst-color-surface);
+}
+
+.exp-input-panel {
+  border-left: 0.25rem solid var(--pst-color-info);
+}
+
+.exp-code-panel {
+  border-left: 0.25rem solid var(--pst-color-primary);
+}
+
+.exp-result-panel {
+  border-left: 0.25rem solid var(--pst-color-success);
+}
+
+.exp-kicker {
+  margin-bottom: 0.6rem;
+  color: var(--pst-color-text-muted);
+  font-size: 0.76rem;
+  font-weight: 750;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+.exp-note {
+  margin: 0 0 0.7rem;
+  color: var(--pst-color-text-muted);
+  font-size: 0.92rem;
+}
+
+.exp-facts {
+  display: grid;
+  grid-template-columns: minmax(8rem, 11rem) minmax(0, 1fr);
+  gap: 0.45rem 0.8rem;
+  margin: 0;
+}
+
+.exp-facts dt {
+  margin: 0;
+  color: var(--pst-color-text-muted);
+  font-weight: 650;
+}
+
+.exp-facts dd {
+  min-width: 0;
+  margin: 0;
+  color: var(--pst-color-on-surface);
+}
+
+.exp-value,
+.exp-code,
+.exp-raw-result pre {
+  max-width: 100%;
+  margin: 0.35rem 0 0;
+  padding: 0.7rem 0.8rem;
+  overflow: auto;
+  overflow-wrap: anywhere;
+  color: var(--pst-color-on-surface);
+  background: var(--pst-color-on-background);
+  border-radius: 0.35rem;
+  font-family: var(--pst-font-family-monospace);
+  font-size: 0.86rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.exp-code-flow {
+  margin: 0.45rem 0 0.75rem;
+  color: var(--pst-color-on-surface);
+}
+
+.exp-code-flow strong,
+.exp-code-flow li {
+  color: inherit;
+}
+
+.exp-code-flow li::marker {
+  color: var(--pst-color-text-muted);
+}
+
+.exp-code-flow ul {
+  margin: 0.3rem 0 0.2rem 1.2rem;
+}
+
+.exp-code-details > summary,
+.exp-raw-result > summary {
+  cursor: pointer;
+  color: var(--pst-color-primary);
+  font-weight: 650;
+}
+
+.exp-raw-result {
+  margin-top: 0.75rem;
+}
+
+.exp-media-frame {
+  margin: 0.7rem 0 1rem;
+  overflow: hidden;
+  border: 1px solid var(--pst-color-border);
+  border-radius: 0.55rem;
+  background: var(--pst-color-background);
+}
+
+.exp-media-frame object {
+  display: block;
+  width: 100%;
+  min-height: 34rem;
+}
+
+.exp-media-frame video {
+  display: block;
+  width: 100%;
+  max-height: 34rem;
+  background: #000;
+}
+
+.cell.tag_exp-evidence > .cell_output img {
+  display: block;
+  max-width: min(100%, 58rem);
+  height: auto;
+  margin: 0.7rem auto 1rem;
+  border: 1px solid var(--pst-color-border);
+  border-radius: 0.55rem;
+}
+
+@media (max-width: 767.98px) {
+  .exp-facts {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
+
+  .exp-facts dd {
+    margin-bottom: 0.55rem;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .bd-header button.primary-toggle {
+    margin-right: 0;
+  }
+
+  .bd-header button.secondary-toggle {
+    margin-left: 0;
+  }
+}

@@ -4,9 +4,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
-_RESOURCE_ROOT = Path(__file__).resolve().parent / "graph"
+_PACKAGE_RESOURCE_ROOT = Path(__file__).resolve().parent
+_RESOURCE_ROOT = _PACKAGE_RESOURCE_ROOT / "graph"
 _RESOURCE_NAMES = ("engineering.toml", "schemas.json")
 _TARGET_DIR = Path(".ternforge") / "docops"
+
+
+def static_dir_path() -> Path:
+    """Return the package-owned Sphinx static asset directory."""
+    return _PACKAGE_RESOURCE_ROOT / "static"
 
 
 def graph_config_path() -> Path:

@@ -85,6 +85,8 @@ Verification matrix
     assert "REQ_DOCOPS" in index
     assert "✓ 1/1" in index
     assert "MISSING" not in index
+    assert "_static/ternforge-docops.css" in index
+    assert (output / "_static" / "ternforge-docops.css").is_file()
 
 
 def test_sphinx_extension_mounts_experiment_reports_in_place(tmp_path: Path) -> None:

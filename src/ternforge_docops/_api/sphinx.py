@@ -11,6 +11,7 @@ from ternforge_docops._internal import (
     graph_config_path,
     publish_experiment_inputs,
     register_verification_view,
+    static_dir_path,
 )
 
 if TYPE_CHECKING:
@@ -38,6 +39,9 @@ def _configure_graph(app: Sphinx, config: Config) -> None:
     config.nb_execution_mode = "off"
     if config.html_theme == "alabaster":
         config.html_theme = "pydata_sphinx_theme"
+    package_static = str(static_dir_path())
+    if package_static not in config.html_static_path:
+        config.html_static_path.append(package_static)
     if "simplepdf_file_name" in config.values and config.simplepdf_file_name is None:
         config.simplepdf_file_name = "release-dossier.pdf"
     config.myst_fence_as_directive = set(config.myst_fence_as_directive) | {"mermaid"}
@@ -72,6 +76,7 @@ def setup(app: Sphinx) -> dict[str, Any]:
     """Register the shared Ternforge documentation stack."""
     for extension in _EXTENSIONS:
         app.setup_extension(extension)
+    app.add_css_file("ternforge-docops.css")
     register_verification_view(app)
     app.connect("config-inited", configure_experiment_mounts, priority=5)
     app.connect("config-inited", _configure_graph, priority=6)

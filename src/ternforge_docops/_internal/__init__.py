@@ -25,6 +25,7 @@ from ternforge_docops._internal.experiments import (
 from ternforge_docops._internal.resources import (
     graph_config_path as graph_config_path,
     stale_resources as stale_resources,
+    static_dir_path as static_dir_path,
     sync_resources as sync_resources,
 )
 from ternforge_docops._internal.sphinx import (
