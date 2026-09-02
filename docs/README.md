@@ -1,40 +1,64 @@
 ---
 name: docs
 doc_type: index
-description: Repository documentation entry point for API reference and executable examples.
+description: Development notes for the Ternforge DocOps documentation site.
 ---
 
 # Documentation
 
-The committed documentation surface is intentionally small before project-specific
-requirements and architecture are modeled explicitly.
+The DocOps repository self-hosts the documentation stack that it ships to
+consumers. Its own site is therefore an acceptance surface for the base Sphinx
+extension, Python adapter, canonical engineering graph resources, shared styles,
+and build commands.
 
-- `api.md` defines the generated public API reference.
-- `examples/ternforge_docops/` is the source of truth for runnable workflows.
-- `traceability.rst` renders implementation and verification evidence from Sphinx-Needs.
-
-## Build
-
-Traceability builds need current pytest evidence. Generate the gitignored local JUnit
-with the same hermetic contract as required CI, then build without executing live examples:
+## Build HTML
 
 ```bash
-uv run pytest -c pyproject.toml -n 2 \
-    --record-mode=none \
-    --block-network \
-    --allowed-hosts='localhost,127\\.0\\.0\\.1' \
-    --cov-context=test \
-    --junitxml=docs/_traceability/local-pytest.xml
-uv run sphinx-build -W --keep-going -D plot_gallery=0 -b html docs docs/_build/html
+uv run ternforge-docops build html
 ```
 
-The full live gallery uses the same local JUnit prerequisite and additionally requires
-the configured environment and credentials:
+The command performs a strict Sphinx build (`-W --keep-going`) with gallery
+execution disabled. It does not execute the project test suite. Generated output
+is written to `docs/_build/html/`, including `needs.json`, `llms.txt`, and
+`llms-full.txt`.
+
+## Build The Release Dossier
 
 ```bash
-uv run sphinx-build -W --keep-going -b html docs docs/_build/html
+uv run ternforge-docops build dossier
 ```
 
-Required CI performs the JUnit import automatically before its documentation build.
+This delegates PDF generation to the upstream SimplePDF Sphinx builder. The local
+machine or CI runner must provide the operating-system libraries required by
+WeasyPrint. DocOps does not install or emulate those system dependencies.
 
-Open `docs/_build/html/index.html` in a browser to inspect the generated site.
+## Engineering Experiments
+
+Validate retained experiment reports with:
+
+```bash
+uv run ternforge-docops experiments validate
+```
+
+Capture one experiment through its capsule-owned Jupyter kernelspec with:
+
+```bash
+uv run ternforge-docops experiments capture 0001
+```
+
+Capture executes from an isolated temporary capsule copy and only replaces the
+retained report/artifacts after the result passes the DocOps report and freshness
+contract.
+
+## Graph Resources
+
+Materialize the canonical graph resources used by repository authoring tools:
+
+```bash
+uv run ternforge-docops sync
+uv run ternforge-docops check
+```
+
+Sphinx itself reads the canonical graph profile directly from the installed DocOps
+package. The materialized `.ternforge/docops/` copy exists for filesystem-based
+authoring tools such as ubCode, not as a second source of truth.

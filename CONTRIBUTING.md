@@ -4,19 +4,18 @@ Start with [SETUP.md](SETUP.md) to provision the local environment. If your
 local environment feels off, run `bash scripts/env/doctor.sh` before debugging
 deeper.
 
-Use [docs/ternforge_docops/README.md](docs/ternforge_docops/README.md) for package
-docs.
+Use [docs/README.md](docs/README.md) for documentation build and preview notes.
 
 Repository-wide package and reusable-zone checks read metadata from
 `[tool.ternforge]` in `pyproject.toml`. When repo-local scripts or shared
 test support need package names or env-var prefixes, use
 `py_lib_testkit.get_project_tooling_config` instead of hardcoding them.
 
-`py-lib-runtime` is consumed as a runtime dependency, while `py-lib-policy`
-and `py-lib-testkit` are independent development dependencies. Each package is
-owned and released separately by Ternforge and pinned immutably by this repo. Keep this repo thin: import shared runtime helpers, call
-shared console commands, and import shared test helpers instead of copying
-reusable implementation files locally.
+`py-lib-policy` and `py-lib-testkit` are independent development dependencies;
+DocOps itself must remain installable without private Ternforge Python runtime
+packages so its CLI can be used from non-Python consumer repositories. Keep this
+repo thin: prefer upstream Sphinx/Jupyter/Allure capabilities and shared Ternforge
+tooling instead of copying reusable implementation locally.
 
 ## Branch And Target Flow
 
@@ -108,15 +107,17 @@ inputs, executable method, environment, and captured result are useful engineeri
 knowledge.
 
 Each retained experiment is a self-contained capsule under
-`experiments/<project>/exp_####_<slug>/` with `src/experiment.py`, one captured
-`report/report.ipynb`, its own `pyproject.toml`, `uv.lock`, and `.python-version`,
-plus causal `inputs/` and optional retained `artifacts/` when needed.
+`experiments/<project>/exp_####_<slug>/` with owned source, one captured
+`report/report.ipynb`, causal `inputs/`, optional retained `artifacts/`, and a
+capsule-owned Jupyter kernelspec describing how its report executes. Python/uv
+capsules additionally retain their own `pyproject.toml`, `uv.lock`, and
+`.python-version`.
 
-Capsules are standalone uv projects. They must not import the parent package,
-repository `src/` or `tests/`, sibling experiments, or shared experiment helpers,
-and they must not use local/workspace/editable dependencies. `py-lib-policy`
-enforces these reusable structural boundaries. Project-specific capture, report,
-and documentation tooling may add stricter rules locally.
+Capsules must not import the parent package, repository `src/` or `tests`, sibling
+experiments, or shared experiment helpers, and must not use local/workspace/editable
+dependencies. `py-lib-policy` owns those structural laws. DocOps owns report
+semantics, freshness validation, isolated Jupyter capture, and documentation
+rendering; it must not reimplement the policy checks.
 
 ## Commit And Release Conventions
 
