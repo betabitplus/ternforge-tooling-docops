@@ -35,6 +35,7 @@ dependencies = [
   "sphinx-codelinks>=1.4,<2",
   "sphinx-design>=0.6,<1",
   "sphinx-llm>=1,<2",
+  "sphinx-mounts>=0.1.3,<0.2",
   "sphinx-needs>=8.4,<9",
   "sphinx-simplepdf>=1.7,<2",
   "sphinx-test-reports>=1.4,<2",

@@ -6,7 +6,12 @@ from typing import TYPE_CHECKING, Any
 
 from sphinx_needs.api import add_field
 
-from ternforge_docops._internal import graph_config_path, register_verification_view
+from ternforge_docops._internal import (
+    configure_experiment_mounts,
+    graph_config_path,
+    publish_experiment_inputs,
+    register_verification_view,
+)
 
 if TYPE_CHECKING:
     from sphinx.application import Sphinx
@@ -14,6 +19,7 @@ if TYPE_CHECKING:
 
 _EXTENSIONS = (
     "myst_nb",
+    "sphinx_mounts",
     "sphinx_design",
     "sphinx_needs",
     "sphinxcontrib.test_reports",
@@ -67,8 +73,10 @@ def setup(app: Sphinx) -> dict[str, Any]:
     for extension in _EXTENSIONS:
         app.setup_extension(extension)
     register_verification_view(app)
-    app.connect("config-inited", _configure_graph, priority=5)
+    app.connect("config-inited", configure_experiment_mounts, priority=5)
+    app.connect("config-inited", _configure_graph, priority=6)
     app.connect("config-inited", _ensure_source_url_field, priority=12)
+    app.connect("builder-inited", publish_experiment_inputs, priority=600)
     return {
         "version": "1",
         "parallel_read_safe": True,

@@ -3507,6 +3507,19 @@ wheels = [
 ]
 
 [[package]]
+name = "sphinx-mounts"
+version = "0.1.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "ignore-python" },
+    { name = "sphinx" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/21/79/4e7d974529e3f9d3f11a5bae086cd53b5068b8f4a7b34e019f83bcf99822/sphinx_mounts-0.1.4.tar.gz", hash = "sha256:c88098b57891a8046965c3987f1246af9457cae962ba28b658ffab5f44ed2af7", size = 24870, upload-time = "2026-08-11T20:55:20.478Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d8/1d/60459b4b118d4918aab1af31145886e74de36f746fb7257b637230e778cc/sphinx_mounts-0.1.4-py3-none-any.whl", hash = "sha256:3369794f5a835d87e771d1c3075fdef95fd4ab7d1b6c6afb30a4abfd48102b54", size = 24343, upload-time = "2026-08-11T20:55:19.138Z" },
+]
+
+[[package]]
 name = "sphinx-needs"
 version = "8.4.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3739,6 +3752,7 @@ dependencies = [
     { name = "sphinx-codelinks" },
     { name = "sphinx-design" },
     { name = "sphinx-llm" },
+    { name = "sphinx-mounts" },
     { name = "sphinx-needs" },
     { name = "sphinx-simplepdf" },
     { name = "sphinx-test-reports" },
@@ -3807,6 +3821,7 @@ requires-dist = [
     { name = "sphinx-codelinks", specifier = ">=1.4,<2" },
     { name = "sphinx-design", specifier = ">=0.6,<1" },
     { name = "sphinx-llm", specifier = ">=1,<2" },
+    { name = "sphinx-mounts", specifier = ">=0.1.3,<0.2" },
     { name = "sphinx-needs", specifier = ">=8.4,<9" },
     { name = "sphinx-simplepdf", specifier = ">=1.7,<2" },
     { name = "sphinx-test-reports", specifier = ">=1.4,<2" },
