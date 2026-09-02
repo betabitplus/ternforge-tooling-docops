@@ -12,6 +12,10 @@ from ternforge_docops._internal.config import (
     get_config as get_config,
     install_config as install_config,
 )
+from ternforge_docops._internal.documentation import (
+    build_html as build_html,
+    build_portal as build_portal,
+)
 from ternforge_docops._internal.experiments import (
     capture_experiment as capture_experiment,
     discover_capsules as discover_capsules,

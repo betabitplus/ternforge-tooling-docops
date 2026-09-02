@@ -6,6 +6,8 @@ import argparse
 from pathlib import Path
 
 from ternforge_docops._internal import (
+    build_html,
+    build_portal,
     capture_experiment,
     discover_capsules,
     resolve_capsule,
@@ -27,6 +29,23 @@ def _parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("sync", help="Materialize canonical DocOps resources.")
     commands.add_parser("check", help="Check canonical DocOps resources.")
+
+    build = commands.add_parser(
+        "build",
+        help="Build documentation presentation from pre-existing evidence.",
+    )
+    build_commands = build.add_subparsers(dest="build_action", required=True)
+    build_commands.add_parser("html", help="Build strict HTML documentation.")
+    portal = build_commands.add_parser(
+        "portal",
+        help="Build strict HTML plus Allure test-result perspectives.",
+    )
+    portal.add_argument(
+        "--allure-results",
+        type=Path,
+        required=True,
+        help="Directory containing pre-generated Allure result files.",
+    )
 
     experiments = commands.add_parser(
         "experiments",
@@ -92,6 +111,16 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if args.command == "check":
         return _check_resources(root)
+    if args.command == "build":
+        if args.build_action == "html":
+            output = build_html(root)
+        else:
+            output = build_portal(
+                root,
+                allure_results=args.allure_results.resolve(),
+            )
+        print(output)
+        return 0
     if args.action == "validate":
         return _validate_experiments(root)
     return _capture_experiment(root, str(args.experiment))
