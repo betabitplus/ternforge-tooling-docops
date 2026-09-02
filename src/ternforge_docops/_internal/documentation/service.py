@@ -3,12 +3,33 @@
 from __future__ import annotations
 
 import shutil
-import subprocess
-import sys
 import tempfile
+from contextlib import chdir
 from pathlib import Path
 
+from sphinx.cmd.build import build_main
+
 from ternforge_docops._internal.allure import curate_results, generate_reports
+
+
+def _run_sphinx(root: Path, docs_root: Path, output_root: Path, builder: str) -> None:
+    """Run one strict Sphinx builder in the repository context."""
+    arguments = [
+        "-E",
+        "-W",
+        "--keep-going",
+        "-D",
+        "plot_gallery=0",
+        "-b",
+        builder,
+        str(docs_root),
+        str(output_root),
+    ]
+    with chdir(root):
+        exit_code = build_main(arguments)
+    if exit_code:
+        message = f"Sphinx {builder} build failed with exit code {exit_code}"
+        raise RuntimeError(message)
 
 
 def build_html(
@@ -20,24 +41,7 @@ def build_html(
     """Build strict HTML documentation without executing project tests."""
     docs_root = docs or root / "docs"
     output_root = output or docs_root / "_build" / "html"
-    subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "sphinx",
-            "-E",
-            "-W",
-            "--keep-going",
-            "-D",
-            "plot_gallery=0",
-            "-b",
-            "html",
-            str(docs_root),
-            str(output_root),
-        ],
-        cwd=root,
-        check=True,
-    )
+    _run_sphinx(root, docs_root, output_root, "html")
     return output_root
 
 
@@ -50,24 +54,7 @@ def build_dossier(
     """Build the release dossier through the upstream SimplePDF Sphinx builder."""
     docs_root = docs or root / "docs"
     output_root = output or docs_root / "_build" / "dossier"
-    subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "sphinx",
-            "-E",
-            "-W",
-            "--keep-going",
-            "-D",
-            "plot_gallery=0",
-            "-b",
-            "simplepdf",
-            str(docs_root),
-            str(output_root),
-        ],
-        cwd=root,
-        check=True,
-    )
+    _run_sphinx(root, docs_root, output_root, "simplepdf")
     return output_root / "release-dossier.pdf"
 
 

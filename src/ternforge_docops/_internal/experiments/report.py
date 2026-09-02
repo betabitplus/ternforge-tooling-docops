@@ -25,10 +25,12 @@ _ROLE_TAGS = {
 
 
 def _tags(cell: NotebookNode) -> set[str]:
+    """Return normalized notebook-cell tags."""
     return {str(tag) for tag in cell.metadata.get("tags", [])}
 
 
 def _role(cell: NotebookNode) -> str:
+    """Resolve the single DocOps experiment role assigned to a cell."""
     roles = _tags(cell) & _ROLE_TAGS
     if len(roles) != 1:
         message = f"expected exactly one experiment role tag, got {sorted(roles)}"
@@ -37,11 +39,13 @@ def _role(cell: NotebookNode) -> str:
 
 
 def _extract_need_id(source: str) -> str | None:
+    """Extract the retained EXP Need identifier from metadata Markdown."""
     match = re.search(r"(?m)^:id:\s*(EXP_[0-9]{4})\s*$", source)
     return None if match is None else match.group(1)
 
 
 def _validate_roles(notebook: NotebookNode) -> list[str]:
+    """Validate the strict Meta/Question/Setup/(Step/Evidence)+/Conclusion order."""
     errors: list[str] = []
     roles: list[str] = []
     for index, cell in enumerate(notebook.cells):
@@ -67,11 +71,9 @@ def _validate_roles(notebook: NotebookNode) -> list[str]:
     return errors
 
 
-def _validate_meta(capsule: Path, cell: NotebookNode) -> list[str]:
+def _validate_meta_id(capsule: Path, source: str) -> list[str]:
+    """Validate that retained EXP metadata identity matches the capsule path."""
     errors: list[str] = []
-    if cell.cell_type != "markdown":
-        return ["metadata cell must be Markdown"]
-    source = str(cell.source)
     if source.count("```{exp}") != 1:
         errors.append("metadata cell must contain exactly one EXP need")
     need_id = _extract_need_id(source)
@@ -82,6 +84,12 @@ def _validate_meta(capsule: Path, cell: NotebookNode) -> list[str]:
         expected = f"EXP_{match.group('number')}" if match else ""
         if need_id != expected:
             errors.append(f"path/id mismatch: expected {expected}, found {need_id}")
+    return errors
+
+
+def _validate_meta_fields(source: str) -> list[str]:
+    """Validate required and obsolete fields in retained EXP metadata."""
+    errors: list[str] = []
     if ":experiment_date:" not in source:
         errors.append("EXP metadata must declare experiment_date")
     if "**Question.**" not in source or "**Conclusion.**" not in source:
@@ -94,7 +102,16 @@ def _validate_meta(capsule: Path, cell: NotebookNode) -> list[str]:
     return errors
 
 
+def _validate_meta(capsule: Path, cell: NotebookNode) -> list[str]:
+    """Validate the retained EXP metadata cell and capsule identity."""
+    if cell.cell_type != "markdown":
+        return ["metadata cell must be Markdown"]
+    source = str(cell.source)
+    return [*_validate_meta_id(capsule, source), *_validate_meta_fields(source)]
+
+
 def _validate_sections(notebook: NotebookNode) -> list[str]:
+    """Validate Question, Setup, and Conclusion section contracts."""
     errors: list[str] = []
     question = notebook.cells[1]
     setup = notebook.cells[2]
@@ -120,6 +137,7 @@ def _validate_evidence_cell(
     step_number: int,
     expected_execution: int,
 ) -> list[str]:
+    """Validate one captured Step evidence cell and its execution state."""
     errors: list[str] = []
     if evidence.cell_type != "code":
         return [f"step {step_number} evidence must be a code cell"]
@@ -139,6 +157,7 @@ def _validate_evidence_cell(
 
 
 def _validate_steps(notebook: NotebookNode) -> list[str]:
+    """Validate numbered Step/Evidence pairs and linear execution counts."""
     errors: list[str] = []
     for step_number, index in enumerate(
         range(3, len(notebook.cells) - 1, 2),
@@ -167,6 +186,7 @@ def _validate_steps(notebook: NotebookNode) -> list[str]:
 
 
 def _validate_kernel(capsule: Path, notebook: NotebookNode) -> list[str]:
+    """Require a notebook kernelspec owned by the retained experiment capsule."""
     name = str(notebook.metadata.get("kernelspec", {}).get("name", ""))
     if not name:
         return ["report must declare notebook.metadata.kernelspec.name"]

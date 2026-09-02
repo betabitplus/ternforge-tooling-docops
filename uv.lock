@@ -3743,14 +3743,16 @@ name = "ternforge-docops"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "docutils" },
+    { name = "jupyter-client" },
     { name = "myst-nb" },
-    { name = "myst-parser" },
     { name = "nbclient" },
     { name = "nbformat" },
     { name = "pydata-sphinx-theme" },
     { name = "sphinx" },
     { name = "sphinx-codelinks" },
     { name = "sphinx-design" },
+    { name = "sphinx-gallery" },
     { name = "sphinx-llm" },
     { name = "sphinx-mounts" },
     { name = "sphinx-needs" },
@@ -3807,19 +3809,20 @@ dev = [
 ]
 docs = [
     { name = "matplotlib" },
-    { name = "sphinx-gallery" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "docutils", specifier = ">=0.21,<0.23" },
+    { name = "jupyter-client", specifier = ">=8.6,<9" },
     { name = "myst-nb", specifier = ">=1.4,<2" },
-    { name = "myst-parser", specifier = ">=4.0.1" },
     { name = "nbclient", specifier = ">=0.10" },
     { name = "nbformat", specifier = ">=5.10" },
     { name = "pydata-sphinx-theme", specifier = ">=0.20" },
     { name = "sphinx", specifier = ">=8.2.3" },
     { name = "sphinx-codelinks", specifier = ">=1.4,<2" },
     { name = "sphinx-design", specifier = ">=0.6,<1" },
+    { name = "sphinx-gallery", specifier = ">=0.21,<1" },
     { name = "sphinx-llm", specifier = ">=1,<2" },
     { name = "sphinx-mounts", specifier = ">=0.1.3,<0.2" },
     { name = "sphinx-needs", specifier = ">=8.4,<9" },
@@ -3874,10 +3877,7 @@ dev = [
     { name = "types-pillow", specifier = ">=10.2.0.20240822" },
     { name = "validate-pyproject", specifier = ">=0.25" },
 ]
-docs = [
-    { name = "matplotlib", specifier = ">=3.11.1" },
-    { name = "sphinx-gallery", specifier = ">=0.21" },
-]
+docs = [{ name = "matplotlib", specifier = ">=3.11.1" }]
 
 [[package]]
 name = "tinycss2"

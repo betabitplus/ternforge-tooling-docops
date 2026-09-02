@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import os
 import shutil
-import subprocess
-import sys
 import tempfile
 from pathlib import Path
 
 import nbformat
+from jupyter_client.kernelspec import KernelSpecManager
+from jupyter_client.manager import KernelManager
+from nbclient import NotebookClient
 
 from ternforge_docops._internal.experiments.digest import capsule_digest
 from ternforge_docops._internal.experiments.report import validate_report
@@ -54,6 +55,7 @@ def validate_experiments(root: Path) -> dict[Path, list[str]]:
 
 
 def _copy_capsule(source: Path, destination: Path) -> None:
+    """Copy causal capsule state while excluding ephemeral execution caches."""
     shutil.copytree(
         source,
         destination,
@@ -67,43 +69,45 @@ def _copy_capsule(source: Path, destination: Path) -> None:
     )
 
 
-def _capture_environment(capsule: Path) -> dict[str, str]:
+def _capture_environment() -> dict[str, str]:
+    """Return a sanitized environment for the capsule-owned kernel process."""
     environment = os.environ.copy()
     environment.pop("PYTHONPATH", None)
     environment.pop("VIRTUAL_ENV", None)
     for name in tuple(environment):
         if name.startswith("DIRENV_"):
             environment.pop(name)
-    environment["JUPYTER_PATH"] = str(capsule / "jupyter")
     return environment
 
 
 def _execute_report(capsule: Path) -> None:
+    """Execute a report through the capsule-owned Jupyter kernelspec."""
     report = capsule / "report" / "report.ipynb"
     notebook = nbformat.read(report, as_version=4)
     kernelspec = str(notebook.metadata.get("kernelspec", {}).get("name", ""))
     if not kernelspec:
         message = "report must declare notebook.metadata.kernelspec.name"
         raise ValueError(message)
-    kernel = capsule / "jupyter" / "kernels" / kernelspec / "kernel.json"
+    kernel_root = capsule / "jupyter" / "kernels"
+    kernel = kernel_root / kernelspec / "kernel.json"
     if not kernel.is_file():
         message = f"capsule-owned kernelspec is missing: {kernel.relative_to(capsule)}"
         raise ValueError(message)
 
-    subprocess.run(
-        [
-            sys.executable,
-            "-m",
-            "jupyter",
-            "execute",
-            "--inplace",
-            "--timeout=1800",
-            str(report.relative_to(capsule)),
-        ],
-        cwd=capsule,
-        check=True,
-        env=_capture_environment(capsule),
+    spec_manager = KernelSpecManager(kernel_dirs=[str(kernel_root)])
+    kernel_manager = KernelManager(
+        kernel_name=kernelspec,
+        kernel_spec_manager=spec_manager,
     )
+    client = NotebookClient(
+        notebook,
+        km=kernel_manager,
+        kernel_name=kernelspec,
+        resources={"metadata": {"path": report.parent}},
+        timeout=1800,
+    )
+    client.execute(env=_capture_environment())
+    nbformat.write(notebook, report)
 
 
 def capture_experiment(capsule: Path) -> None:

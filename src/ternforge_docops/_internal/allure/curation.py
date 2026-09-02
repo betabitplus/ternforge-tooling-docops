@@ -21,6 +21,7 @@ def requirement_titles(needs_json: Path) -> dict[str, str]:
 
 
 def _labels(result: dict[str, object]) -> list[dict[str, object]]:
+    """Return the mutable Allure label list, repairing malformed values."""
     labels = result.get("labels")
     if isinstance(labels, list) and all(isinstance(label, dict) for label in labels):
         return cast("list[dict[str, object]]", labels)
@@ -30,6 +31,7 @@ def _labels(result: dict[str, object]) -> list[dict[str, object]]:
 
 
 def _label_values(result: dict[str, object], name: str) -> tuple[str, ...]:
+    """Return values for one Allure label name in source order."""
     return tuple(
         str(label["value"])
         for label in _labels(result)
@@ -38,6 +40,7 @@ def _label_values(result: dict[str, object], name: str) -> tuple[str, ...]:
 
 
 def _add_label(result: dict[str, object], name: str, value: str) -> None:
+    """Append one Allure label without duplicating an existing pair."""
     labels = _labels(result)
     label = {"name": name, "value": value}
     if label not in labels:
@@ -45,15 +48,11 @@ def _add_label(result: dict[str, object], name: str, value: str) -> None:
 
 
 def _attachment_sources(result: dict[str, object]) -> set[str]:
+    """Collect attachments referenced by a result and its nested steps."""
     sources: set[str] = set()
-
-    def visit(value: object) -> None:
-        if isinstance(value, list):
-            for item in value:
-                visit(item)
-            return
-        if not isinstance(value, dict):
-            return
+    pending: list[dict[str, object]] = [result]
+    while pending:
+        value = pending.pop()
         attachments = value.get("attachments")
         if isinstance(attachments, list):
             for attachment in attachments:
@@ -61,9 +60,7 @@ def _attachment_sources(result: dict[str, object]) -> set[str]:
                     sources.add(str(attachment["source"]))
         steps = value.get("steps")
         if isinstance(steps, list):
-            visit(steps)
-
-    visit(result)
+            pending.extend(step for step in steps if isinstance(step, dict))
     return sources
 
 
@@ -74,6 +71,7 @@ def _copy_result(
     raw_results: Path,
     destination: Path,
 ) -> None:
+    """Write one curated Allure result and only its referenced attachments."""
     destination.mkdir(parents=True, exist_ok=True)
     (destination / result_path.name).write_text(
         json.dumps(result, ensure_ascii=False),

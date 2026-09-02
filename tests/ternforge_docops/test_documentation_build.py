@@ -17,21 +17,21 @@ def test_build_html_runs_only_sphinx(
     docs = tmp_path / "docs"
     docs.mkdir()
     output = tmp_path / "site"
-    commands: list[tuple[list[str], Path]] = []
+    commands: list[list[str]] = []
 
-    def fake_run(command: list[str], *, cwd: Path, check: bool) -> None:
-        assert check is True
-        commands.append((command, cwd))
+    def fake_build_main(arguments: list[str]) -> int:
+        assert Path.cwd() == tmp_path
+        commands.append(arguments)
+        return 0
 
-    monkeypatch.setattr(service.subprocess, "run", fake_run)
+    monkeypatch.setattr(service, "build_main", fake_build_main)
 
     result = service.build_html(tmp_path, docs=docs, output=output)
 
     assert result == output
     assert len(commands) == 1
-    command, cwd = commands[0]
-    assert cwd == tmp_path
-    assert command[1:3] == ["-m", "sphinx"]
+    command = commands[0]
+    assert command[command.index("-b") + 1] == "html"
     assert "pytest" not in command
 
 
@@ -45,19 +45,18 @@ def test_build_dossier_delegates_to_simplepdf(
     output = tmp_path / "dossier"
     commands: list[list[str]] = []
 
-    def fake_run(command: list[str], *, cwd: Path, check: bool) -> None:
-        assert cwd == tmp_path
-        assert check is True
-        commands.append(command)
+    def fake_build_main(arguments: list[str]) -> int:
+        assert Path.cwd() == tmp_path
+        commands.append(arguments)
+        return 0
 
-    monkeypatch.setattr(service.subprocess, "run", fake_run)
+    monkeypatch.setattr(service, "build_main", fake_build_main)
 
     result = service.build_dossier(tmp_path, docs=docs, output=output)
 
     assert result == output / "release-dossier.pdf"
     assert len(commands) == 1
     command = commands[0]
-    assert command[1:3] == ["-m", "sphinx"]
     assert command[command.index("-b") + 1] == "simplepdf"
     assert "pytest" not in command
 

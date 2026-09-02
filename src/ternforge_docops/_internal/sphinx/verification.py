@@ -26,10 +26,12 @@ class _VerificationMatrixDirective(SphinxDirective):
     has_content = False
 
     def run(self) -> list[nodes.Node]:
+        """Insert a placeholder resolved after the complete Needs graph exists."""
         return [_VerificationMatrixNode()]
 
 
 def _verification_ids(value: object) -> tuple[str, ...]:
+    """Normalize testcase verifies values to unversioned Need identifiers."""
     if isinstance(value, str):
         values = value.split(",")
     elif isinstance(value, list | tuple):
@@ -42,6 +44,7 @@ def _verification_ids(value: object) -> tuple[str, ...]:
 
 
 def _verification_counts(app: Sphinx) -> dict[str, dict[str, tuple[int, int]]]:
+    """Count total and passed testcase evidence by requirement and verification kind."""
     totals: dict[str, dict[str, list[int]]] = defaultdict(
         lambda: defaultdict(lambda: [0, 0])
     )
@@ -63,6 +66,7 @@ def _verification_counts(app: Sphinx) -> dict[str, dict[str, tuple[int, int]]]:
 
 
 def _status_text(counts: tuple[int, int] | None, *, required: bool) -> str:
+    """Render evidence counts with required/optional verification semantics."""
     if counts is None:
         return "MISSING" if required else "—"
     total, passed = counts
@@ -72,6 +76,7 @@ def _status_text(counts: tuple[int, int] | None, *, required: bool) -> str:
 
 
 def _entry(text: str, *, header: bool = False) -> nodes.entry:
+    """Build one plain-text docutils table entry."""
     entry = nodes.entry()
     if header:
         entry["classes"].append("head")
@@ -86,6 +91,7 @@ def _requirement_entry(
     fromdocname: str,
     need: Mapping[str, object],
 ) -> nodes.entry:
+    """Build a linked requirement cell with title and status context."""
     entry = nodes.entry()
     paragraph = nodes.paragraph()
     target_doc = str(need.get("docname") or fromdocname)
@@ -112,6 +118,7 @@ def _matrix_table(
     needs: list[Mapping[str, object]],
     counts: dict[str, dict[str, tuple[int, int]]],
 ) -> nodes.table:
+    """Build a theme-native verification matrix for one Need category."""
     table = nodes.table(classes=["docutils", "align-default"])
     tgroup = nodes.tgroup(cols=len(_VERIFICATION_KINDS) + 1)
     table += tgroup
@@ -151,6 +158,7 @@ def _matrix_table(
 
 
 def _section(title: str, table: nodes.table) -> list[nodes.Node]:
+    """Wrap a verification matrix with its category heading."""
     return [nodes.rubric(text=title), table]
 
 
@@ -159,6 +167,7 @@ def _replace_matrix_nodes(
     doctree: nodes.document,
     fromdocname: str,
 ) -> None:
+    """Resolve matrix placeholders after the complete Needs graph is available."""
     view = get_needs_view(app)
     counts = _verification_counts(app)
     requirements = list(view.filter_types(["req"]).values())

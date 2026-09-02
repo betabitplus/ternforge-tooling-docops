@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import shutil
-import subprocess
+import subprocess  # nosec B404 - Allure 3 is an external Node CLI with no Python API.
 from pathlib import Path
 
 _ALLURE_VERSION = "3.16.0"
@@ -17,9 +17,10 @@ def _generate_report(
     group_by: str,
     report_name: str,
 ) -> Path:
+    """Generate one pinned Allure Awesome single-file report perspective."""
     output.parent.mkdir(parents=True, exist_ok=True)
     shutil.rmtree(output, ignore_errors=True)
-    subprocess.run(
+    subprocess.run(  # nosec B603 - absolute npx path, fixed argv, shell remains disabled.
         [
             npx,
             "--yes",

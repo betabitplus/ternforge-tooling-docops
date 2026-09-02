@@ -70,6 +70,7 @@ def _parser() -> argparse.ArgumentParser:
 
 
 def _check_resources(root: Path) -> int:
+    """Report stale materialized DocOps resources for one repository."""
     stale = stale_resources(root)
     if not stale:
         print("DocOps resources are current.")
@@ -80,6 +81,7 @@ def _check_resources(root: Path) -> int:
 
 
 def _validate_experiments(root: Path) -> int:
+    """Validate every retained Engineering Experiment and print violations."""
     capsules = discover_capsules(root)
     if not capsules:
         print("No retained Engineering Experiment capsules found.")
@@ -96,6 +98,7 @@ def _validate_experiments(root: Path) -> int:
 
 
 def _capture_experiment(root: Path, experiment: str) -> int:
+    """Resolve and capture one retained Engineering Experiment capsule."""
     try:
         capsule = resolve_capsule(root, experiment)
         capture_experiment(capsule)
