@@ -17,7 +17,9 @@ jobs:
     with:
       python-version: "3.13"
       runtime-audit-exclude-package: ""
-      runtime-audit-ignore-vulnerabilities: ""
+      # sphinx-codelinks 1.4.0 intentionally requires click<8.2 for its CLI;
+      # DocOps uses only the Sphinx extension and does not call vulnerable click.edit().
+      runtime-audit-ignore-vulnerabilities: "PYSEC-2026-2132"
       playwright-browsers: ""
     secrets:
       app-private-key: ${{ secrets.TERNFORGE_SOURCE_READ_PRIVATE_KEY }}
