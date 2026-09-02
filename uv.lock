@@ -3732,6 +3732,8 @@ source = { editable = "." }
 dependencies = [
     { name = "myst-nb" },
     { name = "myst-parser" },
+    { name = "nbclient" },
+    { name = "nbformat" },
     { name = "pydata-sphinx-theme" },
     { name = "sphinx" },
     { name = "sphinx-codelinks" },
@@ -3798,6 +3800,8 @@ docs = [
 requires-dist = [
     { name = "myst-nb", specifier = ">=1.4,<2" },
     { name = "myst-parser", specifier = ">=4.0.1" },
+    { name = "nbclient", specifier = ">=0.10" },
+    { name = "nbformat", specifier = ">=5.10" },
     { name = "pydata-sphinx-theme", specifier = ">=0.20" },
     { name = "sphinx", specifier = ">=8.2.3" },
     { name = "sphinx-codelinks", specifier = ">=1.4,<2" },

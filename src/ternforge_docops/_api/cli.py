@@ -5,7 +5,14 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from ternforge_docops._internal import stale_resources, sync_resources
+from ternforge_docops._internal import (
+    capture_experiment,
+    discover_capsules,
+    resolve_capsule,
+    stale_resources,
+    sync_resources,
+    validate_experiments,
+)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -20,7 +27,59 @@ def _parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("sync", help="Materialize canonical DocOps resources.")
     commands.add_parser("check", help="Check canonical DocOps resources.")
+
+    experiments = commands.add_parser(
+        "experiments",
+        help="Validate or capture retained Engineering Experiments.",
+    )
+    experiment_commands = experiments.add_subparsers(dest="action", required=True)
+    experiment_commands.add_parser("validate", help="Validate captured EXP reports.")
+    capture = experiment_commands.add_parser(
+        "capture",
+        help="Capture one EXP report from an isolated capsule copy.",
+    )
+    capture.add_argument(
+        "experiment",
+        help="EXP number (for example 0001) or capsule directory name.",
+    )
     return parser
+
+
+def _check_resources(root: Path) -> int:
+    stale = stale_resources(root)
+    if not stale:
+        print("DocOps resources are current.")
+        return 0
+    for path in stale:
+        print(f"stale: {path.relative_to(root)}")
+    return 1
+
+
+def _validate_experiments(root: Path) -> int:
+    capsules = discover_capsules(root)
+    if not capsules:
+        print("No retained Engineering Experiment capsules found.")
+        return 0
+    failures = validate_experiments(root)
+    for capsule, errors in failures.items():
+        print(f"{capsule.relative_to(root)}:")
+        for error in errors:
+            print(f"  - {error}")
+    if failures:
+        return 1
+    print(f"Validated {len(capsules)} Engineering Experiment capsule(s).")
+    return 0
+
+
+def _capture_experiment(root: Path, experiment: str) -> int:
+    try:
+        capsule = resolve_capsule(root, experiment)
+        capture_experiment(capsule)
+    except ValueError as exc:
+        print(exc)
+        return 1
+    print(f"Captured {capsule.relative_to(root)} from an isolated temporary copy.")
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -31,11 +90,8 @@ def main(argv: list[str] | None = None) -> int:
         for path in sync_resources(root):
             print(path.relative_to(root))
         return 0
-
-    stale = stale_resources(root)
-    if not stale:
-        print("DocOps resources are current.")
-        return 0
-    for path in stale:
-        print(f"stale: {path.relative_to(root)}")
-    return 1
+    if args.command == "check":
+        return _check_resources(root)
+    if args.action == "validate":
+        return _validate_experiments(root)
+    return _capture_experiment(root, str(args.experiment))

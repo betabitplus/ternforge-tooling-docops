@@ -12,6 +12,12 @@ from ternforge_docops._internal.config import (
     get_config as get_config,
     install_config as install_config,
 )
+from ternforge_docops._internal.experiments import (
+    capture_experiment as capture_experiment,
+    discover_capsules as discover_capsules,
+    resolve_capsule as resolve_capsule,
+    validate_experiments as validate_experiments,
+)
 from ternforge_docops._internal.resources import (
     graph_config_path as graph_config_path,
     stale_resources as stale_resources,
