@@ -1,0 +1,25 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    name: release
+    runs-on: ${{ vars.TERNFORGE_RUNNER || 'ubuntu-slim' }}
+    timeout-minutes: 15
+    environment: release
+    steps:
+      - name: Run release automation
+        uses: betabitplus/ternforge-infra-ci/.github/actions/release@92ec7f62f2a949f5ea79e8feb298859a7d0e0618 # v5.5.1
+        with:
+          app-client-id: ${{ vars.TERNFORGE_RELEASE_CLIENT_ID }}
+          app-private-key: ${{ secrets.TERNFORGE_RELEASE_PRIVATE_KEY }}
+          synchronize-python-lock: "true"
+          source-read-client-id: ${{ vars.TERNFORGE_SOURCE_READ_CLIENT_ID }}
+          source-read-private-key: ${{ secrets.TERNFORGE_SOURCE_READ_PRIVATE_KEY }}

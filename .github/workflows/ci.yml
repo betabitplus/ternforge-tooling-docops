@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, synchronize, edited]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  ci:
+    name: ci
+    uses: betabitplus/ternforge-infra-ci/.github/workflows/python-library.yml@d96ae241cb86351325d7ce7d9dfc3b3f1aa4101d # v5.7.2
+    with:
+      python-version: "3.13"
+      runtime-audit-exclude-package: ""
+      runtime-audit-ignore-vulnerabilities: ""
+      playwright-browsers: ""
+    secrets:
+      app-private-key: ${{ secrets.TERNFORGE_SOURCE_READ_PRIVATE_KEY }}

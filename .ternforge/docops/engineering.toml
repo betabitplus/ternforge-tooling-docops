@@ -1,0 +1,122 @@
+[needs]
+id_required = true
+build_json = true
+schema_definitions_from_json = "schemas.json"
+
+[needs.fields.status]
+description = "Lifecycle state for requirements, engineering constraints, and architecture decisions."
+schema.enum = ["draft", "proposed", "accepted", "rejected", "deprecated", "superseded"]
+
+[needs.fields.revision]
+description = "Human-managed semantic revision used by conditional trace links."
+schema.type = "integer"
+schema.minimum = 1
+
+[needs.fields.decision_date]
+description = "Date recorded for an architecture decision."
+schema.type = "string"
+schema.pattern = "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+
+[needs.fields.experiment_date]
+description = "Date on which an engineering experiment produced the recorded result."
+schema.type = "string"
+schema.pattern = "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+
+[needs.fields.required_evidence]
+description = "Minimal implementation and verification evidence required by this requirement."
+schema.type = "array"
+schema.items.type = "string"
+schema.items.enum = ["impl", "bdd", "unit", "property", "integration", "e2e"]
+schema.uniqueItems = true
+
+[needs.fields.verification_kind]
+description = "Verification evidence kind emitted by an execution evidence adapter."
+schema.type = "string"
+schema.enum = ["bdd", "unit", "property", "integration", "e2e"]
+
+[needs.fields.gherkin_feature]
+description = "Repository-relative Gherkin feature source for BDD evidence."
+schema.type = "string"
+
+[needs.fields.gherkin_scenario]
+description = "Gherkin scenario name for BDD evidence."
+schema.type = "string"
+
+[needs.fields.issue]
+description = "GitHub issue numbers tracking this object; Sphinx-Needs remains authoritative."
+schema.type = "array"
+schema.items.type = "integer"
+schema.uniqueItems = true
+
+[needs.links.derives]
+outgoing = "derives from"
+incoming = "derived by"
+
+[needs.links.implements]
+outgoing = "implements"
+incoming = "implemented by"
+
+[needs.links.verifies]
+outgoing = "verifies"
+incoming = "verified by"
+
+[needs.links.affects]
+outgoing = "affects"
+incoming = "affected by decision"
+
+[needs.links.supersedes]
+outgoing = "supersedes"
+incoming = "superseded by"
+
+[needs.links.informs]
+outgoing = "informs"
+incoming = "informed by experiment"
+
+[[needs.types]]
+directive = "goal"
+title = "Goal"
+prefix = "GOAL_"
+color = ""
+style = "node"
+
+[[needs.types]]
+directive = "feature"
+title = "Feature"
+prefix = "FEAT_"
+color = ""
+style = "node"
+
+[[needs.types]]
+directive = "req"
+title = "Requirement"
+prefix = "REQ_"
+color = ""
+style = "node"
+
+[[needs.types]]
+directive = "treq"
+title = "Engineering Constraint"
+prefix = "TREQ_"
+color = ""
+style = "node"
+
+[[needs.types]]
+directive = "adr"
+title = "Architecture Decision"
+prefix = "ADR_"
+color = ""
+style = "node"
+
+[[needs.types]]
+directive = "exp"
+title = "Engineering Experiment"
+prefix = "EXP_"
+color = ""
+style = "node"
+
+[[needs.types]]
+directive = "impl"
+title = "Implementation"
+prefix = "IMPL_"
+color = ""
+style = "artifact"

@@ -1,0 +1,39 @@
+name: Docs
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Release tag to publish. Empty uses the latest GitHub release.
+        required: false
+        type: string
+      force:
+        description: Rebuild even when the published site already covers the relevant source.
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  docs:
+    name: docs
+    if: ${{ vars.TERNFORGE_DOCS_MODE != '' }}
+    uses: betabitplus/ternforge-infra-ci/.github/workflows/python-library-docs.yml@d96ae241cb86351325d7ce7d9dfc3b3f1aa4101d # v5.7.2
+    with:
+      python-version: "3.13"
+      package-name: "ternforge_docops"
+      live-mode: ${{ vars.TERNFORGE_DOCS_MODE }}
+      docs-runner: ${{ vars.TERNFORGE_DOCS_RUNNER || 'ubuntu-24.04' }}
+      playwright-browsers: ""
+      local-environment: ${{ vars.TERNFORGE_DOCS_LOCAL_ENVIRONMENT == 'true' }}
+      release-dossier: true
+      target-ref: ${{ github.event.release.tag_name || inputs.ref || '' }}
+      force: ${{ github.event_name == 'workflow_dispatch' && inputs.force || false }}
+    secrets:
+      app-private-key: ${{ secrets.TERNFORGE_SOURCE_READ_PRIVATE_KEY }}

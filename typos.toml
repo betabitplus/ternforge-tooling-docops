@@ -1,0 +1,9 @@
+# Spell-check repo-authored text with narrow, reviewable exceptions.
+
+[files]
+extend-exclude = [
+  # Generated Copier metadata is not repo-authored prose.
+  ".copier-answers.yml",
+  # Lockfile; dependency validation owns this file.
+  "uv.lock",
+]

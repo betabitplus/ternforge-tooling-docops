@@ -1,0 +1,18 @@
+{
+  "keywords-in-logical-order": "on",
+  "only-one-when": "on",
+  "use-and": "on",
+  "no-unnamed-features": "on",
+  "no-unnamed-scenarios": "on",
+  "no-dupe-feature-names": "on",
+  "no-dupe-scenario-names": ["on", "in-feature"],
+  "scenario-size": [
+    "on",
+    {
+      "steps-length": {
+        "Background": 8,
+        "Scenario": 7
+      }
+    }
+  ]
+}

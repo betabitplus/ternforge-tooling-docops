@@ -1,0 +1,27 @@
+_commit: v1.18.0
+_src_path: https://github.com/betabitplus/ternforge-template-py-library.git
+author_email: 8123085+betabitplus@users.noreply.github.com
+author_name: betabitplus
+ci_playwright_browsers: []
+config_class_name: DocOpsConfig
+copyright_year: '2026'
+devcontainer_apt_packages: {}
+env_prefix: TERNFORGE_DOCOPS
+error_class_name: TernforgeDocOpsError
+github_owner: betabitplus
+gitignore_extra_patterns: []
+initial_version: 0.1.0
+package_name: ternforge_docops
+pip_audit_waivers: []
+project_description: Language-agnostic documentation operations tooling for Ternforge
+    repositories.
+project_name: ternforge-docops
+project_slug: ternforge-docops
+project_title: Ternforge DocOps
+project_title_lower: ternforge docops
+repository_name: ternforge-tooling-docops
+runtime_audit_exclude_package: ''
+workspace_python_paths:
+- src
+workspace_test_paths:
+- tests

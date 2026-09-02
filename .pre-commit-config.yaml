@@ -1,0 +1,449 @@
+# Pre-commit hooks configuration
+# Install configured hook stages: pre-commit install
+# Run manually: pre-commit run --all-files
+# Update hooks: pre-commit autoupdate
+
+default_install_hook_types:
+  - pre-commit
+  - pre-push
+  - commit-msg
+  - post-merge
+  - post-checkout
+
+# Stop on first failure to avoid wasting time on subsequent hooks
+fail_fast: true
+
+repos:
+  # =============================================================================
+  # Ruff - Fast Python linter and formatter (locked via uv)
+  # =============================================================================
+  - repo: local
+    hooks:
+      # Linter - runs first to catch issues in mutable project code.
+      - id: ruff
+        name: ruff (lint + autofix)
+        entry: >-
+          bash -c 'paths=(); for path in src tests examples scripts; do
+          [ ! -e "$path" ] || paths+=("$path"); done; uv run ruff check --fix
+          --unsafe-fixes "${paths[@]}"'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+        exclude: ^sandbox/
+
+      # Experiment source is causal evidence: check it, never auto-mutate it.
+      - id: ruff-experiments
+        name: ruff (experiments check-only)
+        entry: uv run ruff check experiments
+        language: system
+        pass_filenames: false
+        files: ^experiments/
+        stages: [pre-commit]
+
+      - id: ruff-format-experiments
+        name: ruff-format (experiments check-only)
+        entry: uv run ruff format --check experiments
+        language: system
+        pass_filenames: false
+        files: ^experiments/
+        stages: [pre-commit]
+
+      # Formatter - runs after linter fixes on mutable project code only.
+      - id: ruff-format
+        name: ruff-format
+        entry: >-
+          bash -c 'paths=(); for path in src tests examples scripts; do
+          [ ! -e "$path" ] || paths+=("$path"); done; uv run ruff format
+          "${paths[@]}"'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+        exclude: ^sandbox/
+
+  # =============================================================================
+  # Gherkin formatting and linting
+  # =============================================================================
+  - repo: local
+    hooks:
+      - id: gherkin-format
+        name: gherkin (format)
+        entry: gherkin-utils format
+        language: node
+        additional_dependencies:
+          - "@cucumber/gherkin-utils@12.0.2"
+        files: \.feature$
+        stages: [pre-commit]
+
+      - id: gherkin-lint
+        name: gherkin (lint)
+        entry: gherkin-lint -c .gherkin-lintrc
+        language: node
+        additional_dependencies:
+          - "@onitofu/gherkin-lint@5.0.0"
+        files: \.feature$
+        stages: [pre-commit]
+
+  # =============================================================================
+  # Local hooks - Baseline repo verification and maintenance
+  # =============================================================================
+  - repo: local
+    hooks:
+      # ty: Fast Rust-based type checker (complements pyright)
+      - id: ty
+        name: ty (fast type checker)
+        entry: uv run --group dev ty check --python .venv
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+        # Run when Python code changes, or when dependency metadata changes (since
+        # missing/extra deps often manifest as unresolved imports in type checks).
+        files: (\.py$|^pyproject\.toml$|^uv\.lock$)
+        exclude: ^sandbox/
+
+      - id: uv-sync-post-merge
+        name: uv sync after merge (if deps changed)
+        entry: uv sync --locked --all-groups
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [post-merge]
+
+      - id: uv-lock-check
+        name: uv lock check (verify lockfile is current)
+        entry: uv lock --check
+        language: system
+        pass_filenames: false
+        files: (pyproject\.toml|uv\.lock)$
+        stages: [pre-commit]
+
+      - id: uv-sync-post-checkout
+        name: uv sync after checkout (if deps changed)
+        entry: bash -c 'if git diff --name-only "$PRE_COMMIT_FROM_REF" "$PRE_COMMIT_TO_REF" 2>/dev/null | grep -qE "pyproject.toml|uv.lock"; then uv sync --locked --all-groups; fi'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [post-checkout]
+
+  # =============================================================================
+  # Local hooks - Product architecture and verification
+  # =============================================================================
+  - repo: local
+    hooks:
+      # pyright: Strict Microsoft type checker (runs on push)
+      - id: pyright
+        name: pyright (strict type checker)
+        entry: uv run pyright
+        language: system
+        types: [python]
+        pass_filenames: false
+        always_run: true
+        args: [--project, pyproject.toml]
+        stages: [pre-push]
+        exclude: ^sandbox/
+
+      - id: import-linter
+        name: import-linter (product architecture)
+        entry: env PYTHONPATH=src:. uv run lint-imports --config pyproject.toml
+        language: system
+        pass_filenames: false
+        always_run: true
+        files: (^src/|^tests/|^examples/|^pyproject.toml$)
+        stages: [pre-push]
+
+      - id: py-lib-policy
+        name: Ternforge policy
+        entry: uv run py-lib-policy check
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+
+  # =============================================================================
+  # Typos - Fast spell checker (Rust-based)
+  # =============================================================================
+  - repo: https://github.com/crate-ci/typos
+    rev: 8a48f81b6c64dcfea44b3633223084c4be58ac5f # v1.49.0
+    hooks:
+      - id: typos
+        args: [--config, typos.toml, --force-exclude]
+        stages: [pre-commit]
+        exclude: ^(\.agents/|tests/.*/__snapshots__/|tests/.*/cassettes/|\.[^/]+/archive/|logs/|data/|records/|CHANGELOG\.md$)
+
+  # =============================================================================
+  # Product code complexity analysis
+  # =============================================================================
+  - repo: local
+    hooks:
+      - id: radon-cc
+        name: radon (cyclomatic complexity)
+        entry: >-
+          bash -c 'output="$(uv run radon cc --min C --show-complexity src)";
+          printf "%s\n" "$output"; test -z "$output"'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+        # Fail on any functions with CC grade C or worse (CC >= 11)
+        # Grades: A (1-5), B (6-10), C (11-20), D (21-30), E (31-40), F (41+)
+        exclude: ^(sandbox/|tests/|scripts/)
+
+      - id: radon-mi
+        name: radon (maintainability index)
+        entry: >-
+          bash -c 'output="$(uv run radon mi --min B --show src)";
+          printf "%s\n" "$output"; test -z "$output"'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+        # Fail on any files with MI grade B or worse (MI <= 19)
+        # Grades: A (20–100), B (10–19), C (0–9)
+        exclude: ^(sandbox/|tests/|scripts/)
+
+  # =============================================================================
+  # Product code structure checks
+  # =============================================================================
+  - repo: local
+    hooks:
+      - id: py-lib-check-cognitive-complexity
+        name: flake8 (cognitive complexity)
+        entry: uv run flake8 --select=CCR001 --max-cognitive-complexity=15 src
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+        exclude: ^(sandbox/|tests/|scripts/)
+
+      - id: py-lib-check-class-attributes-order
+        name: flake8 (class attributes order)
+        entry: uv run flake8 --select=CCE001 src
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]
+        exclude: ^(sandbox/|tests/|scripts/)
+
+  # Product security checks
+  # =============================================================================
+  - repo: local
+    hooks:
+      # bandit: Categorizes and reports common security issues
+      - id: bandit
+        name: bandit (security scanner)
+        entry: uv run bandit -c pyproject.toml -r src
+        language: system
+        pass_filenames: false
+        always_run: true
+        exclude: ^(sandbox/|tests/|scripts/)
+        stages: [pre-push]
+
+  # =============================================================================
+  # Security - Detect secrets (gitleaks)
+  # =============================================================================
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: 83d9cd684c87d95d656c1458ef04895a7f1cbd8e # v8.30.1
+    hooks:
+      # gitleaks: Fast, comprehensive secret scanner (Rust-based)
+      - id: gitleaks
+        name: gitleaks (secret scanner)
+        stages: [pre-commit]
+
+  # =============================================================================
+  # Docs - Docstring coverage
+  # =============================================================================
+  - repo: local
+    hooks:
+      - id: interrogate
+        name: interrogate (docstring coverage)
+        entry: uv run interrogate -c pyproject.toml
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+
+  # =============================================================================
+  # Project hygiene - Deptry dependency checker
+  # =============================================================================
+  - repo: local
+    hooks:
+      - id: deptry
+        name: deptry (dependency hygiene)
+        entry: uv run deptry
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+        args: [--config, pyproject.toml, .]
+
+  # =============================================================================
+  # Build validation - Check-manifest
+  # =============================================================================
+  - repo: local
+    hooks:
+      - id: check-manifest
+        name: check-manifest
+        entry: uv run check-manifest
+        language: system
+        pass_filenames: false
+        stages: [pre-push] # Only run on push (slower check)
+
+  # =============================================================================
+  # TOML validation and formatting
+  # =============================================================================
+  - repo: local
+    hooks:
+      - id: pyproject-fmt
+        name: pyproject-fmt
+        entry: uv run pyproject-fmt --keep-full-version --skip-wrap-for-keys "*" pyproject.toml
+        language: system
+        pass_filenames: false
+        files: pyproject\.toml$
+        stages: [pre-commit]
+
+      - id: validate-pyproject
+        name: validate-pyproject
+        entry: uv run validate-pyproject pyproject.toml
+        language: system
+        pass_filenames: false
+        files: pyproject\.toml$
+        stages: [pre-commit]
+
+  # =============================================================================
+  # .env file linting
+  # =============================================================================
+  - repo: https://github.com/wemake-services/dotenv-linter
+    rev: 0303ce7caee5b6fd6a22cb4e9836fe8a6503db30 # 0.9.0
+    hooks:
+      # dotenv-linter: Validates .env files for common issues
+      - id: dotenv-linter
+        name: dotenv-linter
+        stages: [pre-commit]
+        exclude: (^|/)\.envrc(\.local)?$
+
+  # =============================================================================
+  # Markdown formatting
+  # =============================================================================
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: 5b5dddc4fb0f83c3ea1fc5616fa63e115dce83e0 # v0.49.1
+    hooks:
+      # markdownlint: Checks for Markdown stylistic and structural violations
+      - id: markdownlint
+        name: markdownlint (general)
+        args: [--fix, --config, .markdownlint.yaml]
+        stages: [pre-commit]
+        exclude: ^(\.agents/|logs/|data/|records/|prompts/|CHANGELOG\.md)
+
+  - repo: local
+    hooks:
+      - id: mdformat
+        name: mdformat
+        entry: uv run mdformat
+        language: system
+        types: [markdown]
+        stages: [pre-commit]
+        exclude: ^(\.agents/|logs/|data/|records/|prompts/|CHANGELOG\.md$)
+
+  - repo: https://github.com/tcort/markdown-link-check
+    rev: 275c27c5035a5b4a656fe0e21a4c1403c118c767 # v3.15.0
+    hooks:
+      # markdown-link-check: Detects broken internal and external links
+      - id: markdown-link-check
+        name: markdown-link-check
+        args: [--quiet, --config, .markdown-link-check.json]
+        stages: [pre-push]
+        exclude: ^\.agents/
+
+  # =============================================================================
+  # General file hygiene
+  # =============================================================================
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c # v6.0.0
+    hooks:
+      # Prevent giant files from being committed
+      - id: check-added-large-files
+        args: [--maxkb=1000]
+        stages: [pre-commit]
+        exclude: ^(tests/[^/]+/(e2e/.*/cassettes/|data/))
+
+      # Check for files that would conflict on case-insensitive filesystems
+      - id: check-case-conflict
+        stages: [pre-commit]
+
+      # Check YAML syntax
+      - id: check-yaml
+        args: [--unsafe] # Allow custom tags and complex inline structures
+        stages: [pre-commit]
+
+      # Check TOML syntax
+      - id: check-toml
+        stages: [pre-commit]
+
+      # Check JSON syntax (exclude JSONC files that allow comments)
+      - id: check-json
+        stages: [pre-commit]
+        exclude: ^(\.vscode/|\.devcontainer/)
+
+      # Ensure files end with a newline
+      - id: end-of-file-fixer
+        stages: [pre-commit]
+        exclude: ^(logs/|data/|records/)
+
+      # Remove trailing whitespace
+      - id: trailing-whitespace
+        stages: [pre-commit]
+        exclude: ^(logs/|data/|records/)|\.feature$
+
+      # Check for merge conflict markers
+      - id: check-merge-conflict
+        stages: [pre-commit]
+
+      # Validate Python AST
+      - id: check-ast
+        stages: [pre-commit]
+        exclude: ^\.agents/
+
+  # =============================================================================
+  # Commitizen - Conventional commit validation (locked via uv)
+  # =============================================================================
+  - repo: local
+    hooks:
+      # cz-commit-msg-verify: Validates commit messages against Conventional Commits
+      - id: commitizen
+        name: commitizen
+        entry: uv run cz check --commit-msg-file
+        language: system
+        stages: [commit-msg]
+
+  # =============================================================================
+  # Dockerfile linting
+  # =============================================================================
+  - repo: https://github.com/shenxianpeng/hadolint-pre-commit
+    rev: 92d73d76174db1f71afbeb1c0d6a8c295d9c0092 # v2.14.0.1
+    hooks:
+      - id: hadolint
+        stages: [pre-commit]
+
+  # =============================================================================
+  # Shell script linting
+  # =============================================================================
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: 745eface02aef23e168a8afb6b5737818efbea95 # v0.11.0.1
+    hooks:
+      - id: shellcheck
+        stages: [pre-commit]
+
+  # =============================================================================
+  # Product behavior verification
+  # =============================================================================
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest (full, randomized, non-slow)
+        entry: uv run pytest
+        language: system
+        types: [python]
+        pass_filenames: false
+        args: [tests, -n, auto, -m, "not slow", -q, --no-cov]
+        files: ^(src/|tests/|examples/)
+        stages: [pre-push]

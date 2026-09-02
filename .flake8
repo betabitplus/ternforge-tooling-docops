@@ -1,0 +1,8 @@
+[flake8]
+max-line-length = 88
+extend-ignore = E203,E501
+max-cognitive-complexity = 15
+class-attributes-order = field,nested_class,magic_method,property_method,static_method,class_method,method
+per-file-ignores =
+    src/**/__init__.py:F401
+    tests/**:CCR,CCE

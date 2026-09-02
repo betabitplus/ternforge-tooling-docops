@@ -1,0 +1,317 @@
+{
+  "$defs": {
+    "type-goal": {"properties": {"type": {"const": "goal"}}},
+    "type-feature": {"properties": {"type": {"const": "feature"}}},
+    "type-req": {"properties": {"type": {"const": "req"}}},
+    "type-treq": {"properties": {"type": {"const": "treq"}}},
+    "type-adr": {"properties": {"type": {"const": "adr"}}},
+    "type-exp": {"properties": {"type": {"const": "exp"}}},
+    "type-impl": {"properties": {"type": {"const": "impl"}}},
+    "type-testcase": {"properties": {"type": {"const": "testcase"}}},
+    "requirement-like": {
+      "properties": {"type": {"enum": ["req", "treq"]}}
+    },
+    "decision-affectable": {
+      "properties": {"type": {"enum": ["feature", "req", "treq", "impl"]}}
+    },
+    "experiment-informed-target": {
+      "properties": {"type": {"enum": ["adr", "req", "treq"]}}
+    }
+  },
+  "schemas": [
+    {
+      "id": "goal-id",
+      "message": "Goal IDs must use the GOAL_ prefix.",
+      "select": {"$ref": "#/$defs/type-goal"},
+      "validate": {"local": {"properties": {"id": {"pattern": "^GOAL_[A-Z0-9_]+$"}}}}
+    },
+    {
+      "id": "feature-id-and-parent",
+      "message": "A feature must have a FEAT_ ID and derive from exactly one goal.",
+      "select": {"$ref": "#/$defs/type-feature"},
+      "validate": {
+        "local": {"properties": {"id": {"pattern": "^FEAT_[A-Z0-9_]+$"}}},
+        "network": {
+          "derives": {
+            "contains": {"local": {"$ref": "#/$defs/type-goal"}},
+            "items": {"local": {"$ref": "#/$defs/type-goal"}},
+            "minContains": 1,
+            "maxContains": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "req-contract",
+      "message": "A requirement must have a REQ_ ID, lifecycle status, revision, required evidence, and exactly one feature parent.",
+      "select": {"$ref": "#/$defs/type-req"},
+      "validate": {
+        "local": {
+          "properties": {
+            "id": {"pattern": "^REQ_[A-Z0-9_]+$"},
+            "status": {"enum": ["draft", "accepted", "deprecated"]},
+            "revision": {},
+            "required_evidence": {"items": {}, "minItems": 1}
+          },
+          "required": ["status", "revision", "required_evidence"]
+        },
+        "network": {
+          "derives": {
+            "contains": {"local": {"$ref": "#/$defs/type-feature"}},
+            "items": {"local": {"$ref": "#/$defs/type-feature"}},
+            "minContains": 1,
+            "maxContains": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "treq-contract",
+      "message": "An engineering constraint must have a TREQ_ ID, lifecycle status, revision, required evidence, and exactly one requirement parent.",
+      "select": {"$ref": "#/$defs/type-treq"},
+      "validate": {
+        "local": {
+          "properties": {
+            "id": {"pattern": "^TREQ_[A-Z0-9_]+$"},
+            "status": {"enum": ["draft", "accepted", "deprecated"]},
+            "revision": {},
+            "required_evidence": {"items": {}, "minItems": 1}
+          },
+          "required": ["status", "revision", "required_evidence"]
+        },
+        "network": {
+          "derives": {
+            "contains": {"local": {"$ref": "#/$defs/type-req"}},
+            "items": {"local": {"$ref": "#/$defs/type-req"}},
+            "minContains": 1,
+            "maxContains": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "adr-contract",
+      "message": "An architecture decision must have an ADR_#### ID, decision lifecycle, decision date, minimal decision record sections, and only valid impact links.",
+      "select": {"$ref": "#/$defs/type-adr"},
+      "validate": {
+        "local": {
+          "properties": {
+            "id": {"pattern": "^ADR_[0-9]{4}$"},
+            "status": {"enum": ["proposed", "accepted", "rejected", "deprecated", "superseded"]},
+            "decision_date": {},
+            "content": {"pattern": "\\*\\*Context\\.\\*\\*[\\s\\S]+\\*\\*Decision\\.\\*\\*[\\s\\S]+\\*\\*Consequences\\.\\*\\*[\\s\\S]+\\*\\*Alternatives considered\\.\\*\\*[\\s\\S]+"},
+            "derives": {"maxItems": 0},
+            "implements": {"maxItems": 0},
+            "verifies": {"maxItems": 0}
+          },
+          "required": ["status", "decision_date", "content"]
+        },
+        "network": {
+          "affects": {"items": {"local": {"$ref": "#/$defs/decision-affectable"}}},
+          "supersedes": {"items": {"local": {"$ref": "#/$defs/type-adr"}}}
+        }
+      }
+    },
+    {
+      "id": "adr-supersedes-contract",
+      "message": "Only an accepted architecture decision may supersede another decision, and every target must already be marked superseded.",
+      "select": {"properties": {"type": {"const": "adr"}, "supersedes": {"items": {}, "minItems": 1}}, "required": ["supersedes"]},
+      "validate": {
+        "local": {"properties": {"status": {"const": "accepted"}}},
+        "network": {"supersedes": {"items": {"local": {"properties": {"type": {"const": "adr"}, "status": {"const": "superseded"}}, "required": ["status"]}}}}
+      }
+    },
+    {
+      "id": "adr-superseded-contract",
+      "message": "A superseded architecture decision must be replaced by exactly one accepted architecture decision.",
+      "select": {"properties": {"type": {"const": "adr"}, "status": {"const": "superseded"}}, "required": ["status"]},
+      "validate": {
+        "network_back": {
+          "supersedes": {
+            "contains": {"local": {"properties": {"type": {"const": "adr"}, "status": {"const": "accepted"}}, "required": ["status"]}},
+            "items": {"local": {"$ref": "#/$defs/type-adr"}},
+            "minContains": 1,
+            "maxContains": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "affects-source-contract",
+      "message": "The affects relation is reserved for architecture decisions.",
+      "select": {"properties": {"affects": {"items": {}, "minItems": 1}}, "required": ["affects"]},
+      "validate": {"local": {"properties": {"type": {"const": "adr"}}}}
+    },
+    {
+      "id": "supersedes-source-contract",
+      "message": "The supersedes relation is reserved for architecture decisions.",
+      "select": {"properties": {"supersedes": {"items": {}, "minItems": 1}}, "required": ["supersedes"]},
+      "validate": {"local": {"properties": {"type": {"const": "adr"}}}}
+    },
+    {
+      "id": "experiment-contract",
+      "message": "An engineering experiment must have an EXP_#### ID, date, question/conclusion summary, and only valid informed targets.",
+      "select": {"$ref": "#/$defs/type-exp"},
+      "validate": {
+        "local": {
+          "properties": {
+            "id": {"pattern": "^EXP_[0-9]{4}$"},
+            "experiment_date": {},
+            "content": {"pattern": "\\*\\*Question\\.\\*\\*[\\s\\S]+\\*\\*Conclusion\\.\\*\\*[\\s\\S]+"},
+            "derives": {"maxItems": 0},
+            "implements": {"maxItems": 0},
+            "verifies": {"maxItems": 0},
+            "affects": {"maxItems": 0},
+            "supersedes": {"maxItems": 0}
+          },
+          "required": ["experiment_date", "content"]
+        },
+        "network": {
+          "informs": {"items": {"local": {"$ref": "#/$defs/experiment-informed-target"}}}
+        }
+      }
+    },
+    {
+      "id": "informs-source-contract",
+      "message": "The informs relation is reserved for engineering experiments.",
+      "select": {"properties": {"informs": {"items": {}, "minItems": 1}}, "required": ["informs"]},
+      "validate": {"local": {"properties": {"type": {"const": "exp"}}}}
+    },
+    {
+      "id": "impl-contract",
+      "message": "Implementation evidence must come from source code and implement at least one requirement.",
+      "select": {"$ref": "#/$defs/type-impl"},
+      "validate": {
+        "local": {
+          "properties": {
+            "id": {"pattern": "^IMPL_[A-Z0-9_]+$"},
+            "source_url": {"type": "string", "minLength": 1}
+          },
+          "required": ["source_url"]
+        },
+        "network": {
+          "implements": {
+            "contains": {"local": {"$ref": "#/$defs/requirement-like"}},
+            "items": {"local": {"$ref": "#/$defs/requirement-like"}},
+            "minContains": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "traced-testcase-contract",
+      "message": "Traced verification evidence must pass and verify at least one requirement.",
+      "select": {
+        "properties": {
+          "type": {"const": "testcase"},
+          "verification_kind": {"enum": ["bdd", "unit", "property", "integration", "e2e"]}
+        },
+        "required": ["verification_kind"]
+      },
+      "validate": {
+        "local": {
+          "properties": {"result": {"const": "passed"}},
+          "required": ["result"]
+        },
+        "network": {
+          "verifies": {
+            "contains": {"local": {"$ref": "#/$defs/requirement-like"}},
+            "items": {"local": {"$ref": "#/$defs/requirement-like"}},
+            "minContains": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "requested-impl",
+      "message": "A requirement requesting implementation evidence must have implementation coverage.",
+      "select": {
+        "properties": {
+          "type": {"enum": ["req", "treq"]},
+          "required_evidence": {"items": {}, "contains": {"const": "impl"}}
+        },
+        "required": ["required_evidence"]
+      },
+      "validate": {
+        "network_back": {
+          "implements": {
+            "contains": {"local": {"$ref": "#/$defs/type-impl"}},
+            "minContains": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "unwanted-impl",
+      "message": "Implementation evidence may only target requirements that request implementation coverage.",
+      "select": {"$ref": "#/$defs/type-impl"},
+      "validate": {
+        "network": {
+          "implements": {
+            "items": {"local": {"properties": {"required_evidence": {"items": {}, "contains": {"const": "impl"}}}}}
+          }
+        }
+      }
+    },
+    {
+      "id": "requested-bdd",
+      "message": "A requirement requesting BDD evidence must have BDD coverage.",
+      "select": {"properties": {"type": {"enum": ["req", "treq"]}, "required_evidence": {"items": {}, "contains": {"const": "bdd"}}}, "required": ["required_evidence"]},
+      "validate": {"network_back": {"verifies": {"contains": {"local": {"properties": {"type": {"const": "testcase"}, "verification_kind": {"const": "bdd"}}, "required": ["verification_kind"]}}, "minContains": 1}}}
+    },
+    {
+      "id": "requested-unit",
+      "message": "A requirement requesting unit evidence must have unit coverage.",
+      "select": {"properties": {"type": {"enum": ["req", "treq"]}, "required_evidence": {"items": {}, "contains": {"const": "unit"}}}, "required": ["required_evidence"]},
+      "validate": {"network_back": {"verifies": {"contains": {"local": {"properties": {"type": {"const": "testcase"}, "verification_kind": {"const": "unit"}}, "required": ["verification_kind"]}}, "minContains": 1}}}
+    },
+    {
+      "id": "requested-property",
+      "message": "A requirement requesting property evidence must have property coverage.",
+      "select": {"properties": {"type": {"enum": ["req", "treq"]}, "required_evidence": {"items": {}, "contains": {"const": "property"}}}, "required": ["required_evidence"]},
+      "validate": {"network_back": {"verifies": {"contains": {"local": {"properties": {"type": {"const": "testcase"}, "verification_kind": {"const": "property"}}, "required": ["verification_kind"]}}, "minContains": 1}}}
+    },
+    {
+      "id": "requested-integration",
+      "message": "A requirement requesting integration evidence must have integration coverage.",
+      "select": {"properties": {"type": {"enum": ["req", "treq"]}, "required_evidence": {"items": {}, "contains": {"const": "integration"}}}, "required": ["required_evidence"]},
+      "validate": {"network_back": {"verifies": {"contains": {"local": {"properties": {"type": {"const": "testcase"}, "verification_kind": {"const": "integration"}}, "required": ["verification_kind"]}}, "minContains": 1}}}
+    },
+    {
+      "id": "requested-e2e",
+      "message": "A requirement requesting E2E evidence must have E2E coverage.",
+      "select": {"properties": {"type": {"enum": ["req", "treq"]}, "required_evidence": {"items": {}, "contains": {"const": "e2e"}}}, "required": ["required_evidence"]},
+      "validate": {"network_back": {"verifies": {"contains": {"local": {"properties": {"type": {"const": "testcase"}, "verification_kind": {"const": "e2e"}}, "required": ["verification_kind"]}}, "minContains": 1}}}
+    },
+    {
+      "id": "unwanted-bdd",
+      "message": "BDD evidence may only verify requirements that request BDD coverage.",
+      "select": {"properties": {"type": {"const": "testcase"}, "verification_kind": {"const": "bdd"}}, "required": ["verification_kind"]},
+      "validate": {"network": {"verifies": {"items": {"local": {"properties": {"required_evidence": {"items": {}, "contains": {"const": "bdd"}}}}}}}}
+    },
+    {
+      "id": "unwanted-unit",
+      "message": "Unit evidence may only verify requirements that request unit coverage.",
+      "select": {"properties": {"type": {"const": "testcase"}, "verification_kind": {"const": "unit"}}, "required": ["verification_kind"]},
+      "validate": {"network": {"verifies": {"items": {"local": {"properties": {"required_evidence": {"items": {}, "contains": {"const": "unit"}}}}}}}}
+    },
+    {
+      "id": "unwanted-property",
+      "message": "Property evidence may only verify requirements that request property coverage.",
+      "select": {"properties": {"type": {"const": "testcase"}, "verification_kind": {"const": "property"}}, "required": ["verification_kind"]},
+      "validate": {"network": {"verifies": {"items": {"local": {"properties": {"required_evidence": {"items": {}, "contains": {"const": "property"}}}}}}}}
+    },
+    {
+      "id": "unwanted-integration",
+      "message": "Integration evidence may only verify requirements that request integration coverage.",
+      "select": {"properties": {"type": {"const": "testcase"}, "verification_kind": {"const": "integration"}}, "required": ["verification_kind"]},
+      "validate": {"network": {"verifies": {"items": {"local": {"properties": {"required_evidence": {"items": {}, "contains": {"const": "integration"}}}}}}}}
+    },
+    {
+      "id": "unwanted-e2e",
+      "message": "E2E evidence may only verify requirements that request E2E coverage.",
+      "select": {"properties": {"type": {"const": "testcase"}, "verification_kind": {"const": "e2e"}}, "required": ["verification_kind"]},
+      "validate": {"network": {"verifies": {"items": {"local": {"properties": {"required_evidence": {"items": {}, "contains": {"const": "e2e"}}}}}}}}
+    }
+  ]
+}

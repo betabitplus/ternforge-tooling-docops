@@ -1,0 +1,21 @@
+{
+    "recommendations": [
+        "ms-python.python",
+        "mkhl.direnv",
+        "ms-python.vscode-pylance",
+        "ms-toolsai.jupyter",
+        "ms-toolsai.jupyter-keymap",
+        "ms-toolsai.jupyter-renderers",
+        "charliermarsh.ruff",
+        "GitHub.copilot",
+        "GitHub.copilot-chat",
+        "eamodio.gitlens",
+        "redhat.vscode-yaml",
+        "tamasfe.even-better-toml",
+        "chendm.repomix",
+        "DavidAnson.vscode-markdownlint",
+        "tekumara.typos-vscode",
+        "ChinmaySingh.gherkin-lens",
+        "useblocks.ubcode"
+    ]
+}
