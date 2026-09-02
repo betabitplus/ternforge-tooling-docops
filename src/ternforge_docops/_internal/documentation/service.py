@@ -41,6 +41,36 @@ def build_html(
     return output_root
 
 
+def build_dossier(
+    root: Path,
+    *,
+    docs: Path | None = None,
+    output: Path | None = None,
+) -> Path:
+    """Build the release dossier through the upstream SimplePDF Sphinx builder."""
+    docs_root = docs or root / "docs"
+    output_root = output or docs_root / "_build" / "dossier"
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "sphinx",
+            "-E",
+            "-W",
+            "--keep-going",
+            "-D",
+            "plot_gallery=0",
+            "-b",
+            "simplepdf",
+            str(docs_root),
+            str(output_root),
+        ],
+        cwd=root,
+        check=True,
+    )
+    return output_root / "release-dossier.pdf"
+
+
 def build_portal(
     root: Path,
     *,

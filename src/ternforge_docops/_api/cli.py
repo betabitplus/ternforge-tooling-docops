@@ -6,6 +6,7 @@ import argparse
 from pathlib import Path
 
 from ternforge_docops._internal import (
+    build_dossier,
     build_html,
     build_portal,
     capture_experiment,
@@ -36,6 +37,10 @@ def _parser() -> argparse.ArgumentParser:
     )
     build_commands = build.add_subparsers(dest="build_action", required=True)
     build_commands.add_parser("html", help="Build strict HTML documentation.")
+    build_commands.add_parser(
+        "dossier",
+        help="Build the release dossier with the upstream SimplePDF builder.",
+    )
     portal = build_commands.add_parser(
         "portal",
         help="Build strict HTML plus Allure test-result perspectives.",
@@ -114,6 +119,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "build":
         if args.build_action == "html":
             output = build_html(root)
+        elif args.build_action == "dossier":
+            output = build_dossier(root)
         else:
             output = build_portal(
                 root,

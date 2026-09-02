@@ -13,6 +13,7 @@ from ternforge_docops._internal.config import (
     install_config as install_config,
 )
 from ternforge_docops._internal.documentation import (
+    build_dossier as build_dossier,
     build_html as build_html,
     build_portal as build_portal,
 )

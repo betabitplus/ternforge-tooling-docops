@@ -35,6 +35,33 @@ def test_build_html_runs_only_sphinx(
     assert "pytest" not in command
 
 
+def test_build_dossier_delegates_to_simplepdf(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """PDF generation remains an upstream Sphinx builder responsibility."""
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    output = tmp_path / "dossier"
+    commands: list[list[str]] = []
+
+    def fake_run(command: list[str], *, cwd: Path, check: bool) -> None:
+        assert cwd == tmp_path
+        assert check is True
+        commands.append(command)
+
+    monkeypatch.setattr(service.subprocess, "run", fake_run)
+
+    result = service.build_dossier(tmp_path, docs=docs, output=output)
+
+    assert result == output / "release-dossier.pdf"
+    assert len(commands) == 1
+    command = commands[0]
+    assert command[1:3] == ["-m", "sphinx"]
+    assert command[command.index("-b") + 1] == "simplepdf"
+    assert "pytest" not in command
+
+
 def test_build_portal_publishes_generated_allure_views(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
