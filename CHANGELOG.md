@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.2](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.2.1...v0.2.2) (2026-09-03)
+
+
+### Bug Fixes
+
+* support rich mounted experiment outputs ([#8](https://github.com/betabitplus/ternforge-tooling-docops/issues/8)) ([8932425](https://github.com/betabitplus/ternforge-tooling-docops/commit/893242556d757badbc068ae660780f52e335292c))
+
 ## [0.2.1](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.2.0...v0.2.1) (2026-09-03)
 
 
