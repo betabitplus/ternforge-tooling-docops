@@ -51,6 +51,7 @@ def _configure_python(app: Sphinx, config: Config) -> None:
         "backreferences_dir": "generated/backreferences",
         "doc_module": (package,),
         "reference_url": {package: None},
+        "copyfile_regex": r".*\.(?:png|pdf|mp4)$",
         "junit": "../test-results/sphinx-gallery/junit.xml",
         "remove_config_comments": True,
     }

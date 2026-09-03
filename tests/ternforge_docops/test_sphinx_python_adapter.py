@@ -25,6 +25,7 @@ def test_python_adapter_discovers_conventional_package(tmp_path: Path) -> None:
         '"""Example\n=======\n"""\n\nvalue = 1\n',
         encoding="utf-8",
     )
+    (examples / "fixture.png").write_bytes(b"retained media")
     (tmp_path / "ubproject.toml").write_text(
         """[codelinks.projects.python.source_discover]
 src_dir = "src"
@@ -88,3 +89,4 @@ default = "impl"
     )
 
     assert (tmp_path / "html" / "auto_examples" / "index.html").is_file()
+    assert (docs / "auto_examples" / "fixture.png").read_bytes() == b"retained media"
