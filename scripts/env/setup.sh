@@ -13,3 +13,5 @@ uv sync --locked --all-groups
 uv run pre-commit install
 printf '%s
 ' "Setup complete. Locked dependencies and configured hook stages are installed."
+printf '%s\n' "Synchronizing Ternforge DocOps authoring resources..."
+uv run ternforge-docops sync
