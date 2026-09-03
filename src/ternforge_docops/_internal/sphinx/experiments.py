@@ -25,9 +25,12 @@ def configure_experiment_mounts(app: Sphinx, config: Config) -> None:
             {
                 "files": [str(report)],
                 "mount_at": f"experiments/_generated/{capsule.name}",
+                # MyST-NB materializes rich MIME outputs in the host build tree;
+                # they are generated renderer resources, not source-path escapes.
+                "path_check": "off",
             }
         )
-    config.mounts_from_toml = None
+    config.sources_from_toml = None
     config.mounts = mounts
 
 
