@@ -126,6 +126,10 @@ def test_sphinx_extension_mounts_experiment_reports_in_place(tmp_path: Path) -> 
                     nbformat.v4.new_output(
                         "display_data",
                         data={
+                            "image/png": (
+                                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lE"
+                                "QVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+                            ),
                             "text/html": '<a href="inputs/probe.txt">probe</a>',
                             "text/plain": "probe",
                         },
