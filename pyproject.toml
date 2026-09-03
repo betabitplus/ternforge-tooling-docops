@@ -10,7 +10,7 @@ requires = [ "setuptools>=82.0.1" ]
 # ==============================================================================
 [project]
 name = "ternforge-docops"
-version = "0.2.0"
+version = "0.2.1"
 description = "Language-agnostic documentation operations tooling for Ternforge repositories."
 readme = "README.md"
 keywords = [ "library", "python" ]

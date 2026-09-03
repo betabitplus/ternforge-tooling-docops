@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.1](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.2.0...v0.2.1) (2026-09-03)
+
+
+### Bug Fixes
+
+* complete shared Sphinx defaults ([#4](https://github.com/betabitplus/ternforge-tooling-docops/issues/4)) ([f99d557](https://github.com/betabitplus/ternforge-tooling-docops/commit/f99d5578ef703e3b62c6dc711f5055746bbf2e14))
+
 ## [0.2.0](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.1.0...v0.2.0) (2026-09-02)
 
 
