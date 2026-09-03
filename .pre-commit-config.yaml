@@ -119,6 +119,14 @@ repos:
         files: (pyproject\.toml|uv\.lock)$
         stages: [pre-commit]
 
+      - id: docops-resources
+        name: Ternforge DocOps resources
+        entry: uv run ternforge-docops check
+        language: system
+        pass_filenames: false
+        files: (^\.ternforge/docops/|^pyproject\.toml$|^uv\.lock$)
+        stages: [pre-commit]
+
       - id: uv-sync-post-checkout
         name: uv sync after checkout (if deps changed)
         entry: bash -c 'if git diff --name-only "$PRE_COMMIT_FROM_REF" "$PRE_COMMIT_TO_REF" 2>/dev/null | grep -qE "pyproject.toml|uv.lock"; then uv sync --locked --all-groups; fi'
@@ -364,7 +372,7 @@ repos:
       - id: check-added-large-files
         args: [--maxkb=1000]
         stages: [pre-commit]
-        exclude: ^(tests/[^/]+/(e2e/.*/cassettes/|data/))
+        exclude: ^(tests/[^/]+/(e2e/.*/cassettes/|data/)|experiments/[^/]+/exp_[^/]+/inputs/)
 
       # Check for files that would conflict on case-insensitive filesystems
       - id: check-case-conflict
