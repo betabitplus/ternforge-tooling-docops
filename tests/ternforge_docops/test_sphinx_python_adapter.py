@@ -6,8 +6,25 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+from types import SimpleNamespace
+from typing import Any, cast
 
 from ternforge_docops._api import sphinx_python
+
+
+def test_llm_markdown_child_does_not_adopt_parent_source_trace(tmp_path: Path) -> None:
+    """A sphinx-llm child build must not delete its parent's transient source."""
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    target = docs / sphinx_python._SOURCE_TRACE_NAME
+    target.write_text(sphinx_python._SOURCE_TRACE, encoding="utf-8")
+    tags = SimpleNamespace(has=lambda name: name == "sphinx_llm_markdown")
+    app = SimpleNamespace(confdir=str(docs), tags=tags)
+
+    sphinx_python._materialize_source_trace(cast("Any", app), cast("Any", None))
+    sphinx_python._cleanup_source_trace(cast("Any", app), None)
+
+    assert target.read_text(encoding="utf-8") == sphinx_python._SOURCE_TRACE
 
 
 def test_python_adapter_discovers_conventional_package(tmp_path: Path) -> None:
