@@ -30,6 +30,8 @@ def _run_sphinx(
     arguments = ["-E", "-W", "--keep-going"]
     if not live_examples:
         arguments.extend(("-D", "plot_gallery=0"))
+    if builder == "simplepdf":
+        arguments.extend(("-D", "llms_txt_enabled=0"))
     arguments.extend(("-b", builder, str(docs_root), str(output_root)))
     with chdir(root):
         exit_code = build_main(arguments)

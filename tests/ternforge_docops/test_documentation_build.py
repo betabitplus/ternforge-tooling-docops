@@ -77,6 +77,8 @@ def test_build_dossier_delegates_to_simplepdf(
     assert len(commands) == 1
     command = commands[0]
     assert command[command.index("-b") + 1] == "simplepdf"
+    assert "plot_gallery=0" in command
+    assert "llms_txt_enabled=0" in command
     assert "pytest" not in command
 
 
