@@ -11,6 +11,17 @@ if TYPE_CHECKING:
     from sphinx.application import Sphinx
     from sphinx.config import Config
 
+_SOURCE_TRACE_NAME = "ternforge-python-source-trace.rst"
+_SOURCE_TRACE = """:orphan:
+
+Python implementation source ingestion
+=======================================
+
+.. src-trace::
+   :project: python
+"""
+_OWNED_SOURCE_TRACE_APPS: set[int] = set()
+
 _PYTHON_EXTENSIONS = (
     "sphinx_codelinks",
     "sphinx.ext.autodoc",
@@ -65,6 +76,28 @@ def _configure_source_links(config: Config) -> None:
     config.needs_string_links = links
 
 
+def _materialize_source_trace(app: Sphinx, config: Config) -> None:
+    """Create the Python adapter's transient source-trace ingestion page."""
+    del config
+    target = Path(app.confdir) / _SOURCE_TRACE_NAME
+    if target.exists():
+        if target.read_text(encoding="utf-8") != _SOURCE_TRACE:
+            message = f"DocOps reserved source-trace path already exists: {target}"
+            raise RuntimeError(message)
+        return
+    target.write_text(_SOURCE_TRACE, encoding="utf-8")
+    _OWNED_SOURCE_TRACE_APPS.add(id(app))
+
+
+def _cleanup_source_trace(app: Sphinx, exception: Exception | None) -> None:
+    """Remove the adapter-owned transient source-trace page after the build."""
+    del exception
+    if id(app) not in _OWNED_SOURCE_TRACE_APPS:
+        return
+    (Path(app.confdir) / _SOURCE_TRACE_NAME).unlink(missing_ok=True)
+    _OWNED_SOURCE_TRACE_APPS.discard(id(app))
+
+
 def _configure_python(app: Sphinx, config: Config) -> None:
     """Apply conventional Python-project documentation defaults."""
     if config.src_trace_config_from_toml is None:
@@ -98,6 +131,8 @@ def setup(app: Sphinx) -> dict[str, Any]:
     for extension in _PYTHON_EXTENSIONS:
         app.setup_extension(extension)
     app.connect("config-inited", _configure_python, priority=5)
+    app.connect("config-inited", _materialize_source_trace, priority=10)
+    app.connect("build-finished", _cleanup_source_trace)
     return {
         "version": "1",
         "parallel_read_safe": True,
