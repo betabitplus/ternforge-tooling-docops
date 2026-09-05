@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.2](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.4.1...v0.4.2) (2026-09-05)
+
+
+### Bug Fixes
+
+* recover interrupted DocOps materialization ([#19](https://github.com/betabitplus/ternforge-tooling-docops/issues/19)) ([cde9205](https://github.com/betabitplus/ternforge-tooling-docops/commit/cde920550d0c90dd8de94ad614bcdc7a18d78c68))
+
 ## [0.4.1](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.4.0...v0.4.1) (2026-09-05)
 
 
