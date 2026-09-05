@@ -199,3 +199,73 @@ def test_build_preserves_consumer_override_of_shared_view(
     service.build_html(tmp_path, docs=docs)
 
     assert override.read_text() == "project-specific"
+
+
+def test_build_recovers_transient_sources_left_by_interrupted_build(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A later build adopts and cleans exact DocOps transient materialization."""
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    shared = service.shared_docs_dir_path()
+    for name in ("traceability.rst", "verification.rst", "tests.rst"):
+        (docs / name).write_bytes((shared / name).read_bytes())
+
+    trace_dir = docs / "_traceability"
+    trace_dir.mkdir()
+    (docs / "ternforge-test-evidence.rst").write_text(
+        service._EVIDENCE_SOURCE_TEXT,
+        encoding="utf-8",
+    )
+    (trace_dir / "ternforge-test-evidence.xml").write_text(
+        "<testsuites stale='true'/>",
+        encoding="utf-8",
+    )
+    junit = tmp_path / "pytest-junit.xml"
+    junit.write_text("<testsuites fresh='true'/>", encoding="utf-8")
+
+    def fake_build_main(arguments: list[str]) -> int:
+        del arguments
+        imported = trace_dir / "ternforge-test-evidence.xml"
+        assert imported.read_text() == "<testsuites fresh='true'/>"
+        return 0
+
+    monkeypatch.setattr(service, "build_main", fake_build_main)
+
+    service.build_html(tmp_path, docs=docs, junit=junit)
+
+    for name in ("traceability.rst", "verification.rst", "tests.rst"):
+        assert not (docs / name).exists()
+    assert not (docs / "ternforge-test-evidence.rst").exists()
+    assert not (trace_dir / "ternforge-test-evidence.xml").exists()
+
+
+def test_build_without_junit_discards_stale_reserved_evidence(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Offline builds cannot accidentally import JUnit left by an interrupted run."""
+    docs = tmp_path / "docs"
+    trace_dir = docs / "_traceability"
+    trace_dir.mkdir(parents=True)
+    (docs / "ternforge-test-evidence.rst").write_text(
+        service._EVIDENCE_SOURCE_TEXT,
+        encoding="utf-8",
+    )
+    (trace_dir / "ternforge-test-evidence.xml").write_text(
+        "<testsuites stale='true'/>",
+        encoding="utf-8",
+    )
+
+    def fake_build_main(arguments: list[str]) -> int:
+        del arguments
+        assert not (docs / "ternforge-test-evidence.rst").exists()
+        assert not (trace_dir / "ternforge-test-evidence.xml").exists()
+        return 0
+
+    monkeypatch.setattr(service, "build_main", fake_build_main)
+
+    service.build_html(tmp_path, docs=docs)
+
+    assert not trace_dir.exists()
