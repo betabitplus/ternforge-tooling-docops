@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.1](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.4.0...v0.4.1) (2026-09-05)
+
+
+### Bug Fixes
+
+* preserve dossier build contract ([#16](https://github.com/betabitplus/ternforge-tooling-docops/issues/16)) ([e82e9db](https://github.com/betabitplus/ternforge-tooling-docops/commit/e82e9dbd14e23364149b899da12158064890424f))
+
 ## [0.4.0](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.3.1...v0.4.0) (2026-09-05)
 
 
