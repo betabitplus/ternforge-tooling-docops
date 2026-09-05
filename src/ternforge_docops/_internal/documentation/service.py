@@ -4,12 +4,18 @@ from __future__ import annotations
 
 import shutil
 import tempfile
-from contextlib import chdir
+from collections.abc import Generator
+from contextlib import chdir, contextmanager, suppress
 from pathlib import Path
 
 from sphinx.cmd.build import build_main
 
 from ternforge_docops._internal.allure import curate_results, generate_reports
+from ternforge_docops._internal.resources import shared_docs_dir_path
+
+_EVIDENCE_SOURCE = "ternforge-test-evidence.rst"
+_EVIDENCE_DIR = "_traceability"
+_EVIDENCE_XML = "ternforge-test-evidence.xml"
 
 
 def _run_sphinx(root: Path, docs_root: Path, output_root: Path, builder: str) -> None:
@@ -32,16 +38,71 @@ def _run_sphinx(root: Path, docs_root: Path, output_root: Path, builder: str) ->
         raise RuntimeError(message)
 
 
+@contextmanager
+def _materialized_sources(docs_root: Path, junit: Path | None) -> Generator[None]:
+    """Materialize package-owned views and optional JUnit only for one build."""
+    generated: list[Path] = []
+    docs_root.mkdir(parents=True, exist_ok=True)
+
+    for source in shared_docs_dir_path().glob("*.rst"):
+        target = docs_root / source.name
+        if target.exists():
+            continue
+        target.write_bytes(source.read_bytes())
+        generated.append(target)
+
+    trace_dir: Path | None = None
+    if junit is not None:
+        junit = junit.resolve()
+        if not junit.is_file():
+            message = f"JUnit evidence does not exist: {junit}"
+            raise FileNotFoundError(message)
+        source = docs_root / _EVIDENCE_SOURCE
+        trace_dir = docs_root / _EVIDENCE_DIR
+        target = trace_dir / _EVIDENCE_XML
+        if source.exists() or target.exists():
+            message = (
+                "DocOps build-reserved evidence paths already exist: "
+                f"{source} or {target}"
+            )
+            raise RuntimeError(message)
+        trace_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(junit, target)
+        source.write_text(
+            ":orphan:\n\n"
+            "Test evidence\n"
+            "=============\n\n"
+            ".. test-file:: Imported test evidence\n"
+            "   :id: TEST_EVIDENCE\n"
+            f"   :file: {_EVIDENCE_DIR}/{_EVIDENCE_XML}\n"
+            "   :auto_suites:\n"
+            "   :auto_cases:\n",
+            encoding="utf-8",
+        )
+        generated.extend((source, target))
+
+    try:
+        yield
+    finally:
+        for path in reversed(generated):
+            path.unlink(missing_ok=True)
+        if trace_dir is not None:
+            with suppress(OSError):
+                trace_dir.rmdir()
+
+
 def build_html(
     root: Path,
     *,
     docs: Path | None = None,
     output: Path | None = None,
+    junit: Path | None = None,
 ) -> Path:
     """Build strict HTML documentation without executing project tests."""
     docs_root = docs or root / "docs"
     output_root = output or docs_root / "_build" / "html"
-    _run_sphinx(root, docs_root, output_root, "html")
+    with _materialized_sources(docs_root, junit):
+        _run_sphinx(root, docs_root, output_root, "html")
     return output_root
 
 
@@ -50,11 +111,13 @@ def build_dossier(
     *,
     docs: Path | None = None,
     output: Path | None = None,
+    junit: Path | None = None,
 ) -> Path:
     """Build the release dossier through the upstream SimplePDF Sphinx builder."""
     docs_root = docs or root / "docs"
     output_root = output or docs_root / "_build" / "dossier"
-    _run_sphinx(root, docs_root, output_root, "simplepdf")
+    with _materialized_sources(docs_root, junit):
+        _run_sphinx(root, docs_root, output_root, "simplepdf")
     return output_root / "release-dossier.pdf"
 
 
@@ -64,9 +127,10 @@ def build_portal(
     allure_results: Path,
     docs: Path | None = None,
     output: Path | None = None,
+    junit: Path | None = None,
 ) -> Path:
     """Build docs plus Allure perspectives from pre-existing evidence inputs."""
-    output_root = build_html(root, docs=docs, output=output)
+    output_root = build_html(root, docs=docs, output=output, junit=junit)
     needs_json = output_root / "needs.json"
     if not needs_json.is_file():
         message = f"Sphinx build did not produce {needs_json}"

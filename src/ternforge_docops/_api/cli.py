@@ -36,15 +36,29 @@ def _parser() -> argparse.ArgumentParser:
         help="Build documentation presentation from pre-existing evidence.",
     )
     build_commands = build.add_subparsers(dest="build_action", required=True)
-    build_commands.add_parser("html", help="Build strict HTML documentation.")
-    build_commands.add_parser(
+    html = build_commands.add_parser("html", help="Build strict HTML documentation.")
+    html.add_argument(
+        "--junit", type=Path, help="Pre-generated JUnit evidence to import."
+    )
+    html.add_argument("--output", type=Path, help="Output directory for rendered HTML.")
+    dossier = build_commands.add_parser(
         "dossier",
         help="Build the release dossier with the upstream SimplePDF builder.",
+    )
+    dossier.add_argument(
+        "--junit", type=Path, help="Pre-generated JUnit evidence to import."
+    )
+    dossier.add_argument(
+        "--output", type=Path, help="Output directory for dossier build files."
     )
     portal = build_commands.add_parser(
         "portal",
         help="Build strict HTML plus Allure test-result perspectives.",
     )
+    portal.add_argument(
+        "--junit", type=Path, help="Pre-generated JUnit evidence to import."
+    )
+    portal.add_argument("--output", type=Path, help="Output directory for the portal.")
     portal.add_argument(
         "--allure-results",
         type=Path,
@@ -120,14 +134,18 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "check":
         return _check_resources(root)
     if args.command == "build":
+        junit = args.junit.resolve() if args.junit is not None else None
+        build_output = args.output.resolve() if args.output is not None else None
         if args.build_action == "html":
-            output = build_html(root)
+            output = build_html(root, junit=junit, output=build_output)
         elif args.build_action == "dossier":
-            output = build_dossier(root)
+            output = build_dossier(root, junit=junit, output=build_output)
         else:
             output = build_portal(
                 root,
                 allure_results=args.allure_results.resolve(),
+                junit=junit,
+                output=build_output,
             )
         print(output)
         return 0
