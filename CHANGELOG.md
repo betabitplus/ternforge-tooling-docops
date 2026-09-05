@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.1](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.3.0...v0.3.1) (2026-09-05)
+
+
+### Bug Fixes
+
+* restore Python source trace ingestion ([#12](https://github.com/betabitplus/ternforge-tooling-docops/issues/12)) ([8c129b1](https://github.com/betabitplus/ternforge-tooling-docops/commit/8c129b1798eab09acb68444fb07cb585a9f6b5ef))
+
 ## [0.3.0](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.2.2...v0.3.0) (2026-09-05)
 
 
