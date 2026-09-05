@@ -18,19 +18,19 @@ _EVIDENCE_DIR = "_traceability"
 _EVIDENCE_XML = "ternforge-test-evidence.xml"
 
 
-def _run_sphinx(root: Path, docs_root: Path, output_root: Path, builder: str) -> None:
+def _run_sphinx(
+    root: Path,
+    docs_root: Path,
+    output_root: Path,
+    builder: str,
+    *,
+    live_examples: bool = False,
+) -> None:
     """Run one strict Sphinx builder in the repository context."""
-    arguments = [
-        "-E",
-        "-W",
-        "--keep-going",
-        "-D",
-        "plot_gallery=0",
-        "-b",
-        builder,
-        str(docs_root),
-        str(output_root),
-    ]
+    arguments = ["-E", "-W", "--keep-going"]
+    if not live_examples:
+        arguments.extend(("-D", "plot_gallery=0"))
+    arguments.extend(("-b", builder, str(docs_root), str(output_root)))
     with chdir(root):
         exit_code = build_main(arguments)
     if exit_code:
@@ -97,12 +97,19 @@ def build_html(
     docs: Path | None = None,
     output: Path | None = None,
     junit: Path | None = None,
+    live_examples: bool = False,
 ) -> Path:
     """Build strict HTML documentation without executing project tests."""
     docs_root = docs or root / "docs"
     output_root = output or docs_root / "_build" / "html"
     with _materialized_sources(docs_root, junit):
-        _run_sphinx(root, docs_root, output_root, "html")
+        _run_sphinx(
+            root,
+            docs_root,
+            output_root,
+            "html",
+            live_examples=live_examples,
+        )
     return output_root
 
 
@@ -125,12 +132,17 @@ def build_portal(
     root: Path,
     *,
     allure_results: Path,
-    docs: Path | None = None,
     output: Path | None = None,
     junit: Path | None = None,
+    live_examples: bool = False,
 ) -> Path:
     """Build docs plus Allure perspectives from pre-existing evidence inputs."""
-    output_root = build_html(root, docs=docs, output=output, junit=junit)
+    output_root = build_html(
+        root,
+        output=output,
+        junit=junit,
+        live_examples=live_examples,
+    )
     needs_json = output_root / "needs.json"
     if not needs_json.is_file():
         message = f"Sphinx build did not produce {needs_json}"
