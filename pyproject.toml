@@ -115,6 +115,7 @@ packages.find.include = [ "*" ]
 # ==============================================================================
 package-dir."" = "src"
 package-data.ternforge_docops = [
+  "_internal/resources/docs/*.rst",
   "_internal/resources/graph/*.json",
   "_internal/resources/graph/*.toml",
   "_internal/resources/static/*.css",

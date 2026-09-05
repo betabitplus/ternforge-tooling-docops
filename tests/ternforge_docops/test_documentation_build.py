@@ -78,8 +78,9 @@ def test_build_portal_publishes_generated_allure_views(
         *,
         docs: Path | None = None,
         output: Path | None = None,
+        junit: Path | None = None,
     ) -> Path:
-        del root, docs, output
+        del root, docs, output, junit
         calls.append("html")
         return tmp_path / "site"
 
@@ -127,3 +128,51 @@ def test_build_portal_publishes_generated_allure_views(
     )
     assert (output / "test-results" / "all" / "index.html").read_text() == "all"
     assert (output / "test-results" / "index.html").read_text() == "requirements"
+
+
+def test_build_materializes_shared_views_and_junit_only_for_build(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Generic views and JUnit ingestion are owned and cleaned up by DocOps."""
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    junit = tmp_path / "pytest-junit.xml"
+    junit.write_text("<testsuites/>", encoding="utf-8")
+
+    def fake_build_main(arguments: list[str]) -> int:
+        del arguments
+        assert (docs / "traceability.rst").is_file()
+        assert (docs / "verification.rst").is_file()
+        assert (docs / "tests.rst").is_file()
+        evidence = docs / "ternforge-test-evidence.rst"
+        imported = docs / "_traceability" / "ternforge-test-evidence.xml"
+        assert ".. test-file:: Imported test evidence" in evidence.read_text()
+        assert imported.read_text() == "<testsuites/>"
+        return 0
+
+    monkeypatch.setattr(service, "build_main", fake_build_main)
+
+    service.build_html(tmp_path, docs=docs, junit=junit)
+
+    assert not (docs / "traceability.rst").exists()
+    assert not (docs / "verification.rst").exists()
+    assert not (docs / "tests.rst").exists()
+    assert not (docs / "ternforge-test-evidence.rst").exists()
+    assert not (docs / "_traceability" / "ternforge-test-evidence.xml").exists()
+
+
+def test_build_preserves_consumer_override_of_shared_view(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A project-specific page may override a package-owned default."""
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    override = docs / "traceability.rst"
+    override.write_text("project-specific", encoding="utf-8")
+    monkeypatch.setattr(service, "build_main", lambda arguments: 0)
+
+    service.build_html(tmp_path, docs=docs)
+
+    assert override.read_text() == "project-specific"

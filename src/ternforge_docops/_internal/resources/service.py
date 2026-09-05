@@ -15,6 +15,11 @@ def static_dir_path() -> Path:
     return _PACKAGE_RESOURCE_ROOT / "static"
 
 
+def shared_docs_dir_path() -> Path:
+    """Return package-owned generic documentation source pages."""
+    return _PACKAGE_RESOURCE_ROOT / "docs"
+
+
 def graph_config_path() -> Path:
     """Return the canonical Sphinx-Needs graph configuration path."""
     return _RESOURCE_ROOT / "engineering.toml"

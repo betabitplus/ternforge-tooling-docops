@@ -33,10 +33,43 @@ def _discover_package(repo_root: Path) -> str | None:
     return packages[0] if len(packages) == 1 else None
 
 
+def _configure_source_links(config: Config) -> None:
+    """Apply generic Python/Gherkin source links from consumer render context."""
+    context = config.needs_render_context
+    if (
+        not isinstance(context, dict)
+        or not {"source_base", "source_ref"} <= context.keys()
+    ):
+        return
+    links = dict(config.needs_string_links)
+    links.setdefault(
+        "gherkin_feature_source",
+        {
+            "regex": r"(?P<path>features/.+\.feature)$",
+            "link_url": "{{ source_base }}/{{ source_ref }}/{{ path }}",
+            "link_name": "{{ path }}",
+            "options": ["gherkin_feature"],
+        },
+    )
+    links.setdefault(
+        "pytest_module_source",
+        {
+            "regex": r"(?P<module>tests(?:\.[A-Za-z0-9_]+)+)$",
+            "link_url": (
+                "{{ source_base }}/{{ source_ref }}/{{ module | replace('.', '/') }}.py"
+            ),
+            "link_name": "{{ module | replace('.', '/') }}.py",
+            "options": ["classname"],
+        },
+    )
+    config.needs_string_links = links
+
+
 def _configure_python(app: Sphinx, config: Config) -> None:
     """Apply conventional Python-project documentation defaults."""
     if config.src_trace_config_from_toml is None:
         config.src_trace_config_from_toml = "../ubproject.toml"
+    _configure_source_links(config)
 
     package = _discover_package(Path(app.confdir).parent)
     if package is None or config.sphinx_gallery_conf != DEFAULT_GALLERY_CONF:
