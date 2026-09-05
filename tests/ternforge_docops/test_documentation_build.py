@@ -32,7 +32,26 @@ def test_build_html_runs_only_sphinx(
     assert len(commands) == 1
     command = commands[0]
     assert command[command.index("-b") + 1] == "html"
+    assert "plot_gallery=0" in command
     assert "pytest" not in command
+
+
+def test_build_html_can_execute_live_gallery_examples(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Trusted publication can opt into Sphinx-Gallery execution explicitly."""
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    commands: list[list[str]] = []
+    monkeypatch.setattr(
+        service, "build_main", lambda arguments: commands.append(arguments) or 0
+    )
+
+    service.build_html(tmp_path, docs=docs, live_examples=True)
+
+    assert len(commands) == 1
+    assert "plot_gallery=0" not in commands[0]
 
 
 def test_build_dossier_delegates_to_simplepdf(
@@ -79,8 +98,10 @@ def test_build_portal_publishes_generated_allure_views(
         docs: Path | None = None,
         output: Path | None = None,
         junit: Path | None = None,
+        live_examples: bool = False,
     ) -> Path:
         del root, docs, output, junit
+        assert live_examples is False
         calls.append("html")
         return tmp_path / "site"
 

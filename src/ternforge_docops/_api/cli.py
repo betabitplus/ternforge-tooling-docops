@@ -41,6 +41,11 @@ def _parser() -> argparse.ArgumentParser:
         "--junit", type=Path, help="Pre-generated JUnit evidence to import."
     )
     html.add_argument("--output", type=Path, help="Output directory for rendered HTML.")
+    html.add_argument(
+        "--live-examples",
+        action="store_true",
+        help="Execute Sphinx-Gallery examples during trusted publication.",
+    )
     dossier = build_commands.add_parser(
         "dossier",
         help="Build the release dossier with the upstream SimplePDF builder.",
@@ -59,6 +64,11 @@ def _parser() -> argparse.ArgumentParser:
         "--junit", type=Path, help="Pre-generated JUnit evidence to import."
     )
     portal.add_argument("--output", type=Path, help="Output directory for the portal.")
+    portal.add_argument(
+        "--live-examples",
+        action="store_true",
+        help="Execute Sphinx-Gallery examples during trusted publication.",
+    )
     portal.add_argument(
         "--allure-results",
         type=Path,
@@ -137,7 +147,12 @@ def main(argv: list[str] | None = None) -> int:
         junit = args.junit.resolve() if args.junit is not None else None
         build_output = args.output.resolve() if args.output is not None else None
         if args.build_action == "html":
-            output = build_html(root, junit=junit, output=build_output)
+            output = build_html(
+                root,
+                junit=junit,
+                output=build_output,
+                live_examples=args.live_examples,
+            )
         elif args.build_action == "dossier":
             output = build_dossier(root, junit=junit, output=build_output)
         else:
@@ -146,6 +161,7 @@ def main(argv: list[str] | None = None) -> int:
                 allure_results=args.allure_results.resolve(),
                 junit=junit,
                 output=build_output,
+                live_examples=args.live_examples,
             )
         print(output)
         return 0
