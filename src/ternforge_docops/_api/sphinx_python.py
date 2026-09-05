@@ -84,6 +84,9 @@ def _materialize_source_trace(app: Sphinx, config: Config) -> None:
         if target.read_text(encoding="utf-8") != _SOURCE_TRACE:
             message = f"DocOps reserved source-trace path already exists: {target}"
             raise RuntimeError(message)
+        # Adopt an exact transient copy left by an interrupted build so the
+        # build-finished hook removes it after this successful retry.
+        _OWNED_SOURCE_TRACE_APPS.add(id(app))
         return
     target.write_text(_SOURCE_TRACE, encoding="utf-8")
     _OWNED_SOURCE_TRACE_APPS.add(id(app))

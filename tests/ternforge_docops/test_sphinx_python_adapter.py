@@ -7,6 +7,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from ternforge_docops._api import sphinx_python
+
 
 def test_python_adapter_discovers_conventional_package(tmp_path: Path) -> None:
     """A conventional Python repo needs no project-specific gallery wiring."""
@@ -127,6 +129,12 @@ default = "impl"
     subprocess.run([git, "-C", str(tmp_path), "add", "."], check=True)
     subprocess.run(
         [git, "-C", str(tmp_path), "commit", "-m", "test fixture"], check=True
+    )
+
+    # Simulate a transient adapter page left by an abruptly interrupted build.
+    (docs / "ternforge-python-source-trace.rst").write_text(
+        sphinx_python._SOURCE_TRACE,
+        encoding="utf-8",
     )
 
     subprocess.run(
