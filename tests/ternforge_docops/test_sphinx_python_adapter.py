@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -17,6 +18,10 @@ def test_python_adapter_discovers_conventional_package(tmp_path: Path) -> None:
     examples.mkdir(parents=True)
 
     (package / "__init__.py").write_text('"""Demo package."""\n', encoding="utf-8")
+    (package / "implementation.py").write_text(
+        "# @impl Demo implementation, IMPL_DEMO, [REQ_DEMO[revision==1]]\n",
+        encoding="utf-8",
+    )
     (examples / "GALLERY_HEADER.rst").write_text(
         "Demo examples\n=============\n",
         encoding="utf-8",
@@ -27,7 +32,11 @@ def test_python_adapter_discovers_conventional_package(tmp_path: Path) -> None:
     )
     (examples / "fixture.png").write_bytes(b"retained media")
     (tmp_path / "ubproject.toml").write_text(
-        """[codelinks.projects.python.source_discover]
+        """[codelinks]
+set_local_url = true
+local_url_field = "source_url"
+
+[codelinks.projects.python.source_discover]
 src_dir = "src"
 include = ["**/*.py"]
 comment_type = "python"
@@ -66,9 +75,58 @@ default = "impl"
 .. toctree::
    :maxdepth: 1
 
+   contract
    auto_examples/index
 """,
         encoding="utf-8",
+    )
+    git = shutil.which("git")
+    assert git is not None
+    subprocess.run([git, "init", "--initial-branch=main", str(tmp_path)], check=True)
+    subprocess.run(
+        [git, "-C", str(tmp_path), "config", "user.name", "DocOps test"], check=True
+    )
+    subprocess.run(
+        [git, "-C", str(tmp_path), "config", "user.email", "docops@example.invalid"],
+        check=True,
+    )
+    subprocess.run(
+        [
+            git,
+            "-C",
+            str(tmp_path),
+            "remote",
+            "add",
+            "origin",
+            "https://github.com/example/demo.git",
+        ],
+        check=True,
+    )
+
+    (docs / "contract.rst").write_text(
+        """Demo contract
+=============
+
+.. goal:: Demo goal
+   :id: GOAL_DEMO
+
+.. feature:: Demo feature
+   :id: FEAT_DEMO
+   :derives: GOAL_DEMO
+
+.. req:: Demo requirement
+   :id: REQ_DEMO
+   :status: accepted
+   :revision: 1
+   :required_evidence: impl
+   :derives: FEAT_DEMO
+""",
+        encoding="utf-8",
+    )
+
+    subprocess.run([git, "-C", str(tmp_path), "add", "."], check=True)
+    subprocess.run(
+        [git, "-C", str(tmp_path), "commit", "-m", "test fixture"], check=True
     )
 
     subprocess.run(
@@ -90,3 +148,5 @@ default = "impl"
 
     assert (tmp_path / "html" / "auto_examples" / "index.html").is_file()
     assert (docs / "auto_examples" / "fixture.png").read_bytes() == b"retained media"
+    assert "IMPL_DEMO" in (tmp_path / "html" / "needs.json").read_text(encoding="utf-8")
+    assert not (docs / "ternforge-python-source-trace.rst").exists()
