@@ -126,6 +126,10 @@ package-data.ternforge_docops = [
 required-version = "==0.12.5"
 sources.py-lib-policy = { git = "https://github.com/betabitplus/ternforge-tooling-py-policy.git", tag = "v2.0.0" }
 sources.py-lib-testkit = { git = "https://github.com/betabitplus/ternforge-tooling-py-testkit.git", tag = "v2.3.0" }
+<<<<<<< before updating
+=======
+sources.ternforge-docops = { git = "https://github.com/betabitplus/ternforge-tooling-docops.git", tag = "v0.4.4" }
+>>>>>>> after updating
 
 # ---------------- Ruff configuration ----------------
 [tool.ruff]
