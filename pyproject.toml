@@ -52,7 +52,8 @@ scripts.ternforge-docops = "ternforge_docops._api.cli:main"
 
 [dependency-groups]
 dev = [
-  "allure-pytest-bdd>=2.16,<3",
+  # Test runner, plugins, and retained execution evidence
+  "allure-pytest>=2.16,<3",
   # Security auditing
   "bandit>=1.9.4",
   "check-manifest>=0.51",
@@ -124,7 +125,7 @@ package-data.ternforge_docops = [
 [tool.uv]
 required-version = "==0.12.5"
 sources.py-lib-policy = { git = "https://github.com/betabitplus/ternforge-tooling-py-policy.git", tag = "v2.0.0" }
-sources.py-lib-testkit = { git = "https://github.com/betabitplus/ternforge-tooling-py-testkit.git", tag = "v2.2.2" }
+sources.py-lib-testkit = { git = "https://github.com/betabitplus/ternforge-tooling-py-testkit.git", tag = "v2.3.0" }
 
 # ---------------- Ruff configuration ----------------
 [tool.ruff]

@@ -1,7 +1,7 @@
 Engineering work starts from the requirements graph, not from tests or code in isolation.
 
 - Use `experiments/` only for durable investigations whose executable method, inputs, environment, and captured result are worth preserving. Retained experiments are standalone `exp_####_<slug>` capsules and must not import the parent project, tests, sibling experiments, or shared experiment code.
-- Author goals, features, requirements, and optional engineering constraints in the docs graph.
+- Author goals, features, requirements, and optional Engineering Constraints in the docs graph; record architecture decisions as ADRs when the rationale is durable.
 - Declare the minimum required evidence with `required_evidence`.
 - Link pytest evidence with a revision-pinned `verifies` reference (`REQ_ID[revision==N]`) and an explicit `verification_kind`.
 - Link implementation evidence in source with a revision-pinned target: `# @impl Title, IMPL_ID, [REQ_ID[revision==N]]`.

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import tempfile
@@ -45,13 +46,69 @@ def resolve_capsule(root: Path, value: str) -> Path:
     return matches[0]
 
 
+def _transaction_dir(capsule: Path) -> Path:
+    """Return the sibling transaction directory used for retained capture commit."""
+    return capsule.parent / f".{capsule.name}.capture-transaction"
+
+
+def _write_transaction_state(
+    transaction: Path,
+    *,
+    phase: str,
+    had_artifacts: bool,
+) -> None:
+    """Persist transaction state through an atomic same-filesystem rename."""
+    temporary = transaction / "state.json.tmp"
+    temporary.write_text(
+        json.dumps({"phase": phase, "had_artifacts": had_artifacts}),
+        encoding="utf-8",
+    )
+    temporary.replace(transaction / "state.json")
+
+
+def _recover_capture_transaction(capsule: Path) -> None:
+    """Rollback an interrupted retained-capture commit or finish cleanup."""
+    transaction = _transaction_dir(capsule)
+    if not transaction.exists():
+        return
+
+    state_path = transaction / "state.json"
+    if not state_path.is_file():
+        shutil.rmtree(transaction)
+        return
+
+    state = json.loads(state_path.read_text(encoding="utf-8"))
+    if state.get("phase") == "committed":
+        shutil.rmtree(transaction)
+        return
+
+    target_report = capsule / "report" / "report.ipynb"
+    old_report = transaction / "old-report.ipynb"
+    if old_report.is_file():
+        old_report.replace(target_report)
+
+    target_artifacts = capsule / "artifacts"
+    displaced_artifacts = transaction / "old-artifacts"
+    if bool(state.get("had_artifacts")):
+        if displaced_artifacts.is_dir():
+            if target_artifacts.exists():
+                shutil.rmtree(target_artifacts)
+            displaced_artifacts.replace(target_artifacts)
+    elif target_artifacts.exists():
+        shutil.rmtree(target_artifacts)
+
+    shutil.rmtree(transaction)
+
+
 def validate_experiments(root: Path) -> dict[Path, list[str]]:
-    """Return report violations keyed by capsule."""
-    return {
-        capsule: errors
-        for capsule in discover_capsules(root)
-        if (errors := validate_report(capsule))
-    }
+    """Return report violations keyed by capsule, recovering interrupted commits."""
+    violations: dict[Path, list[str]] = {}
+    for capsule in discover_capsules(root):
+        _recover_capture_transaction(capsule)
+        errors = validate_report(capsule)
+        if errors:
+            violations[capsule] = errors
+    return violations
 
 
 def _copy_capsule(source: Path, destination: Path) -> None:
@@ -110,9 +167,62 @@ def _execute_report(capsule: Path) -> None:
     nbformat.write(notebook, report)
 
 
+def _commit_capture(capsule: Path, isolated: Path) -> None:
+    """Commit report and artifacts as one recoverable retained-capture transaction."""
+    _recover_capture_transaction(capsule)
+    transaction = _transaction_dir(capsule)
+    transaction.mkdir()
+
+    target_report = capsule / "report" / "report.ipynb"
+    target_artifacts = capsule / "artifacts"
+    if target_artifacts.exists() and not target_artifacts.is_dir():
+        message = f"experiment artifacts path is not a directory: {target_artifacts}"
+        raise ValueError(message)
+
+    shutil.copy2(target_report, transaction / "old-report.ipynb")
+    shutil.copy2(isolated / "report" / "report.ipynb", transaction / "new-report.ipynb")
+
+    isolated_artifacts = isolated / "artifacts"
+    if isolated_artifacts.is_dir():
+        shutil.copytree(isolated_artifacts, transaction / "new-artifacts")
+
+    had_artifacts = target_artifacts.is_dir()
+    _write_transaction_state(
+        transaction,
+        phase="prepared",
+        had_artifacts=had_artifacts,
+    )
+
+    try:
+        (transaction / "new-report.ipynb").replace(target_report)
+        _write_transaction_state(
+            transaction,
+            phase="report-replaced",
+            had_artifacts=had_artifacts,
+        )
+
+        if had_artifacts:
+            target_artifacts.replace(transaction / "old-artifacts")
+        staged_artifacts = transaction / "new-artifacts"
+        if staged_artifacts.is_dir():
+            staged_artifacts.replace(target_artifacts)
+
+        _write_transaction_state(
+            transaction,
+            phase="committed",
+            had_artifacts=had_artifacts,
+        )
+    except Exception:
+        _recover_capture_transaction(capsule)
+        raise
+
+    shutil.rmtree(transaction)
+
+
 def capture_experiment(capsule: Path) -> None:
     """Capture one report from an isolated temporary capsule copy."""
     capsule = capsule.resolve()
+    _recover_capture_transaction(capsule)
     with tempfile.TemporaryDirectory(prefix=f"{capsule.name}-") as temp_dir:
         isolated = Path(temp_dir) / capsule.name
         _copy_capsule(capsule, isolated)
@@ -132,10 +242,4 @@ def capture_experiment(capsule: Path) -> None:
             )
             raise ValueError(message)
 
-        shutil.copy2(report, capsule / "report" / "report.ipynb")
-        isolated_artifacts = isolated / "artifacts"
-        target_artifacts = capsule / "artifacts"
-        if isolated_artifacts.is_dir():
-            if target_artifacts.exists():
-                shutil.rmtree(target_artifacts)
-            shutil.copytree(isolated_artifacts, target_artifacts)
+        _commit_capture(capsule, isolated)

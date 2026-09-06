@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import sys
 from pathlib import Path
 
@@ -10,6 +11,8 @@ import nbformat
 
 from ternforge_docops._internal.experiments import (
     capture_experiment,
+    service as experiment_service,
+    validate_experiments,
     validate_report,
 )
 
@@ -130,3 +133,40 @@ def test_digest_ignores_python_comments_but_detects_semantic_changes(
     assert validate_report(capsule) == [
         "capsule digest is stale; causal capsule state changed"
     ]
+
+
+def test_validate_recovers_interrupted_capture_transaction(tmp_path: Path) -> None:
+    """Validation rolls back a partially committed report/artifact transaction."""
+    capsule = _make_capsule(tmp_path)
+    capture_experiment(capsule)
+
+    report = capsule / "report" / "report.ipynb"
+    retained_report = report.read_bytes()
+    artifacts = capsule / "artifacts"
+    artifacts.mkdir()
+    (artifacts / "retained.txt").write_text("old\n", encoding="utf-8")
+
+    transaction = experiment_service._transaction_dir(capsule)
+    transaction.mkdir()
+    shutil.copy2(report, transaction / "old-report.ipynb")
+    experiment_service._write_transaction_state(
+        transaction,
+        phase="prepared",
+        had_artifacts=True,
+    )
+
+    report.write_text("partial replacement\n", encoding="utf-8")
+    artifacts.replace(transaction / "old-artifacts")
+    artifacts.mkdir()
+    (artifacts / "partial.txt").write_text("new\n", encoding="utf-8")
+    experiment_service._write_transaction_state(
+        transaction,
+        phase="report-replaced",
+        had_artifacts=True,
+    )
+
+    assert validate_experiments(tmp_path) == {}
+    assert report.read_bytes() == retained_report
+    assert (artifacts / "retained.txt").read_text(encoding="utf-8") == "old\n"
+    assert not (artifacts / "partial.txt").exists()
+    assert not transaction.exists()
