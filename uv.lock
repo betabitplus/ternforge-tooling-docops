@@ -24,17 +24,16 @@ wheels = [
 ]
 
 [[package]]
-name = "allure-pytest-bdd"
+name = "allure-pytest"
 version = "2.16.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "allure-python-commons" },
     { name = "pytest" },
-    { name = "pytest-bdd" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/98/3c/a1b7ec1ededfa9751dd8135f2efe7f894af2bc1469cdb785599720bff573/allure_pytest_bdd-2.16.0.tar.gz", hash = "sha256:b86e2457bd55f6da36b34e795874edab9f1734b239274e56b00e9e592154d887", size = 9592, upload-time = "2026-04-27T08:34:43.61Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ea/31/7bde416fb98264e3e9a3025b176529c6c071d120a61be17fca4b100a4d7d/allure_pytest-2.16.0.tar.gz", hash = "sha256:3cc883595b1ce4280b0b9a5fdaa0ce3bb5cdbaa1b43c7269d8b82e825e6e107c", size = 17697, upload-time = "2026-04-27T08:34:40.254Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/43/8a/c7d63f07bbba63b91b5658250ee875f6763aad37c9cfaa231fd0100198bb/allure_pytest_bdd-2.16.0-py3-none-any.whl", hash = "sha256:ec983435057bd363eb08802e54b87fdd247417033ef71a8f861b0f05aa890806", size = 11317, upload-time = "2026-04-27T08:34:42.493Z" },
+    { url = "https://files.pythonhosted.org/packages/19/41/7e37edaf081c01055afedb8236b6b6232e515745b7959342f801d9464834/allure_pytest-2.16.0-py3-none-any.whl", hash = "sha256:e5035a3b1f541b0c2ee566822df6fec20e0628b8536780e5bdfe39060ac0c71b", size = 12493, upload-time = "2026-04-27T08:34:39.37Z" },
 ]
 
 [[package]]
@@ -2614,8 +2613,8 @@ dependencies = [
 
 [[package]]
 name = "py-lib-testkit"
-version = "2.2.2"
-source = { git = "https://github.com/betabitplus/ternforge-tooling-py-testkit.git?tag=v2.2.2#a4a7f68a6b8e573d14ff1f82ff6574021743ab9a" }
+version = "2.3.0"
+source = { git = "https://github.com/betabitplus/ternforge-tooling-py-testkit.git?tag=v2.3.0#49b35e01b5c3ef5cd83662a5d41173891aba661e" }
 dependencies = [
     { name = "ipython" },
     { name = "nest-asyncio" },
@@ -3763,7 +3762,7 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "allure-pytest-bdd" },
+    { name = "allure-pytest" },
     { name = "bandit" },
     { name = "check-manifest" },
     { name = "check-wheel-contents" },
@@ -3833,7 +3832,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "allure-pytest-bdd", specifier = ">=2.16,<3" },
+    { name = "allure-pytest", specifier = ">=2.16,<3" },
     { name = "bandit", specifier = ">=1.9.4" },
     { name = "check-manifest", specifier = ">=0.51" },
     { name = "check-wheel-contents", specifier = ">=0.6.1" },
@@ -3859,7 +3858,7 @@ dev = [
     { name = "pip-audit", specifier = ">=2.10.1" },
     { name = "pre-commit", specifier = ">=4.6" },
     { name = "py-lib-policy", git = "https://github.com/betabitplus/ternforge-tooling-py-policy.git?tag=v2.0.0" },
-    { name = "py-lib-testkit", git = "https://github.com/betabitplus/ternforge-tooling-py-testkit.git?tag=v2.2.2" },
+    { name = "py-lib-testkit", git = "https://github.com/betabitplus/ternforge-tooling-py-testkit.git?tag=v2.3.0" },
     { name = "pyproject-fmt", specifier = ">=2.23" },
     { name = "pyright", specifier = ">=1.1.410" },
     { name = "pytest", specifier = ">=9.1" },
