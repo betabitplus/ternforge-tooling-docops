@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.5](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.4.4...v0.4.5) (2026-09-07)
+
+
+### Bug Fixes
+
+* finish template metadata cleanup ([#25](https://github.com/betabitplus/ternforge-tooling-docops/issues/25)) ([6c84fc6](https://github.com/betabitplus/ternforge-tooling-docops/commit/6c84fc6a4b36b6bb304ade5f536e64b3393f906b))
+
 ## [0.4.4](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.4.3...v0.4.4) (2026-09-06)
 
 
