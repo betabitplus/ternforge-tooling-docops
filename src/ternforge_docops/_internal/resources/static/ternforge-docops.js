@@ -15,6 +15,23 @@
     });
   }
 
+  const JSON_EXPAND_DEPTH = 3;
+
+  function expandJsonTreeToDepth(node, maxDepth) {
+    if (!node || node.depth >= maxDepth || !node.children?.length) {
+      return;
+    }
+
+    node.isExpanded = true;
+    node.el
+      ?.querySelector(".fa-caret-right")
+      ?.classList.replace("fa-caret-right", "fa-caret-down");
+    node.children.forEach((child) => {
+      child.el?.classList.remove("hide");
+      expandJsonTreeToDepth(child, maxDepth);
+    });
+  }
+
   function renderJsonTree(rawResult) {
     const code = rawResult ? rawResult.querySelector("pre code") : null;
     if (!code || typeof window.JsonView === "undefined") {
@@ -27,6 +44,7 @@
       target.className = "exp-json-tree";
       const tree = window.JsonView.createTree(code.textContent);
       window.JsonView.render(tree, target);
+      expandJsonTreeToDepth(tree, JSON_EXPAND_DEPTH);
       viewer.appendChild(target);
       return viewer;
     } catch (_error) {
