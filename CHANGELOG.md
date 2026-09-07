@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.2](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.5.1...v0.5.2) (2026-09-07)
+
+
+### Bug Fixes
+
+* **experiments:** expand raw JSON by default ([#31](https://github.com/betabitplus/ternforge-tooling-docops/issues/31)) ([b103595](https://github.com/betabitplus/ternforge-tooling-docops/commit/b1035956653455c91a3c07695718c6f3e791577e))
+
 ## [0.5.1](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.5.0...v0.5.1) (2026-09-07)
 
 
