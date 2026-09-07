@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.1](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.5.0...v0.5.1) (2026-09-07)
+
+
+### Bug Fixes
+
+* **experiments:** preserve report readability ([#29](https://github.com/betabitplus/ternforge-tooling-docops/issues/29)) ([de2e2d5](https://github.com/betabitplus/ternforge-tooling-docops/commit/de2e2d5ab56ce2701429206eef12be9492d12dd4))
+
 ## [0.5.0](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.4.5...v0.5.0) (2026-09-07)
 
 
