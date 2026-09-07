@@ -2600,21 +2600,21 @@ wheels = [
 
 [[package]]
 name = "py-lib-policy"
-version = "2.0.0"
-source = { git = "https://github.com/betabitplus/ternforge-tooling-py-policy.git?tag=v2.0.0#4e75f593c1e9ef20011907dfd5c772d4f4827c65" }
+version = "2.1.1"
+source = { git = "https://github.com/betabitplus/ternforge-tooling-py-policy.git?tag=v2.1.1#a3c9f097323099e1614def7ed14aeb5558d47184" }
 
 [[package]]
 name = "py-lib-runtime"
-version = "1.1.7"
-source = { git = "https://github.com/betabitplus/ternforge-tooling-py-runtime.git?tag=v1.1.7#430368122183df5009412ef62513bd6fd31206cd" }
+version = "1.2.1"
+source = { git = "https://github.com/betabitplus/ternforge-tooling-py-runtime.git?tag=v1.2.1#35cd672057e12b637772ff7e09e58eb5b2d731c1" }
 dependencies = [
     { name = "structlog" },
 ]
 
 [[package]]
 name = "py-lib-testkit"
-version = "2.3.0"
-source = { git = "https://github.com/betabitplus/ternforge-tooling-py-testkit.git?tag=v2.3.0#49b35e01b5c3ef5cd83662a5d41173891aba661e" }
+version = "2.3.2"
+source = { git = "https://github.com/betabitplus/ternforge-tooling-py-testkit.git?tag=v2.3.2#0ee170c627e155050fb542ecb44939e71e378e13" }
 dependencies = [
     { name = "ipython" },
     { name = "nest-asyncio" },
@@ -3857,8 +3857,8 @@ dev = [
     { name = "pillow", specifier = ">=12.2" },
     { name = "pip-audit", specifier = ">=2.10.1" },
     { name = "pre-commit", specifier = ">=4.6" },
-    { name = "py-lib-policy", git = "https://github.com/betabitplus/ternforge-tooling-py-policy.git?tag=v2.0.0" },
-    { name = "py-lib-testkit", git = "https://github.com/betabitplus/ternforge-tooling-py-testkit.git?tag=v2.3.0" },
+    { name = "py-lib-policy", git = "https://github.com/betabitplus/ternforge-tooling-py-policy.git?tag=v2.1.1" },
+    { name = "py-lib-testkit", git = "https://github.com/betabitplus/ternforge-tooling-py-testkit.git?tag=v2.3.2" },
     { name = "pyproject-fmt", specifier = ">=2.23" },
     { name = "pyright", specifier = ">=1.1.410" },
     { name = "pytest", specifier = ">=9.1" },
