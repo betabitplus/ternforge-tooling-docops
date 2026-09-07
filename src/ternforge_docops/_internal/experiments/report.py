@@ -92,8 +92,6 @@ def _validate_meta_fields(source: str) -> list[str]:
     errors: list[str] = []
     if ":experiment_date:" not in source:
         errors.append("EXP metadata must declare experiment_date")
-    if "**Question.**" not in source or "**Conclusion.**" not in source:
-        errors.append("EXP content must include Question and Conclusion summaries")
     errors.extend(
         f"obsolete EXP metadata field is forbidden: {field}"
         for field in (":experiment_source:", ":experiment_evidence:")

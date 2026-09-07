@@ -150,21 +150,20 @@
     },
     {
       "id": "experiment-contract",
-      "message": "An engineering experiment must have an EXP_#### ID, date, question/conclusion summary, and only valid informed targets.",
+      "message": "An engineering experiment must have an EXP_#### ID, date, and only valid informed targets; its Question and Answer live once in the retained report narrative.",
       "select": {"$ref": "#/$defs/type-exp"},
       "validate": {
         "local": {
           "properties": {
             "id": {"pattern": "^EXP_[0-9]{4}$"},
             "experiment_date": {},
-            "content": {"pattern": "\\*\\*Question\\.\\*\\*[\\s\\S]+\\*\\*Conclusion\\.\\*\\*[\\s\\S]+"},
             "derives": {"maxItems": 0},
             "implements": {"maxItems": 0},
             "verifies": {"maxItems": 0},
             "affects": {"maxItems": 0},
             "supersedes": {"maxItems": 0}
           },
-          "required": ["experiment_date", "content"]
+          "required": ["experiment_date"]
         },
         "network": {
           "informs": {"items": {"local": {"$ref": "#/$defs/experiment-informed-target"}}}

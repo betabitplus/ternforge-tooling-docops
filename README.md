@@ -54,6 +54,15 @@ provides its own Jupyter kernelspec; DocOps executes the notebook through the
 standard Jupyter protocol from an isolated temporary copy and validates the
 captured report before replacing retained evidence.
 
+The HTML presentation uses progressive disclosure without changing retained
+evidence. A report keeps one Question and one final Conclusion in its notebook;
+the published page presents that Conclusion beside the Question as the decision
+answer. Each evidence step shows Input and Observed output side by side when space
+allows, while actual capture code and raw results live behind one Technical details
+control. Consumer reports should keep their top capability summary decision-first
+(`Capability`, empirical `Outcome`, and one `Key observation`) and leave detailed
+inputs to the evidence step where they belong.
+
 ## Sphinx Integration
 
 A consumer enables the shared stack with the base extension:

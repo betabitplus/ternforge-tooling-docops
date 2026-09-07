@@ -2,6 +2,7 @@
 
 from ternforge_docops._internal.sphinx.experiments import (
     configure_experiment_mounts as configure_experiment_mounts,
+    inject_experiment_page_metadata as inject_experiment_page_metadata,
     publish_experiment_inputs as publish_experiment_inputs,
 )
 from ternforge_docops._internal.sphinx.verification import (

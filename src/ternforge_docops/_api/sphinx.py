@@ -10,6 +10,7 @@ from sphinx_needs.api import add_field
 from ternforge_docops._internal import (
     configure_experiment_mounts,
     graph_config_path,
+    inject_experiment_page_metadata,
     publish_experiment_inputs,
     register_verification_view,
     static_dir_path,
@@ -138,11 +139,13 @@ def setup(app: Sphinx) -> dict[str, Any]:
     for extension in _EXTENSIONS:
         app.setup_extension(extension)
     app.add_css_file("ternforge-docops.css")
+    app.add_js_file("ternforge-docops.js")
     register_verification_view(app)
     app.connect("config-inited", configure_experiment_mounts, priority=5)
     app.connect("config-inited", _configure_graph, priority=6)
     app.connect("config-inited", _ensure_source_url_field, priority=12)
     app.connect("builder-inited", publish_experiment_inputs, priority=600)
+    app.connect("html-page-context", inject_experiment_page_metadata, priority=600)
     return {
         "version": "1",
         "parallel_read_safe": True,

@@ -98,6 +98,140 @@ html[data-theme="dark"] .sd-card {
   margin-top: 0.5rem;
 }
 
+.exp-findings-table tbody tr.exp-finding-link {
+  cursor: pointer;
+}
+
+.exp-findings-table tbody tr.exp-finding-link:hover,
+.exp-findings-table tbody tr.exp-finding-link:focus {
+  background: color-mix(in srgb, var(--pst-color-primary) 8%, transparent);
+  outline: none;
+}
+
+.exp-findings-table td.exp-outcome {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.exp-findings-table td.exp-outcome-working {
+  color: var(--pst-color-success);
+}
+
+.exp-findings-table td.exp-outcome-caveat,
+.exp-findings-table td.exp-outcome-inconclusive {
+  color: var(--pst-color-warning);
+}
+
+.exp-findings-table td.exp-outcome-unsupported {
+  color: var(--pst-color-danger);
+}
+
+.exp-answer {
+  margin: 0.25rem 0 1.25rem;
+  padding: 0.9rem 1rem;
+  border-left: 0.25rem solid var(--pst-color-success);
+  border-radius: 0.45rem;
+  background: var(--pst-color-surface);
+}
+
+.exp-answer h2 {
+  margin-top: 0;
+}
+
+.exp-provenance {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.8rem;
+  margin: 0.55rem 0 0.9rem;
+  color: var(--pst-color-text-muted);
+  font-size: 0.88rem;
+}
+
+.exp-provenance a {
+  white-space: nowrap;
+}
+
+.exp-json-viewer {
+  max-height: 32rem;
+  overflow: auto;
+}
+
+.exp-evidence-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.exp-evidence-column > :first-child .exp-panel {
+  margin-top: 0;
+}
+
+.exp-technical-details {
+  margin: 0.75rem 0 0;
+  border: 1px solid var(--pst-color-border);
+  border-radius: 0.55rem;
+  background: var(--pst-color-surface);
+}
+
+.exp-technical-details > summary {
+  padding: 0.75rem 0.9rem;
+  cursor: pointer;
+  color: var(--pst-color-primary);
+  font-weight: 700;
+}
+
+.exp-technical-body {
+  padding: 0 0.9rem 0.9rem;
+}
+
+.exp-tech-tabs {
+  display: flex;
+  gap: 0.35rem;
+  margin: 0 0 0.75rem;
+  padding-bottom: 0.45rem;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--pst-color-border);
+}
+
+.exp-tech-tab {
+  padding: 0.35rem 0.65rem;
+  border: 1px solid transparent;
+  border-radius: 0.35rem;
+  color: var(--pst-color-text-muted);
+  background: transparent;
+  font: inherit;
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.exp-tech-tab[aria-selected="true"] {
+  color: var(--pst-color-primary);
+  border-color: var(--pst-color-border);
+  background: var(--pst-color-background);
+}
+
+.exp-tech-panel[hidden] {
+  display: none;
+}
+
+.exp-technical-body .exp-code-panel {
+  margin: 0;
+  padding: 0;
+  border-left: 0;
+  background: transparent;
+}
+
+.exp-technical-body .exp-code-panel > .exp-kicker,
+.exp-technical-body .exp-code-panel > .exp-note {
+  display: none;
+}
+
+.exp-technical-body .exp-raw-result {
+  margin: 0;
+}
+
 .cell.tag_exp-evidence .output {
   margin: 0;
 }
@@ -234,6 +368,10 @@ html[data-theme="dark"] .sd-card {
 }
 
 @media (max-width: 767.98px) {
+  .exp-evidence-grid {
+    grid-template-columns: 1fr;
+  }
+
   .exp-facts {
     grid-template-columns: 1fr;
     gap: 0.15rem;

@@ -87,6 +87,8 @@ Verification matrix
     assert "MISSING" not in index
     assert "_static/ternforge-docops.css" in index
     assert (output / "_static" / "ternforge-docops.css").is_file()
+    assert "_static/ternforge-docops.js" in index
+    assert (output / "_static" / "ternforge-docops.js").is_file()
 
 
 def test_sphinx_extension_mounts_experiment_reports_in_place(tmp_path: Path) -> None:
@@ -118,7 +120,16 @@ def test_sphinx_extension_mounts_experiment_reports_in_place(tmp_path: Path) -> 
     (inputs / "probe.txt").write_text("mounted evidence", encoding="utf-8")
     notebook = nbformat.v4.new_notebook(
         cells=[
-            nbformat.v4.new_markdown_cell("# Mounted experiment"),
+            nbformat.v4.new_markdown_cell(
+                """# Mounted experiment
+
+```{exp} Demo experiment
+:id: EXP_0001
+:hide:
+:experiment_date: 2026-09-02
+```
+"""
+            ),
             nbformat.v4.new_code_cell(
                 "pass",
                 execution_count=1,
@@ -169,6 +180,9 @@ def test_sphinx_extension_mounts_experiment_reports_in_place(tmp_path: Path) -> 
         output / "experiments" / "_generated" / "exp_0001_demo" / "inputs" / "probe.txt"
     )
     assert mounted_report.is_file()
-    assert "Mounted experiment" in mounted_report.read_text(encoding="utf-8")
+    mounted_html = mounted_report.read_text(encoding="utf-8")
+    assert "Mounted experiment" in mounted_html
+    assert 'meta name="ternforge-exp-id" content="EXP_0001"' in mounted_html
+    assert 'meta name="ternforge-exp-date" content="2026-09-02"' in mounted_html
     assert published_input.read_text(encoding="utf-8") == "mounted evidence"
     assert not (docs / "experiments" / "_generated").exists()
