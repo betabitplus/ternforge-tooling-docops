@@ -64,10 +64,6 @@ def _make_capsule(tmp_path: Path) -> Path:
                     """```{exp} Demo experiment
 :id: EXP_0001
 :experiment_date: 2026-09-02
-
-**Question.** Can the capsule execute through its own kernelspec?
-
-**Conclusion.** The captured output answers the question.
 ```
 """
                 ),

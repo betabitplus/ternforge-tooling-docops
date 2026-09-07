@@ -120,6 +120,7 @@ package-data.ternforge_docops = [
   "_internal/resources/graph/*.json",
   "_internal/resources/graph/*.toml",
   "_internal/resources/static/*.css",
+  "_internal/resources/static/*.js",
 ]
 
 [tool.uv]
