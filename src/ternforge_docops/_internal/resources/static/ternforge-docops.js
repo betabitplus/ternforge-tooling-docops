@@ -24,7 +24,7 @@
       const viewer = document.createElement("div");
       viewer.className = "sphinx-data-viewer exp-json-viewer";
       const target = document.createElement("div");
-      target.className = "sdv-data";
+      target.className = "exp-json-tree";
       const tree = window.JsonView.createTree(code.textContent);
       window.JsonView.render(tree, target);
       viewer.appendChild(target);

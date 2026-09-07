@@ -156,15 +156,61 @@ html[data-theme="dark"] .sd-card {
   overflow: auto;
 }
 
+.exp-json-viewer .json-container {
+  color: var(--pst-color-text-muted);
+  font-family: var(--pst-font-family-monospace);
+}
+
+.exp-json-viewer .json-container .json-key {
+  color: var(--pst-color-on-surface);
+  font-weight: 600;
+}
+
+.exp-json-viewer .json-container .json-type,
+.exp-json-viewer .json-container .json-index,
+.exp-json-viewer .json-container .json-size,
+.exp-json-viewer .json-container .json-separator,
+.exp-json-viewer .json-container .caret-icon {
+  color: var(--pst-color-text-muted);
+}
+
+.exp-json-viewer .json-container .json-string {
+  color: var(--pst-color-success);
+}
+
+.exp-json-viewer .json-container .json-number {
+  color: var(--pst-color-warning);
+}
+
+.exp-json-viewer .json-container .json-boolean {
+  color: var(--pst-color-info);
+}
+
+.exp-json-viewer .json-container .json-null,
+.exp-json-viewer .json-container .json-object,
+.exp-json-viewer .json-container .json-undefined {
+  color: var(--pst-color-text-muted);
+}
+
 .exp-evidence-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
   gap: 1rem;
   align-items: start;
 }
 
 .exp-evidence-column > :first-child .exp-panel {
   margin-top: 0;
+}
+
+.exp-evidence-column > .output.text_html {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  color: inherit !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .exp-technical-details {
@@ -214,6 +260,16 @@ html[data-theme="dark"] .sd-card {
 
 .exp-tech-panel[hidden] {
   display: none;
+}
+
+.exp-technical-details .exp-technical-body .exp-tech-panel.output.text_html {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  color: inherit !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .exp-technical-body .exp-code-panel {
@@ -274,7 +330,7 @@ html[data-theme="dark"] .sd-card {
 
 .exp-facts {
   display: grid;
-  grid-template-columns: minmax(8rem, 11rem) minmax(0, 1fr);
+  grid-template-columns: minmax(7rem, 9rem) minmax(0, 1fr);
   gap: 0.45rem 0.8rem;
   margin: 0;
 }
@@ -300,7 +356,7 @@ html[data-theme="dark"] .sd-card {
   overflow: auto;
   overflow-wrap: anywhere;
   color: var(--pst-color-on-surface);
-  background: var(--pst-color-on-background);
+  background: var(--pst-color-background);
   border-radius: 0.35rem;
   font-family: var(--pst-font-family-monospace);
   font-size: 0.86rem;
