@@ -151,44 +151,56 @@ html[data-theme="dark"] .sd-card {
   white-space: nowrap;
 }
 
-.exp-json-viewer {
+.ternforge-json-viewer {
   max-height: 32rem;
   overflow: auto;
 }
 
-.exp-json-viewer .json-container {
+.ternforge-json-viewer .json-container {
   color: var(--pst-color-text-muted);
   font-family: var(--pst-font-family-monospace);
 }
 
-.exp-json-viewer .json-container .json-key {
+.ternforge-json-viewer .json-container .json-key {
   color: var(--pst-color-on-surface);
   font-weight: 600;
 }
 
-.exp-json-viewer .json-container .json-type,
-.exp-json-viewer .json-container .json-index,
-.exp-json-viewer .json-container .json-size,
-.exp-json-viewer .json-container .json-separator,
-.exp-json-viewer .json-container .caret-icon {
+.ternforge-json-viewer .json-container .json-type,
+.ternforge-json-viewer .json-container .json-index,
+.ternforge-json-viewer .json-container .json-size,
+.ternforge-json-viewer .json-container .json-separator,
+.ternforge-json-viewer .json-container .caret-icon {
   color: var(--pst-color-text-muted);
 }
 
-.exp-json-viewer .json-container .json-string {
-  color: var(--pst-color-success);
+.ternforge-json-viewer .json-container .json-string {
+  color: color-mix(
+    in srgb,
+    var(--pst-color-success) 85%,
+    var(--pst-color-text-base)
+  );
 }
 
-.exp-json-viewer .json-container .json-number {
-  color: var(--pst-color-warning);
+.ternforge-json-viewer .json-container .json-number {
+  color: color-mix(
+    in srgb,
+    var(--pst-color-warning) 60%,
+    var(--pst-color-text-base)
+  );
 }
 
-.exp-json-viewer .json-container .json-boolean {
-  color: var(--pst-color-info);
+.ternforge-json-viewer .json-container .json-boolean {
+  color: color-mix(
+    in srgb,
+    var(--pst-color-info) 60%,
+    var(--pst-color-text-base)
+  );
 }
 
-.exp-json-viewer .json-container .json-null,
-.exp-json-viewer .json-container .json-object,
-.exp-json-viewer .json-container .json-undefined {
+.ternforge-json-viewer .json-container .json-null,
+.ternforge-json-viewer .json-container .json-object,
+.ternforge-json-viewer .json-container .json-undefined {
   color: var(--pst-color-text-muted);
 }
 
@@ -446,4 +458,90 @@ html[data-theme="dark"] .sd-card {
   .bd-header button.secondary-toggle {
     margin-left: 0;
   }
+}
+
+/* Native Living Specifications: narrative first, forensic detail on demand. */
+[id^="living-feature-"] {
+  scroll-margin-top: 7rem;
+}
+
+.sd-tab-set:has(.living-step) > .sd-tab-label {
+  color: var(--pst-color-text-base);
+}
+
+.bd-article .sd-tab-set:has(.living-step) > input:checked + .sd-tab-label {
+  color: var(--pst-color-text-base);
+}
+
+.living-feature-overview td,
+.living-feature-overview th {
+  vertical-align: top;
+}
+
+.living-step {
+  margin: 0.7rem 0;
+  padding: 0.8rem 1rem;
+  border-left: 0.22rem solid var(--pst-color-border);
+  border-radius: 0.35rem;
+  background: var(--pst-color-surface);
+}
+
+.living-step-given {
+  border-left-color: var(--pst-color-info);
+}
+
+.living-step-when {
+  border-left-color: var(--pst-color-warning);
+}
+
+.living-step-then {
+  border-left-color: var(--pst-color-success);
+}
+
+.living-step > :first-child,
+.living-technical-details :first-child {
+  margin-top: 0;
+}
+
+.living-step > :last-child,
+.living-technical-details :last-child {
+  margin-bottom: 0;
+}
+
+.living-media {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  margin: 0.65rem 0 1rem;
+  border: 1px solid var(--pst-color-border);
+  border-radius: 0.55rem;
+  background: var(--pst-color-background);
+}
+
+.living-image {
+  max-height: 34rem;
+  object-fit: contain;
+}
+
+.living-video,
+.living-pdf {
+  width: 100%;
+}
+
+.living-video {
+  max-height: 34rem;
+  background: #000;
+}
+
+.living-pdf {
+  min-height: 34rem;
+}
+
+.living-technical-details,
+.living-source {
+  margin: 0.9rem 0 1.2rem;
+}
+
+.living-json-viewer {
+  margin: 0.5rem 0 1rem;
 }

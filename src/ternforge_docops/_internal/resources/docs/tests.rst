@@ -3,9 +3,9 @@
 Test results
 ============
 
-Concrete executions are presented in several views generated from the same evidence
-run. JUnit is the authoritative verification input for Sphinx-Needs; Allure is the
-human-facing execution presentation.
+Concrete executions are presented from the same retained evidence run. JUnit is the
+authoritative verification input for Sphinx-Needs. :doc:`specifications` is the narrative
+BDD view; Allure remains the forensic browser for the complete current execution inventory.
 
 Current verification inventory
 ------------------------------
@@ -36,46 +36,40 @@ Current verification inventory
 Choose a perspective
 --------------------
 
-.. grid:: 1 1 3 3
+.. grid:: 1 1 2 2
    :gutter: 3
 
-   .. grid-item-card:: BDD stories
-      :link: test-results/bdd/index.html
+   .. grid-item-card:: Executable specifications
+      :link: specifications
+      :link-type: doc
+      :class-card: portal-card
+
+      Read Feature → Rule → Scenario → Given/When/Then as current living documentation with
+      rich evidence beside the step that produced it.
+
+   .. grid-item-card:: All test execution
+      :link: test-results/index.html
       :link-type: url
       :class-card: portal-card
 
-      Read Feature → Rule → Scenario executions as a narrative with rich step evidence.
+      Browse the complete current BDD, unit, integration, and property execution inventory in
+      the generic Allure forensic view.
 
-   .. grid-item-card:: Verification by requirement
-      :link: test-results/requirements/index.html
-      :link-type: url
-      :class-card: portal-card
+For authoritative requirement-to-test relationships use :doc:`verification`.
 
-      Start from a requirement, then inspect its BDD, unit, integration, or property
-      executions.
+Forensic execution browser
+--------------------------
 
-   .. grid-item-card:: All tests by layer
-      :link: test-results/all/index.html
-      :link-type: url
-      :class-card: portal-card
-
-      Browse the complete execution inventory grouped by verification layer.
-
-Requirement-centric test evidence
----------------------------------
-
-.. button-link:: test-results/requirements/index.html
+.. button-link:: test-results/index.html
    :color: primary
    :shadow:
 
-   Open verification by requirement full screen
+   Open all test results full screen
 
 .. raw:: html
 
    <iframe
      class="test-portal-frame"
-     src="test-results/requirements/index.html"
-     title="Verification by requirement"
+     src="test-results/index.html"
+     title="All test results"
    ></iframe>
-
-For authoritative requirement-to-test relationships use :doc:`verification`.

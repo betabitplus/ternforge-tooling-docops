@@ -3,9 +3,9 @@
 Verification
 ============
 
-This page summarizes whether requested verification layers are covered and where
-the concrete execution evidence can be inspected. Imported JUnit remains the
-authoritative TEST input in the Sphinx-Needs graph.
+This page summarizes whether requested verification layers are covered and where concrete
+execution evidence can be inspected. Imported JUnit remains the authoritative TEST input in
+the Sphinx-Needs graph.
 
 Release outcome
 ---------------
@@ -36,10 +36,9 @@ Release outcome
 Verification matrix
 -------------------
 
-Rows are product requirements and engineering constraints; columns are verification
-layers. ``x/x`` means all executions in that layer passed. ``missing`` means the
-object requests that verification kind but no execution was found. A dash means the
-layer is not requested.
+Rows are product requirements and engineering constraints; columns are verification layers.
+``x/x`` means all executions in that layer passed. ``missing`` means the object requests that
+verification kind but no execution was found. A dash means the layer is not requested.
 
 .. raw:: html
 
@@ -52,30 +51,22 @@ layer is not requested.
 Inspect concrete evidence
 -------------------------
 
-.. grid:: 1 1 3 3
+.. grid:: 1 1 2 2
    :gutter: 3
 
-   .. grid-item-card:: BDD stories
-      :link: test-results/bdd/index.html
+   .. grid-item-card:: Executable specifications
+      :link: specifications
+      :link-type: doc
+      :class-card: portal-card
+
+      Inspect current BDD behavior as Feature → Rule → Scenario → Given/When/Then with rich
+      evidence beside the step that produced it.
+
+   .. grid-item-card:: All test execution
+      :link: test-results/index.html
       :link-type: url
       :class-card: portal-card
 
-      Read Feature → Rule → Scenario → Given/When/Then with evidence attached to
-      the step that produced it.
+      Browse the complete current execution inventory across all verification layers in Allure.
 
-   .. grid-item-card:: By requirement
-      :link: test-results/requirements/index.html
-      :link-type: url
-      :class-card: portal-card
-
-      Start from a requirement and inspect the executions that verify it.
-
-   .. grid-item-card:: All tests by layer
-      :link: test-results/all/index.html
-      :link-type: url
-      :class-card: portal-card
-
-      Browse the complete execution inventory grouped by verification layer.
-
-For exact requirement, implementation, and verification relationships use
-:doc:`traceability`.
+For exact requirement, implementation, and verification relationships use :doc:`traceability`.

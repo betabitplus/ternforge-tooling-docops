@@ -58,7 +58,7 @@ def _parser() -> argparse.ArgumentParser:
     )
     portal = build_commands.add_parser(
         "portal",
-        help="Build strict HTML plus Allure test-result perspectives.",
+        help="Build strict HTML with native Living Specs and forensic Allure results.",
     )
     portal.add_argument(
         "--junit", type=Path, help="Pre-generated JUnit evidence to import."

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ternforge_docops._internal.allure import curate_results, generate_reports
+from ternforge_docops._internal.allure import curate_results, generate_report
 
 
 def _write_result(
@@ -17,12 +17,17 @@ def _write_result(
     layer: str,
     requirement: str,
     attachment: str,
+    history_id: str,
+    stop: int,
 ) -> None:
     path.write_text(
         json.dumps(
             {
                 "name": name,
                 "status": "passed",
+                "historyId": history_id,
+                "start": stop - 10,
+                "stop": stop,
                 "labels": [
                     {"name": "layer", "value": layer},
                     {"name": "requirement", "value": requirement},
@@ -46,72 +51,64 @@ def _write_result(
     )
 
 
-def test_curate_results_uses_allure_labels_and_needs_titles(tmp_path: Path) -> None:
-    """Curation never joins Allure results back to JUnit testcase names."""
+def test_curate_results_keeps_only_current_execution_and_referenced_evidence(
+    tmp_path: Path,
+) -> None:
+    """The forensic view is current-only and does not copy fixture or stale evidence."""
     raw = tmp_path / "raw"
     curated = tmp_path / "curated"
-    bdd = tmp_path / "bdd"
     raw.mkdir()
-    needs_json = tmp_path / "needs.json"
-    needs_json.write_text(
-        json.dumps(
-            {
-                "current_version": "1",
-                "versions": {
-                    "1": {
-                        "needs": {
-                            "REQ_UNIT": {"title": "Unit contract"},
-                            "REQ_BDD": {"title": "BDD contract"},
-                        }
-                    }
-                },
-            }
-        ),
-        encoding="utf-8",
+    _write_result(
+        raw / "old-result.json",
+        name="scenario",
+        layer="bdd",
+        requirement="REQ_BDD",
+        attachment="old.txt",
+        history_id="scenario-history",
+        stop=100,
+    )
+    _write_result(
+        raw / "new-result.json",
+        name="scenario",
+        layer="bdd",
+        requirement="REQ_BDD",
+        attachment="new.txt",
+        history_id="scenario-history",
+        stop=200,
     )
     _write_result(
         raw / "unit-result.json",
-        name="test_raw_python_name",
+        name="unit test",
         layer="unit",
         requirement="REQ_UNIT",
-        attachment="unit-attachment.txt",
+        attachment="unit.txt",
+        history_id="unit-history",
+        stop=150,
     )
-    _write_result(
-        raw / "bdd-result.json",
-        name="Human BDD scenario",
-        layer="bdd",
-        requirement="REQ_BDD",
-        attachment="bdd-attachment.txt",
-    )
-    (raw / "unit-attachment.txt").write_text("unit evidence", encoding="utf-8")
-    (raw / "bdd-attachment.txt").write_text("bdd evidence", encoding="utf-8")
+    for name in ("old.txt", "new.txt", "unit.txt"):
+        (raw / name).write_text(name, encoding="utf-8")
     (raw / "fixture-container.json").write_text("{}", encoding="utf-8")
 
-    curate_results(
-        raw,
-        needs_json=needs_json,
-        curated_results=curated,
-        bdd_results=bdd,
-    )
+    curate_results(raw, curated_results=curated)
 
-    unit = json.loads((curated / "unit-result.json").read_text(encoding="utf-8"))
-    bdd_result = json.loads((bdd / "bdd-result.json").read_text(encoding="utf-8"))
-    unit_labels = {(label["name"], label["value"]) for label in unit["labels"]}
-    bdd_labels = {(label["name"], label["value"]) for label in bdd_result["labels"]}
-    assert unit["name"] == "test_raw_python_name"
-    assert ("requirement_view", "REQ_UNIT — Unit contract") in unit_labels
-    assert ("requirement_view", "REQ_BDD — BDD contract") in bdd_labels
-    assert (curated / "unit-attachment.txt").read_text() == "unit evidence"
-    assert (bdd / "bdd-attachment.txt").read_text() == "bdd evidence"
+    assert not (curated / "old-result.json").exists()
+    assert not (curated / "old.txt").exists()
+    assert (curated / "new-result.json").is_file()
+    assert (curated / "new.txt").read_text() == "new.txt"
+    assert (curated / "unit-result.json").is_file()
+    assert (curated / "unit.txt").read_text() == "unit.txt"
     assert not (curated / "fixture-container.json").exists()
-    assert not (bdd / "unit-result.json").exists()
+    current = json.loads((curated / "new-result.json").read_text(encoding="utf-8"))
+    labels = {(label["name"], label["value"]) for label in current["labels"]}
+    assert ("requirement", "REQ_BDD") in labels
+    assert all(name != "requirement_view" for name, _ in labels)
 
 
-def test_generate_reports_delegates_html_to_allure(
+def test_generate_report_delegates_forensic_html_to_allure(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """DocOps selects perspectives while Allure owns the generated HTML shell."""
+    """DocOps selects one forensic perspective while Allure owns the HTML shell."""
     commands: list[list[str]] = []
 
     def fake_run(command: list[str], *, check: bool) -> None:
@@ -124,24 +121,17 @@ def test_generate_reports_delegates_html_to_allure(
     monkeypatch.setattr("shutil.which", lambda _: "/usr/bin/npx")
     monkeypatch.setattr("subprocess.run", fake_run)
     curated = tmp_path / "curated"
-    bdd = tmp_path / "bdd"
     curated.mkdir()
-    bdd.mkdir()
 
-    reports = generate_reports(
+    report = generate_report(
         curated_results=curated,
-        bdd_results=bdd,
-        output_root=tmp_path / "reports",
+        output=tmp_path / "report",
     )
 
-    assert set(reports) == {"bdd", "requirements", "all"}
-    assert len(commands) == 3
-    assert all("--single-file" in command for command in commands)
-    assert all("--theme" not in command for command in commands)
-    assert commands[0][commands[0].index("--group-by") + 1] == "epic,feature,rule"
-    assert commands[1][commands[1].index("--group-by") + 1] == (
-        "requirement_view,layer"
-    )
-    assert commands[2][commands[2].index("--group-by") + 1] == (
-        "layer,parentSuite,suite"
-    )
+    assert report == tmp_path / "report" / "index.html"
+    assert len(commands) == 1
+    command = commands[0]
+    assert "--single-file" in command
+    assert "--theme" not in command
+    assert command[command.index("--group-by") + 1] == "layer,parentSuite,suite"
+    assert command[command.index("--report-name") + 1] == "All test results"

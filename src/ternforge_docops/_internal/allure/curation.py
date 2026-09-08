@@ -1,50 +1,11 @@
-"""Allure result curation from adapter-owned trace labels and the Needs graph."""
+"""Allure result curation for the current forensic execution view."""
 
 from __future__ import annotations
 
 import json
 import shutil
 from pathlib import Path
-from typing import cast
-
-
-def requirement_titles(needs_json: Path) -> dict[str, str]:
-    """Return Need titles from one Sphinx-Needs JSON export."""
-    data = json.loads(needs_json.read_text(encoding="utf-8"))
-    current_version = str(data["current_version"])
-    needs = data["versions"][current_version]["needs"]
-    return {
-        str(need_id): str(need.get("title") or need_id)
-        for need_id, need in needs.items()
-        if isinstance(need, dict)
-    }
-
-
-def _labels(result: dict[str, object]) -> list[dict[str, object]]:
-    """Return the mutable Allure label list, repairing malformed values."""
-    labels = result.get("labels")
-    if isinstance(labels, list) and all(isinstance(label, dict) for label in labels):
-        return cast("list[dict[str, object]]", labels)
-    labels = []
-    result["labels"] = labels
-    return labels
-
-
-def _label_values(result: dict[str, object], name: str) -> tuple[str, ...]:
-    """Return values for one Allure label name in source order."""
-    return tuple(
-        str(label["value"])
-        for label in _labels(result)
-        if label.get("name") == name and "value" in label
-    )
-
-
-def _add_label(result: dict[str, object], name: str, value: str) -> None:
-    """Append one Allure label without duplicating an existing pair."""
-    labels = _labels(result)
-    label = {"name": name, "value": value}
-    if label not in labels:
-        labels.append(label)
+from typing import Any
 
 
 def _attachment_sources(result: dict[str, object]) -> set[str]:
@@ -64,6 +25,43 @@ def _attachment_sources(result: dict[str, object]) -> set[str]:
     return sources
 
 
+def _identity(result: dict[str, Any], result_path: Path) -> str:
+    """Return the stable Allure identity used to select the latest execution."""
+    return str(
+        result.get("historyId")
+        or result.get("uuid")
+        or result.get("testCaseId")
+        or result_path.name
+    )
+
+
+def _ordering(result: dict[str, Any], result_path: Path) -> tuple[int, int, str]:
+    """Order repeated executions by their captured finish/start times."""
+    return (
+        int(result.get("stop") or result.get("start") or 0),
+        int(result.get("start") or 0),
+        result_path.name,
+    )
+
+
+def _current_results(raw_results: Path) -> tuple[tuple[Path, dict[str, Any]], ...]:
+    """Return only the latest Allure result for each execution identity."""
+    current: dict[str, tuple[tuple[int, int, str], Path, dict[str, Any]]] = {}
+    for result_path in sorted(raw_results.glob("*-result.json")):
+        try:
+            result = json.loads(result_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+        if not isinstance(result, dict):
+            continue
+        identity = _identity(result, result_path)
+        ordering = _ordering(result, result_path)
+        previous = current.get(identity)
+        if previous is None or ordering > previous[0]:
+            current[identity] = (ordering, result_path, result)
+    return tuple((value[1], value[2]) for value in current.values())
+
+
 def _copy_result(
     result_path: Path,
     result: dict[str, object],
@@ -71,7 +69,7 @@ def _copy_result(
     raw_results: Path,
     destination: Path,
 ) -> None:
-    """Write one curated Allure result and only its referenced attachments."""
+    """Write one current Allure result and only its referenced attachments."""
     destination.mkdir(parents=True, exist_ok=True)
     (destination / result_path.name).write_text(
         json.dumps(result, ensure_ascii=False),
@@ -83,40 +81,14 @@ def _copy_result(
             shutil.copy2(attachment, destination / source)
 
 
-def curate_results(
-    raw_results: Path,
-    *,
-    needs_json: Path,
-    curated_results: Path,
-    bdd_results: Path,
-) -> None:
-    """Create fixture-free Allure result sets with graph-backed presentation labels."""
-    titles = requirement_titles(needs_json)
-    for directory in (curated_results, bdd_results):
-        shutil.rmtree(directory, ignore_errors=True)
-        directory.mkdir(parents=True)
-
-    for result_path in sorted(raw_results.glob("*-result.json")):
-        result = json.loads(result_path.read_text(encoding="utf-8"))
-        if not isinstance(result, dict):
-            continue
-        for requirement_id in _label_values(result, "requirement"):
-            title = titles.get(requirement_id, requirement_id)
-            _add_label(
-                result,
-                "requirement_view",
-                f"{requirement_id} — {title}",
-            )
+def curate_results(raw_results: Path, *, curated_results: Path) -> None:
+    """Create a fixture-free, current-only Allure result set for forensic browsing."""
+    shutil.rmtree(curated_results, ignore_errors=True)
+    curated_results.mkdir(parents=True)
+    for result_path, result in _current_results(raw_results):
         _copy_result(
             result_path,
             result,
             raw_results=raw_results,
             destination=curated_results,
         )
-        if "bdd" in _label_values(result, "layer"):
-            _copy_result(
-                result_path,
-                result,
-                raw_results=raw_results,
-                destination=bdd_results,
-            )

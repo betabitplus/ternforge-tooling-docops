@@ -1,4 +1,4 @@
-/* Progressive disclosure for retained Engineering Experiment evidence. */
+/* Progressive disclosure for Ternforge retained evidence and living specifications. */
 (function () {
   "use strict";
 
@@ -33,15 +33,15 @@
   }
 
   function renderJsonTree(rawResult) {
-    const code = rawResult ? rawResult.querySelector("pre code") : null;
+    const code = rawResult ? rawResult.querySelector("pre code, pre") : null;
     if (!code || typeof window.JsonView === "undefined") {
       return rawResult;
     }
     try {
       const viewer = document.createElement("div");
-      viewer.className = "sphinx-data-viewer exp-json-viewer";
+      viewer.className = "sphinx-data-viewer ternforge-json-viewer";
       const target = document.createElement("div");
-      target.className = "exp-json-tree";
+      target.className = "ternforge-json-tree";
       const tree = window.JsonView.createTree(code.textContent);
       window.JsonView.render(tree, target);
       expandJsonTreeToDepth(tree, JSON_EXPAND_DEPTH);
@@ -307,9 +307,29 @@
     document.querySelectorAll(".cell.tag_exp-evidence").forEach(enhanceEvidence);
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", enhanceExperiments);
-  } else {
+  function enhanceLivingSpecifications() {
+    document.querySelectorAll(".living-json-raw").forEach((raw) => {
+      if (raw.dataset.livingEnhanced === "true") {
+        return;
+      }
+      const rendered = renderJsonTree(raw);
+      if (rendered !== raw) {
+        rendered.classList.add("living-json-viewer");
+        raw.replaceWith(rendered);
+      } else {
+        raw.dataset.livingEnhanced = "true";
+      }
+    });
+  }
+
+  function enhanceDocOps() {
     enhanceExperiments();
+    enhanceLivingSpecifications();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", enhanceDocOps);
+  } else {
+    enhanceDocOps();
   }
 })();
