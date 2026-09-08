@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.3](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.6.2...v0.6.3) (2026-09-08)
+
+
+### Bug Fixes
+
+* **specifications:** enforce stock design boundary ([#40](https://github.com/betabitplus/ternforge-tooling-docops/issues/40)) ([b1592d0](https://github.com/betabitplus/ternforge-tooling-docops/commit/b1592d000ad2dcd46db04d3623b5638def5aa1eb))
+
 ## [0.6.2](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.6.1...v0.6.2) (2026-09-08)
 
 
