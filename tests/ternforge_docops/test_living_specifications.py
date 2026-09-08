@@ -104,7 +104,7 @@ def test_living_specs_render_current_narrative_and_rich_evidence(
             "tests.bdd.test_images#test_image",
             180,
             "A provider route describes the example traffic image — QwenChat",
-        ): "test-results/index.html#abc123"
+        ): "test-results/index.html#testresult/abc123"
     }
 
     report = render_living_specifications(root, raw, result_links=result_links)
@@ -116,14 +116,20 @@ def test_living_specs_render_current_narrative_and_rich_evidence(
     assert ".. tab-item:: ✓ QwenChat" in report.source
     assert (
         ":bdg-link-secondary-line:`Execution evidence ↗ "
-        "<test-results/index.html#abc123>`" in report.source
+        "<test-results/index.html#testresult/abc123>`" in report.source
     )
-    assert ".. card:: Acceptance scenarios" in report.source
+    assert ".. rubric:: Scenarios" in report.source
     assert (
-        ".. card:: Scenario 01 · A provider route describes the example traffic image"
-        in report.source
+        ".. dropdown:: Scenario 01 · A provider route describes the example "
+        "traffic image" in report.source
     )
-    assert ":bdg-secondary-line:`Rule`" in report.source
+    assert ":open:" in report.source
+    assert (
+        "Rule · A traffic image produces grounded structured evidence" in report.source
+    )
+    assert ":bdg-secondary-line:`Rule`" not in report.source
+    assert ":shadow: none" not in report.source
+    assert ":margin:" not in report.source
     assert ".. container:: living-scenario" not in report.source
     assert ".. container:: living-step" not in report.source
     assert ":class-card: portal-card" not in report.source

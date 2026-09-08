@@ -98,14 +98,13 @@ def _render_story(
     feature: str,
     row: ScenarioRow,
 ) -> None:
-    """Render one numbered scenario card and its current concrete examples."""
+    """Render one numbered scenario using the stock Sphinx Design disclosure."""
     number, rule, story, examples = row
     ordered = sorted(examples, key=lambda value: value.name.casefold())
     outcome, count = status_summary(ordered)
     lines.extend((f".. _{_scenario_anchor(epic, feature, rule, story)}:", ""))
-    append_rst(lines, 0, f".. card:: Scenario {number:02d} · {rst_inline(story)}")
-    append_rst(lines, 3, ":shadow: none")
-    append_rst(lines, 3, ":margin: 3 0 4 0")
+    append_rst(lines, 0, f".. dropdown:: Scenario {number:02d} · {rst_inline(story)}")
+    append_rst(lines, 3, ":open:")
     append_rst(lines, 0)
     append_rst(lines, 3, f"{outcome} **{count}**")
     append_rst(lines, 0)
@@ -148,16 +147,14 @@ def _render_scenario_index(
     rows: list[ScenarioRow],
 ) -> None:
     """Render a compact feature-local acceptance-scenario navigation index."""
-    append_rst(lines, 0, ".. card:: Acceptance scenarios")
-    append_rst(lines, 3, ":shadow: none")
-    append_rst(lines, 3, ":margin: 2 0 4 0")
+    append_rst(lines, 0, ".. rubric:: Scenarios")
     append_rst(lines, 0)
     for _, rule, story, examples in rows:
         outcome, count = status_summary(examples)
         anchor = _scenario_anchor(epic, feature, rule, story)
         append_rst(
             lines,
-            3,
+            0,
             f"#. :ref:`{rst_inline(story)} <{anchor}>` — {outcome} {count}",
         )
     append_rst(lines, 0)
@@ -229,8 +226,7 @@ def _render_feature(
     current_rule = ""
     for number, rule, story, examples in rows:
         if rule != current_rule:
-            append_rst(lines, 0, f":bdg-secondary-line:`Rule` **{rst_inline(rule)}**")
-            append_rst(lines, 0)
+            heading(lines, f"Rule · {rule}", "^")
             current_rule = rule
         _render_story(lines, epic, feature, (number, rule, story, examples))
     _render_feature_source(lines, feature_examples)
