@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.1](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.6.0...v0.6.1) (2026-09-08)
+
+
+### Bug Fixes
+
+* **specifications:** link living evidence to allure ([#35](https://github.com/betabitplus/ternforge-tooling-docops/issues/35)) ([1efc8ea](https://github.com/betabitplus/ternforge-tooling-docops/commit/1efc8ea8609c27dd550f917ba6c83190799c910e))
+
 ## [0.6.0](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.5.2...v0.6.0) (2026-09-08)
 
 
