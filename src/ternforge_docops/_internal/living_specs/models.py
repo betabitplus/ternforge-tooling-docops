@@ -41,7 +41,9 @@ class LivingExample:
     steps: tuple[LivingStep, ...]
     attachments: tuple[LivingAttachment, ...]
     duration_ms: int | None
+    started_ms: int | None
     full_name: str
+    allure_url: str
     source_path: str
     source_line: int | None
     source_exists: bool

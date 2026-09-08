@@ -539,7 +539,21 @@ html[data-theme="dark"] .sd-card {
 
 .living-technical-details,
 .living-source {
+  min-width: 0;
+  max-width: 100%;
   margin: 0.9rem 0 1.2rem;
+}
+
+.living-technical-details .sd-summary-content {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.living-technical-details code.literal,
+.living-technical-details code.literal .pre {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .living-json-viewer {

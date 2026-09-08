@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import html
+from datetime import UTC, datetime
 
 from ternforge_docops._internal.living_specs.models import (
     LivingAttachment,
@@ -162,6 +163,12 @@ def _render_technical_metadata(
     """Render forensic execution metadata for one BDD example."""
     append_rst(lines, body, f"**Status:** ``{example.status}``")
     append_rst(lines, 0)
+    if example.started_ms is not None:
+        executed = datetime.fromtimestamp(example.started_ms / 1000, tz=UTC).isoformat(
+            timespec="seconds"
+        )
+        append_rst(lines, body, f"**Executed:** ``{executed.replace('+00:00', 'Z')}``")
+        append_rst(lines, 0)
     if example.duration_ms is not None:
         append_rst(lines, body, f"**Duration:** {example.duration_ms} ms")
         append_rst(lines, 0)
@@ -220,7 +227,14 @@ def _render_technical(lines: list[str], example: LivingExample, indent: int) -> 
 def render_example(lines: list[str], example: LivingExample, indent: int) -> None:
     """Render one current BDD example and its evidence."""
     status = f"{status_icon(example.status)} {example.status.capitalize()}"
-    append_rst(lines, indent, f"**{status}**")
+    if example.allure_url:
+        append_rst(
+            lines,
+            indent,
+            f"**{status}** · `Open current result in Allure <{example.allure_url}>`__",
+        )
+    else:
+        append_rst(lines, indent, f"**{status}**")
     append_rst(lines, 0)
     if example.status != "passed" and example.status_message:
         append_rst(

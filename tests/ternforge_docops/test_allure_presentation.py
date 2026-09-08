@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
+import base64
 import json
 from pathlib import Path
 
 import pytest
 
-from ternforge_docops._internal.allure import curate_results, generate_report
+from ternforge_docops._internal.allure import (
+    curate_results,
+    extract_result_links,
+    generate_report,
+)
 
 
 def _write_result(
@@ -135,3 +140,29 @@ def test_generate_report_delegates_forensic_html_to_allure(
     assert "--theme" not in command
     assert command[command.index("--group-by") + 1] == "layer,parentSuite,suite"
     assert command[command.index("--report-name") + 1] == "All test results"
+
+
+def test_extract_result_links_uses_allure_ids(tmp_path: Path) -> None:
+    """Living Specs can deep-link to the exact result rendered by pinned Allure 3."""
+    result = {
+        "name": "scenario — QwenChat",
+        "fullName": "tests.bdd.test_example#test_scenario",
+        "start": 123,
+        "status": "passed",
+    }
+    payload = base64.b64encode(json.dumps(result).encode()).decode()
+    report = tmp_path / "index.html"
+    report.write_text(
+        f'<script>d("data/test-results/abc123.json","{payload}")</script>',
+        encoding="utf-8",
+    )
+
+    links = extract_result_links(report)
+
+    assert links == {
+        (
+            "tests.bdd.test_example#test_scenario",
+            123,
+            "scenario — QwenChat",
+        ): "test-results/index.html#testresult/abc123"
+    }

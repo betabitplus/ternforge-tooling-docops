@@ -140,7 +140,7 @@ def test_build_portal_publishes_living_specs_and_allure_diagnostics(
     monkeypatch.setattr(
         service,
         "render_living_specifications",
-        lambda root, raw_results: SimpleNamespace(
+        lambda root, raw_results, *, result_links: SimpleNamespace(
             source="Current executable behavior\n",
             assets=(),
         ),
@@ -153,7 +153,7 @@ def test_build_portal_publishes_living_specs_and_allure_diagnostics(
     result = service.build_portal(tmp_path, allure_results=raw, output=output)
 
     assert result == output
-    assert calls == ["html", "curate", "allure"]
+    assert calls == ["curate", "allure", "html"]
     assert (output / "test-results" / "index.html").read_text() == "all"
     assert not (output / "test-results" / "bdd").exists()
     assert not (output / "test-results" / "requirements").exists()

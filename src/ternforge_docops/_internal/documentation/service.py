@@ -10,7 +10,11 @@ from pathlib import Path
 
 from sphinx.cmd.build import build_main
 
-from ternforge_docops._internal.allure import curate_results, generate_report
+from ternforge_docops._internal.allure import (
+    curate_results,
+    extract_result_links,
+    generate_report,
+)
 from ternforge_docops._internal.living_specs import (
     publish_living_assets,
     render_living_specifications,
@@ -185,23 +189,8 @@ def build_portal(
     live_examples: bool = False,
 ) -> Path:
     """Build native Living Specs and one forensic Allure view."""
-    living_report = render_living_specifications(root, allure_results)
     docs_root = root / "docs"
     output_root = output or docs_root / "_build" / "html"
-    with _materialized_sources(docs_root, junit, living_report.source):
-        _run_sphinx(
-            root,
-            docs_root,
-            output_root,
-            "html",
-            live_examples=live_examples,
-        )
-    publish_living_assets(living_report, output_root)
-    needs_json = output_root / "needs.json"
-    if not needs_json.is_file():
-        message = f"Sphinx build did not produce {needs_json}"
-        raise RuntimeError(message)
-
     with tempfile.TemporaryDirectory(prefix="ternforge-docops-allure-") as temp_dir:
         temp = Path(temp_dir)
         curated = temp / "curated"
@@ -210,6 +199,24 @@ def build_portal(
             curated_results=curated,
             output=temp / "report",
         )
+        living_report = render_living_specifications(
+            root,
+            allure_results,
+            result_links=extract_result_links(report),
+        )
+        with _materialized_sources(docs_root, junit, living_report.source):
+            _run_sphinx(
+                root,
+                docs_root,
+                output_root,
+                "html",
+                live_examples=live_examples,
+            )
+        publish_living_assets(living_report, output_root)
+        needs_json = output_root / "needs.json"
+        if not needs_json.is_file():
+            message = f"Sphinx build did not produce {needs_json}"
+            raise RuntimeError(message)
         target = output_root / "test-results"
         shutil.rmtree(target, ignore_errors=True)
         target.mkdir(parents=True)
