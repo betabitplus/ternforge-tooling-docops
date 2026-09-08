@@ -3,11 +3,17 @@
 from __future__ import annotations
 
 import ast
-import json
 import re
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from ternforge_docops._internal.allure.results import (
+    ExecutionKey,
+    current_results,
+    execution_key,
+    labels,
+)
 from ternforge_docops._internal.living_specs.models import (
     LivingAttachment,
     LivingExample,
@@ -20,21 +26,9 @@ _SPECIFICATION_RE = re.compile(
 _STATUS_ORDER = {"failed": 0, "broken": 1, "skipped": 2, "unknown": 3, "passed": 4}
 
 
-def _labels(result: dict[str, Any], name: str) -> tuple[str, ...]:
-    """Return ordered values for one Allure label name."""
-    labels = result.get("labels")
-    if not isinstance(labels, list):
-        return ()
-    return tuple(
-        str(label.get("value"))
-        for label in labels
-        if isinstance(label, dict) and label.get("name") == name and label.get("value")
-    )
-
-
 def _one_label(result: dict[str, Any], name: str, fallback: str) -> str:
     """Return the first value for one Allure label or a fallback."""
-    values = _labels(result, name)
+    values = labels(result, name)
     return values[0] if values else fallback
 
 
@@ -145,49 +139,6 @@ def _steps(raw_results: Path, result: dict[str, Any]) -> tuple[LivingStep, ...]:
     )
 
 
-def _read_result(result_path: Path) -> dict[str, Any] | None:
-    """Read one Allure result defensively, ignoring malformed or unreadable files."""
-    try:
-        result = json.loads(result_path.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
-        return None
-    return result if isinstance(result, dict) else None
-
-
-def _result_identity(result: dict[str, Any], result_path: Path) -> str:
-    """Return the stable execution identity used for current-result selection."""
-    return str(
-        result.get("historyId")
-        or result.get("uuid")
-        or result.get("testCaseId")
-        or result_path.name
-    )
-
-
-def _result_ordering(result: dict[str, Any], result_path: Path) -> tuple[int, int, str]:
-    """Return a deterministic ordering key for repeated executions."""
-    return (
-        int(result.get("stop") or result.get("start") or 0),
-        int(result.get("start") or 0),
-        result_path.name,
-    )
-
-
-def _current_bdd_results(raw_results: Path) -> tuple[dict[str, Any], ...]:
-    """Select only the latest retained execution for each BDD example identity."""
-    current: dict[str, tuple[tuple[int, int, str], dict[str, Any]]] = {}
-    for result_path in sorted(raw_results.glob("*-result.json")):
-        result = _read_result(result_path)
-        if result is None or "bdd" not in _labels(result, "layer"):
-            continue
-        identity = _result_identity(result, result_path)
-        ordering = _result_ordering(result, result_path)
-        previous = current.get(identity)
-        if previous is None or ordering > previous[0]:
-            current[identity] = (ordering, result)
-    return tuple(value[1] for value in current.values())
-
-
 def _duration_ms(result: dict[str, Any]) -> int | None:
     """Compute captured execution duration when both timestamps are available."""
     start = result.get("start")
@@ -195,6 +146,12 @@ def _duration_ms(result: dict[str, Any]) -> int | None:
     if not isinstance(start, int | float) or not isinstance(stop, int | float):
         return None
     return max(0, int(stop) - int(start))
+
+
+def _started_ms(result: dict[str, Any]) -> int | None:
+    """Return the captured start timestamp when available."""
+    start = result.get("start")
+    return int(start) if isinstance(start, int | float) else None
 
 
 def _status_details(result: dict[str, Any]) -> tuple[str, str]:
@@ -205,7 +162,12 @@ def _status_details(result: dict[str, Any]) -> tuple[str, str]:
     return str(details.get("message") or ""), str(details.get("trace") or "")
 
 
-def _example(root: Path, raw_results: Path, result: dict[str, Any]) -> LivingExample:
+def _example(
+    root: Path,
+    raw_results: Path,
+    result: dict[str, Any],
+    result_links: Mapping[ExecutionKey, str],
+) -> LivingExample:
     """Normalize one current Allure BDD result into the Living Specs model."""
     feature = _one_label(result, "feature", "Executable behavior")
     rule = _one_label(result, "rule", "Behavior rule")
@@ -221,12 +183,14 @@ def _example(root: Path, raw_results: Path, result: dict[str, Any]) -> LivingExa
         feature_description=description,
         rule=rule,
         story=story,
-        requirements=tuple(dict.fromkeys(_labels(result, "requirement"))),
-        tags=tuple(dict.fromkeys(_labels(result, "tag"))),
+        requirements=tuple(dict.fromkeys(labels(result, "requirement"))),
+        tags=tuple(dict.fromkeys(labels(result, "tag"))),
         steps=_steps(raw_results, result),
         attachments=_attachments(raw_results, result),
         duration_ms=_duration_ms(result),
+        started_ms=_started_ms(result),
         full_name=str(result.get("fullName") or ""),
+        allure_url=result_links.get(execution_key(result), ""),
         source_path=source_path,
         source_line=source_line,
         source_exists=source_exists,
@@ -235,11 +199,18 @@ def _example(root: Path, raw_results: Path, result: dict[str, Any]) -> LivingExa
     )
 
 
-def load_examples(root: Path, raw_results: Path) -> tuple[LivingExample, ...]:
-    """Load the latest BDD executions and normalize them for presentation."""
+def load_examples(
+    root: Path,
+    raw_results: Path,
+    *,
+    result_links: Mapping[ExecutionKey, str] | None = None,
+) -> tuple[LivingExample, ...]:
+    """Load the exact current BDD executions shared with the forensic Allure view."""
+    links = result_links or {}
     examples = [
-        _example(root, raw_results, result)
-        for result in _current_bdd_results(raw_results)
+        _example(root, raw_results, current.data, links)
+        for current in current_results(raw_results)
+        if "bdd" in labels(current.data, "layer")
     ]
     return tuple(
         sorted(

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import shutil
+from collections.abc import Mapping
 from pathlib import Path
 
+from ternforge_docops._internal.allure.results import ExecutionKey
 from ternforge_docops._internal.living_specs.evidence import load_examples
 from ternforge_docops._internal.living_specs.models import (
     LivingAttachment,
@@ -42,10 +44,17 @@ def _published_assets(
 
 
 def render_living_specifications(
-    root: Path, raw_results: Path
+    root: Path,
+    raw_results: Path,
+    *,
+    result_links: Mapping[ExecutionKey, str] | None = None,
 ) -> LivingSpecificationsReport:
     """Render current BDD evidence as narrative-first, theme-native RST."""
-    examples = load_examples(root.resolve(), raw_results.resolve())
+    examples = load_examples(
+        root.resolve(),
+        raw_results.resolve(),
+        result_links=result_links,
+    )
     if not examples:
         return LivingSpecificationsReport(source=_EMPTY_SOURCE, assets=())
     return LivingSpecificationsReport(
