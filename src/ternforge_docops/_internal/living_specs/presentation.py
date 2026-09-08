@@ -15,6 +15,8 @@ from ternforge_docops._internal.living_specs.detail import (
 )
 from ternforge_docops._internal.living_specs.models import LivingExample
 
+type ScenarioRow = tuple[int, str, str, list[LivingExample]]
+
 
 def _slug(value: str) -> str:
     """Create a stable anchor-safe slug from one narrative label."""
@@ -25,6 +27,13 @@ def _slug(value: str) -> str:
 def _feature_anchor(epic: str, feature: str) -> str:
     """Return the stable Living Specs anchor for one feature."""
     return f"living-feature-{_slug(epic)}-{_slug(feature)}"
+
+
+def _scenario_anchor(epic: str, feature: str, rule: str, story: str) -> str:
+    """Return the stable Living Specs anchor for one acceptance scenario."""
+    return (
+        f"living-scenario-{_slug(epic)}-{_slug(feature)}-{_slug(rule)}-{_slug(story)}"
+    )
 
 
 def _group_examples(
@@ -87,33 +96,79 @@ def _render_overview(lines: list[str], examples: tuple[LivingExample, ...]) -> N
 
 def _render_story(
     lines: list[str],
-    story: str,
-    examples: list[LivingExample],
+    epic: str,
+    feature: str,
+    row: ScenarioRow,
 ) -> None:
-    """Render one scenario and its current concrete examples."""
+    """Render one numbered scenario card and its current concrete examples."""
+    number, rule, story, examples = row
     ordered = sorted(examples, key=lambda value: value.name.casefold())
     outcome, count = status_summary(ordered)
-    append_rst(lines, 0, f"**Scenario:** {rst_inline(story)}")
+    lines.extend((f".. _{_scenario_anchor(epic, feature, rule, story)}:", ""))
+    append_rst(lines, 0, ".. container:: living-scenario")
     append_rst(lines, 0)
-    append_rst(lines, 0, f"**Current verification:** {outcome} · {count}")
+    append_rst(lines, 3, ".. container:: living-scenario-heading")
+    append_rst(lines, 0)
+    append_rst(lines, 6, f"**Scenario {number:02d}**")
+    append_rst(lines, 0)
+    append_rst(lines, 6, f"**{rst_inline(story)}**")
+    append_rst(lines, 0)
+    append_rst(lines, 3, ".. container:: living-scenario-summary")
+    append_rst(lines, 0)
+    append_rst(lines, 6, f"**{outcome}** · {count}")
     append_rst(lines, 0)
     requirements = tuple(
         dict.fromkeys(req for example in ordered for req in example.requirements)
     )
     if requirements:
         links = ", ".join(f":need:`{rst_inline(req)}`" for req in requirements)
-        append_rst(lines, 0, f"**Verifies:** {links}")
+        append_rst(lines, 6, f"**Verifies:** {links}")
         append_rst(lines, 0)
     if len(ordered) == 1 and ordered[0].name == "Scenario":
-        render_example(lines, ordered[0], 0)
+        render_example(lines, ordered[0], 3)
         return
-    append_rst(lines, 0, ".. tab-set::")
+    append_rst(lines, 3, ".. tab-set::")
     append_rst(lines, 0)
     for example in ordered:
         label = f"{status_icon(example.status)} {example.name}"
-        append_rst(lines, 3, f".. tab-item:: {rst_inline(label)}")
+        append_rst(lines, 6, f".. tab-item:: {rst_inline(label)}")
         append_rst(lines, 0)
-        render_example(lines, example, 6)
+        render_example(lines, example, 9)
+
+
+def _scenario_rows(
+    rules: dict[str, dict[str, list[LivingExample]]],
+) -> list[ScenarioRow]:
+    """Return deterministically numbered acceptance scenarios for one feature."""
+    rows: list[ScenarioRow] = []
+    number = 1
+    for rule in sorted(rules, key=str.casefold):
+        for story in sorted(rules[rule], key=str.casefold):
+            rows.append((number, rule, story, rules[rule][story]))
+            number += 1
+    return rows
+
+
+def _render_scenario_index(
+    lines: list[str],
+    epic: str,
+    feature: str,
+    rows: list[ScenarioRow],
+) -> None:
+    """Render a compact feature-local acceptance-scenario navigation index."""
+    append_rst(lines, 0, ".. container:: living-scenario-index")
+    append_rst(lines, 0)
+    append_rst(lines, 3, "**Acceptance scenarios**")
+    append_rst(lines, 0)
+    for _, rule, story, examples in rows:
+        outcome, count = status_summary(examples)
+        anchor = _scenario_anchor(epic, feature, rule, story)
+        append_rst(
+            lines,
+            3,
+            f"#. :ref:`{rst_inline(story)} <{anchor}>` — {outcome} · {count}",
+        )
+    append_rst(lines, 0)
 
 
 def _render_feature_source(
@@ -177,11 +232,27 @@ def _render_feature(
     if description:
         lines.extend((rst_inline(description), ""))
     outcome, count = status_summary(feature_examples)
-    lines.extend((f"**Current verification:** {outcome} · {count}", ""))
-    for rule in sorted(rules, key=str.casefold):
-        lines.extend((f".. rubric:: Rule — {rst_inline(rule)}", ""))
-        for story in sorted(rules[rule], key=str.casefold):
-            _render_story(lines, story, rules[rule][story])
+    lines.extend(
+        (
+            ".. container:: living-feature-summary",
+            "",
+            f"   **{outcome}** · {count}",
+            "",
+        )
+    )
+    rows = _scenario_rows(rules)
+    _render_scenario_index(lines, epic, feature, rows)
+    current_rule = ""
+    for number, rule, story, examples in rows:
+        if rule != current_rule:
+            append_rst(lines, 0, ".. container:: living-rule-heading")
+            append_rst(lines, 0)
+            append_rst(lines, 3, "**Rule**")
+            append_rst(lines, 0)
+            append_rst(lines, 3, rst_inline(rule))
+            append_rst(lines, 0)
+            current_rule = rule
+        _render_story(lines, epic, feature, (number, rule, story, examples))
     _render_feature_source(lines, feature_examples)
 
 

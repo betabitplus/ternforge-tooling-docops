@@ -104,20 +104,24 @@ def test_living_specs_render_current_narrative_and_rich_evidence(
             "tests.bdd.test_images#test_image",
             180,
             "A provider route describes the example traffic image — QwenChat",
-        ): "test-results/index.html#testresult/abc123"
+        ): "test-results/index.html#abc123"
     }
 
     report = render_living_specifications(root, raw, result_links=result_links)
 
     assert "Structured image understanding" in report.source
     assert "The same image contract should remain valid" in report.source
-    assert "**Current verification:** ✓ Verified · 1/1 passed" in report.source
+    assert "**✓ Verified** · 1/1 passed" in report.source
     assert ":need:`REQ_IMAGE_INPUT`" in report.source
     assert ".. tab-item:: ✓ QwenChat" in report.source
     assert (
-        "Open current result in Allure <test-results/index.html#testresult/abc123>"
+        "View execution evidence in Allure ↗ <test-results/index.html#abc123>"
         in report.source
     )
+    assert "**Acceptance scenarios**" in report.source
+    assert "**Scenario 01**" in report.source
+    assert "**A provider route describes the example traffic image**" in report.source
+    assert "living-scenario" in report.source
     assert "**Executed:**" in report.source
     assert '**Given** the "QwenChat" image route' in report.source
     assert "**When** the route analyzes the example traffic image:" in report.source

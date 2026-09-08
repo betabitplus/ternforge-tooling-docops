@@ -227,14 +227,19 @@ def _render_technical(lines: list[str], example: LivingExample, indent: int) -> 
 def render_example(lines: list[str], example: LivingExample, indent: int) -> None:
     """Render one current BDD example and its evidence."""
     status = f"{status_icon(example.status)} {example.status.capitalize()}"
+    append_rst(
+        lines,
+        indent,
+        f".. container:: living-example-meta living-example-{example.status}",
+    )
+    append_rst(lines, 0)
     if example.allure_url:
-        append_rst(
-            lines,
-            indent,
-            f"**{status}** · `Open current result in Allure <{example.allure_url}>`__",
+        evidence_link = (
+            f"`View execution evidence in Allure ↗ <{example.allure_url}>`__"
         )
+        append_rst(lines, indent + 3, f"**{status}** · {evidence_link}")
     else:
-        append_rst(lines, indent, f"**{status}**")
+        append_rst(lines, indent + 3, f"**{status}**")
     append_rst(lines, 0)
     if example.status != "passed" and example.status_message:
         append_rst(
