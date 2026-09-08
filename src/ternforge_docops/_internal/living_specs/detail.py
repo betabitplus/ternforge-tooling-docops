@@ -48,16 +48,16 @@ def _code_block(
 
 
 def status_summary(values: list[LivingExample]) -> tuple[str, str]:
-    """Summarize verification outcome for one set of examples."""
+    """Summarize verification outcome using stock Sphinx Design badges."""
     total = len(values)
     passed = sum(value.status == "passed" for value in values)
     if total and passed == total:
-        return "✓ Verified", f"{passed}/{total} passed"
+        return ":bdg-success:`Verified`", f"{passed}/{total} passed"
     if any(value.status in {"failed", "broken"} for value in values):
-        return "✗ Failing", f"{passed}/{total} passed"
+        return ":bdg-danger:`Failing`", f"{passed}/{total} passed"
     if any(value.status == "skipped" for value in values):
-        return "◐ Incomplete", f"{passed}/{total} passed"
-    return "? Unknown", f"{passed}/{total} passed"
+        return ":bdg-warning:`Incomplete`", f"{passed}/{total} passed"
+    return ":bdg-secondary:`Unknown`", f"{passed}/{total} passed"
 
 
 def status_icon(status: str) -> str:
@@ -143,18 +143,13 @@ def _step_parts(name: str) -> tuple[str, str]:
 def _render_step(lines: list[str], step: LivingStep, indent: int) -> None:
     """Render one executed BDD step with non-forensic attachments beside it."""
     keyword, text = _step_parts(step.name)
-    append_rst(
-        lines, indent, f".. container:: living-step living-step-{keyword.lower()}"
-    )
-    append_rst(lines, 0)
-    content_indent = indent + 3
     sentence = f"**{keyword}** {rst_inline(text)}".rstrip()
-    append_rst(lines, content_indent, sentence)
+    append_rst(lines, indent, sentence)
     append_rst(lines, 0)
     for attachment in step.attachments:
         if attachment.name.casefold() in _TECHNICAL_ATTACHMENT_NAMES:
             continue
-        _render_attachment(lines, attachment, content_indent)
+        _render_attachment(lines, attachment, indent)
 
 
 def _render_technical_metadata(
@@ -226,21 +221,13 @@ def _render_technical(lines: list[str], example: LivingExample, indent: int) -> 
 
 def render_example(lines: list[str], example: LivingExample, indent: int) -> None:
     """Render one current BDD example and its evidence."""
-    status = f"{status_icon(example.status)} {example.status.capitalize()}"
-    append_rst(
-        lines,
-        indent,
-        f".. container:: living-example-meta living-example-{example.status}",
-    )
-    append_rst(lines, 0)
     if example.allure_url:
-        evidence_link = (
-            f"`View execution evidence in Allure ↗ <{example.allure_url}>`__"
+        append_rst(
+            lines,
+            indent,
+            f":bdg-link-secondary-line:`Execution evidence ↗ <{example.allure_url}>`",
         )
-        append_rst(lines, indent + 3, f"**{status}** · {evidence_link}")
-    else:
-        append_rst(lines, indent + 3, f"**{status}**")
-    append_rst(lines, 0)
+        append_rst(lines, 0)
     if example.status != "passed" and example.status_message:
         append_rst(
             lines, indent, f"**Attention:** {rst_inline(example.status_message)}"

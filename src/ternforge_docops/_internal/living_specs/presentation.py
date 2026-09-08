@@ -70,7 +70,6 @@ def _render_overview(lines: list[str], examples: tuple[LivingExample, ...]) -> N
         ("Passing", f"{passed}/{len(examples)}"),
     ):
         append_rst(lines, 3, f".. grid-item-card:: {title}")
-        append_rst(lines, 6, ":class-card: portal-card")
         append_rst(lines, 0)
         append_rst(lines, 6, value)
         append_rst(lines, 0)
@@ -78,7 +77,6 @@ def _render_overview(lines: list[str], examples: tuple[LivingExample, ...]) -> N
     heading(lines, "Feature overview", "-")
     append_rst(lines, 0, ".. list-table::")
     append_rst(lines, 3, ":header-rows: 1")
-    append_rst(lines, 3, ":class: living-feature-overview")
     append_rst(lines, 0)
     append_rst(lines, 3, "* - Area")
     append_rst(lines, 5, "- Capability")
@@ -105,24 +103,18 @@ def _render_story(
     ordered = sorted(examples, key=lambda value: value.name.casefold())
     outcome, count = status_summary(ordered)
     lines.extend((f".. _{_scenario_anchor(epic, feature, rule, story)}:", ""))
-    append_rst(lines, 0, ".. container:: living-scenario")
+    append_rst(lines, 0, f".. card:: Scenario {number:02d} · {rst_inline(story)}")
+    append_rst(lines, 3, ":shadow: none")
+    append_rst(lines, 3, ":margin: 3 0 4 0")
     append_rst(lines, 0)
-    append_rst(lines, 3, ".. container:: living-scenario-heading")
-    append_rst(lines, 0)
-    append_rst(lines, 6, f"**Scenario {number:02d}**")
-    append_rst(lines, 0)
-    append_rst(lines, 6, f"**{rst_inline(story)}**")
-    append_rst(lines, 0)
-    append_rst(lines, 3, ".. container:: living-scenario-summary")
-    append_rst(lines, 0)
-    append_rst(lines, 6, f"**{outcome}** · {count}")
+    append_rst(lines, 3, f"{outcome} **{count}**")
     append_rst(lines, 0)
     requirements = tuple(
         dict.fromkeys(req for example in ordered for req in example.requirements)
     )
     if requirements:
         links = ", ".join(f":need:`{rst_inline(req)}`" for req in requirements)
-        append_rst(lines, 6, f"**Verifies:** {links}")
+        append_rst(lines, 3, f"**Verifies:** {links}")
         append_rst(lines, 0)
     if len(ordered) == 1 and ordered[0].name == "Scenario":
         render_example(lines, ordered[0], 3)
@@ -156,9 +148,9 @@ def _render_scenario_index(
     rows: list[ScenarioRow],
 ) -> None:
     """Render a compact feature-local acceptance-scenario navigation index."""
-    append_rst(lines, 0, ".. container:: living-scenario-index")
-    append_rst(lines, 0)
-    append_rst(lines, 3, "**Acceptance scenarios**")
+    append_rst(lines, 0, ".. card:: Acceptance scenarios")
+    append_rst(lines, 3, ":shadow: none")
+    append_rst(lines, 3, ":margin: 2 0 4 0")
     append_rst(lines, 0)
     for _, rule, story, examples in rows:
         outcome, count = status_summary(examples)
@@ -166,7 +158,7 @@ def _render_scenario_index(
         append_rst(
             lines,
             3,
-            f"#. :ref:`{rst_inline(story)} <{anchor}>` — {outcome} · {count}",
+            f"#. :ref:`{rst_inline(story)} <{anchor}>` — {outcome} {count}",
         )
     append_rst(lines, 0)
 
@@ -189,7 +181,6 @@ def _render_feature_source(
         if not exists:
             continue
         append_rst(lines, 0, ".. dropdown:: Gherkin source")
-        append_rst(lines, 3, ":class-container: living-source")
         append_rst(lines, 0)
         append_rst(lines, 3, f"``{rst_inline(source)}``")
         append_rst(lines, 0)
@@ -232,24 +223,13 @@ def _render_feature(
     if description:
         lines.extend((rst_inline(description), ""))
     outcome, count = status_summary(feature_examples)
-    lines.extend(
-        (
-            ".. container:: living-feature-summary",
-            "",
-            f"   **{outcome}** · {count}",
-            "",
-        )
-    )
+    lines.extend((f"{outcome} **{count}**", ""))
     rows = _scenario_rows(rules)
     _render_scenario_index(lines, epic, feature, rows)
     current_rule = ""
     for number, rule, story, examples in rows:
         if rule != current_rule:
-            append_rst(lines, 0, ".. container:: living-rule-heading")
-            append_rst(lines, 0)
-            append_rst(lines, 3, "**Rule**")
-            append_rst(lines, 0)
-            append_rst(lines, 3, rst_inline(rule))
+            append_rst(lines, 0, f":bdg-secondary-line:`Rule` **{rst_inline(rule)}**")
             append_rst(lines, 0)
             current_rule = rule
         _render_story(lines, epic, feature, (number, rule, story, examples))
