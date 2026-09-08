@@ -104,7 +104,7 @@ def test_living_specs_render_current_narrative_and_rich_evidence(
             "tests.bdd.test_images#test_image",
             180,
             "A provider route describes the example traffic image — QwenChat",
-        ): "test-results/index.html#testresult/abc123"
+        ): "test-results/index.html#abc123"
     }
 
     report = render_living_specifications(root, raw, result_links=result_links)
@@ -116,7 +116,7 @@ def test_living_specs_render_current_narrative_and_rich_evidence(
     assert ".. tab-item:: ✓ QwenChat" in report.source
     assert (
         ":bdg-link-secondary-line:`Execution evidence ↗ "
-        "<test-results/index.html#testresult/abc123>`" in report.source
+        "<test-results/index.html#abc123>`" in report.source
     )
     assert ".. rubric:: Scenarios" in report.source
     assert (
