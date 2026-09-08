@@ -124,6 +124,9 @@ def test_living_specs_render_current_narrative_and_rich_evidence(
         in report.source
     )
     assert ":bdg-secondary-line:`Rule`" in report.source
+    assert ".. container:: living-scenario" not in report.source
+    assert ".. container:: living-step" not in report.source
+    assert ":class-card: portal-card" not in report.source
     assert "**Executed:**" in report.source
     assert '**Given** the "QwenChat" image route' in report.source
     assert "**When** the route analyzes the example traffic image:" in report.source
