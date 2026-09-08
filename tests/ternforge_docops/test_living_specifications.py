@@ -111,17 +111,19 @@ def test_living_specs_render_current_narrative_and_rich_evidence(
 
     assert "Structured image understanding" in report.source
     assert "The same image contract should remain valid" in report.source
-    assert "**✓ Verified** · 1/1 passed" in report.source
+    assert ":bdg-success:`Verified` **1/1 passed**" in report.source
     assert ":need:`REQ_IMAGE_INPUT`" in report.source
     assert ".. tab-item:: ✓ QwenChat" in report.source
     assert (
-        "View execution evidence in Allure ↗ <test-results/index.html#abc123>"
+        ":bdg-link-secondary-line:`Execution evidence ↗ "
+        "<test-results/index.html#abc123>`" in report.source
+    )
+    assert ".. card:: Acceptance scenarios" in report.source
+    assert (
+        ".. card:: Scenario 01 · A provider route describes the example traffic image"
         in report.source
     )
-    assert "**Acceptance scenarios**" in report.source
-    assert "**Scenario 01**" in report.source
-    assert "**A provider route describes the example traffic image**" in report.source
-    assert "living-scenario" in report.source
+    assert ":bdg-secondary-line:`Rule`" in report.source
     assert "**Executed:**" in report.source
     assert '**Given** the "QwenChat" image route' in report.source
     assert "**When** the route analyzes the example traffic image:" in report.source
