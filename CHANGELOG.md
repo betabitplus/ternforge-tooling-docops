@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.4](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.6.3...v0.6.4) (2026-09-08)
+
+
+### Bug Fixes
+
+* **specifications:** improve living report navigation ([#42](https://github.com/betabitplus/ternforge-tooling-docops/issues/42)) ([57f40f1](https://github.com/betabitplus/ternforge-tooling-docops/commit/57f40f1a48c8844cc882082ceb77f36a5ec8f718))
+
 ## [0.6.3](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.6.2...v0.6.3) (2026-09-08)
 
 
