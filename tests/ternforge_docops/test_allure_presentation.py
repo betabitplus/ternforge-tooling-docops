@@ -164,5 +164,5 @@ def test_extract_result_links_uses_allure_ids(tmp_path: Path) -> None:
             "tests.bdd.test_example#test_scenario",
             123,
             "scenario — QwenChat",
-        ): "test-results/index.html#testresult/abc123"
+        ): "test-results/index.html#abc123"
     }
