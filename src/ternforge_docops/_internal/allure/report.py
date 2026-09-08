@@ -67,7 +67,5 @@ def extract_result_links(report: Path) -> dict[ExecutionKey, str]:
         result = _decoded_result(match.group("payload"))
         if result is None:
             continue
-        links[execution_key(result)] = (
-            f"test-results/index.html#testresult/{match.group('id')}"
-        )
+        links[execution_key(result)] = f"test-results/index.html#{match.group('id')}"
     return links
