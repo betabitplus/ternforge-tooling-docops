@@ -12,9 +12,10 @@ DocOps owns the reusable documentation platform layer:
 - the canonical Sphinx-Needs engineering graph profile and schemas;
 - the shared Sphinx extension stack and presentation styles;
 - graph-native verification views over Sphinx-Needs/Test-Reports evidence;
+- native Living Specifications generated from Gherkin semantics and current Allure evidence;
 - retained Engineering Experiment report validation and isolated capture;
 - in-place experiment notebook mounting and publication of retained media inputs;
-- Allure result curation and standard report perspectives;
+- current-only Allure curation plus one generic forensic execution browser;
 - strict HTML, portal, and release-dossier build orchestration.
 
 DocOps deliberately does **not** own test execution, CI runners, repository policy,
@@ -38,7 +39,7 @@ ternforge-docops build portal --junit test-results/pytest-junit.xml --allure-res
 ternforge-docops build dossier --junit test-results/pytest-junit.xml
 ```
 
-`build html`, `build portal`, and `build dossier` can import pre-generated JUnit evidence directly; DocOps materializes the Sphinx-Test-Reports source only for the build and cleans it afterwards. `build portal` additionally consumes Allure results. None of the build commands runs the project test suite. HTML and portal builds keep Sphinx-Gallery execution disabled by default; trusted publication may opt in explicitly with `--live-examples`.
+`build html`, `build portal`, and `build dossier` can import pre-generated JUnit evidence directly; DocOps materializes the Sphinx-Test-Reports source only for the build and cleans it afterwards. `build portal` additionally consumes Allure results to derive current Living Specifications and the generic forensic execution browser. None of the build commands runs the project test suite. HTML and portal builds keep Sphinx-Gallery execution disabled by default; trusted publication may opt in explicitly with `--live-examples`.
 `build dossier` delegates to the upstream Sphinx SimplePDF builder and therefore
 requires the operating-system libraries required by WeasyPrint on the runner.
 
