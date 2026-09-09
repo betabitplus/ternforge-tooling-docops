@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.7](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.6.6...v0.6.7) (2026-09-09)
+
+
+### Bug Fixes
+
+* validate experiment MyST targets ([#49](https://github.com/betabitplus/ternforge-tooling-docops/issues/49)) ([89f16ab](https://github.com/betabitplus/ternforge-tooling-docops/commit/89f16abad654ad9b1b6d15ca445432eebd12da07))
+
 ## [0.6.6](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.6.5...v0.6.6) (2026-09-09)
 
 
