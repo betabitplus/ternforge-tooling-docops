@@ -15,17 +15,6 @@ _EPHEMERAL_PARTS = {
     "__pycache__",
     "artifacts",
 }
-_PRESENTATION_FUNCTIONS = {
-    "_html_value",
-    "_rendered_value",
-    "_facts_markdown",
-    "_input_facts",
-    "display_case_input",
-    "display_case_code",
-    "_short_text",
-    "_summary_items",
-    "display_result",
-}
 
 
 def _update(hasher: hashlib._Hash, marker: bytes, data: bytes) -> None:
@@ -42,36 +31,10 @@ def _python_semantics(source: str, *, filename: str) -> bytes:
     return ast.dump(tree, include_attributes=False).encode()
 
 
-def _experiment_semantics(source: str, *, filename: str) -> bytes:
-    """Return causal experiment syntax while ignoring report-only presentation helpers.
-
-    Presentation-only helpers do not invalidate retained provider evidence.
-    """
-    tree = ast.parse(source, filename=filename, type_comments=True)
-    body: list[ast.stmt] = []
-    for node in tree.body:
-        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and (
-            node.name in _PRESENTATION_FUNCTIONS
-        ):
-            continue
-        if isinstance(node, ast.ImportFrom) and node.module == "IPython.display":
-            continue
-        if isinstance(node, ast.Import):
-            aliases = [alias for alias in node.names if alias.name != "html"]
-            if not aliases:
-                continue
-            node.names = aliases
-        body.append(node)
-    tree.body = body
-    return ast.dump(tree, include_attributes=False).encode()
-
-
 def _file_bytes(path: Path) -> bytes:
     """Return semantic bytes for Python and exact bytes for other files."""
     if path.suffix == ".py":
         source = path.read_text()
-        if path.name == "experiment.py":
-            return _experiment_semantics(source, filename=str(path))
         return _python_semantics(source, filename=str(path))
     return path.read_bytes()
 
