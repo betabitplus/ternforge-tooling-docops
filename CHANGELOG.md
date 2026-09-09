@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.1](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.8.0...v0.8.1) (2026-09-09)
+
+
+### Bug Fixes
+
+* normalize multiline contract descriptions ([#59](https://github.com/betabitplus/ternforge-tooling-docops/issues/59)) ([07c4b44](https://github.com/betabitplus/ternforge-tooling-docops/commit/07c4b442d1cc9245b948f75389e3b735762f9c85))
+
 ## [0.8.0](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.7.0...v0.8.0) (2026-09-09)
 
 
