@@ -129,6 +129,7 @@ def setup(app: Sphinx) -> dict[str, Any]:
     for extension in _EXTENSIONS:
         app.setup_extension(extension)
     app.add_css_file("ternforge-docops.css")
+    app.add_js_file("ternforge-data-viewer.js")
     register_verification_view(app)
     app.connect("config-inited", configure_experiment_mounts, priority=5)
     app.connect("config-inited", _configure_graph, priority=6)
