@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.0](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.6.9...v0.7.0) (2026-09-09)
+
+
+### Features
+
+* **living-specs:** split features into pages ([#55](https://github.com/betabitplus/ternforge-tooling-docops/issues/55)) ([83b1d7d](https://github.com/betabitplus/ternforge-tooling-docops/commit/83b1d7dc85fd116815edb842daecc1e0e9ade3c2))
+
 ## [0.6.9](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.6.8...v0.6.9) (2026-09-09)
 
 
