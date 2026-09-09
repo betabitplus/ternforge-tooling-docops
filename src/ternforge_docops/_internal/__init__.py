@@ -32,7 +32,6 @@ from ternforge_docops._internal.resources import (
 )
 from ternforge_docops._internal.sphinx import (
     configure_experiment_mounts as configure_experiment_mounts,
-    inject_experiment_page_metadata as inject_experiment_page_metadata,
     publish_experiment_inputs as publish_experiment_inputs,
     register_verification_view as register_verification_view,
 )

@@ -81,7 +81,9 @@ def _make_capsule(tmp_path: Path) -> Path:
                 "hide-input",
             ),
             _cell(
-                nbformat.v4.new_markdown_cell("## 1. Observe output\n\nRun the probe."),
+                nbformat.v4.new_markdown_cell(
+                    "(case-observe-output)=\n## 1. Observe output\n\nRun the probe."
+                ),
                 "exp-step",
             ),
             _cell(
@@ -126,6 +128,58 @@ def test_digest_ignores_python_comments_but_detects_semantic_changes(
     assert validate_report(capsule) == []
 
     source.write_text("VALUE = 2\n", encoding="utf-8")
+    assert validate_report(capsule) == [
+        "capsule digest is stale; causal capsule state changed"
+    ]
+
+
+def test_digest_ignores_experiment_presentation_helpers(tmp_path: Path) -> None:
+    """Allow report-only rendering changes without invalidating provider evidence."""
+    capsule = _make_capsule(tmp_path)
+    source = capsule / "src" / "experiment.py"
+    source.write_text(
+        """from IPython.display import HTML, display
+
+
+def run_probe() -> int:
+    return 1
+
+
+def display_result(value: int) -> None:
+    display(HTML(f\"<b>{value}</b>\"))
+""",
+        encoding="utf-8",
+    )
+    capture_experiment(capsule)
+
+    source.write_text(
+        """from IPython.display import Markdown, display
+
+
+def run_probe() -> int:
+    return 1
+
+
+def display_result(value: int) -> None:
+    display(Markdown(f\"**{value}**\"))
+""",
+        encoding="utf-8",
+    )
+    assert validate_report(capsule) == []
+
+    source.write_text(
+        """from IPython.display import Markdown, display
+
+
+def run_probe() -> int:
+    return 2
+
+
+def display_result(value: int) -> None:
+    display(Markdown(f\"**{value}**\"))
+""",
+        encoding="utf-8",
+    )
     assert validate_report(capsule) == [
         "capsule digest is stale; causal capsule state changed"
     ]

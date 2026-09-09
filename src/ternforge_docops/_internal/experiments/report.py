@@ -163,7 +163,11 @@ def _validate_steps(notebook: NotebookNode) -> list[str]:
     ):
         step = notebook.cells[index]
         evidence = notebook.cells[index + 1]
-        heading = str(step.source).splitlines()[0] if step.source else ""
+        source_lines = str(step.source).splitlines() if step.source else []
+        heading_index = 1 if source_lines and source_lines[0].endswith(")=") else 0
+        heading = (
+            source_lines[heading_index] if len(source_lines) > heading_index else ""
+        )
         match = _STEP_PATTERN.fullmatch(heading)
         if (
             step.cell_type != "markdown"

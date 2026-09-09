@@ -10,7 +10,6 @@ from sphinx_needs.api import add_field
 from ternforge_docops._internal import (
     configure_experiment_mounts,
     graph_config_path,
-    inject_experiment_page_metadata,
     publish_experiment_inputs,
     register_verification_view,
     static_dir_path,
@@ -24,6 +23,7 @@ _EXTENSIONS = (
     "myst_nb",
     "sphinx_mounts",
     "sphinx_design",
+    "sphinx_data_viewer",
     "sphinx_needs",
     "sphinxcontrib.test_reports",
     "sphinx_llm.txt",
@@ -33,13 +33,6 @@ _EXTENSIONS = (
 )
 
 _DEFAULT_NEED_ROLE_TITLE_LENGTH = 30
-_PORTAL_CARD_LAYOUT = {
-    "extends": "clean",
-    "meta": {
-        "fields": "stored",
-        "exclude": ["layout", "style"],
-    },
-}
 _SIMPLEPDF_MIME_PRIORITIES = [
     ("simplepdf", "text/html", 30),
     ("simplepdf", "image/svg+xml", 40),
@@ -61,6 +54,8 @@ def _configure_notebooks(config: Config) -> None:
         config.nb_code_prompt_hide = "Hide experiment code"
     if not config.nb_mime_priority_overrides:
         config.nb_mime_priority_overrides = list(_SIMPLEPDF_MIME_PRIORITIES)
+    if config.nb_render_markdown_format == "commonmark":
+        config.nb_render_markdown_format = "myst"
     config.myst_enable_extensions = set(config.myst_enable_extensions) | {"colon_fence"}
     config.myst_fence_as_directive = set(config.myst_fence_as_directive) | {"mermaid"}
     if "auto_examples/*.ipynb" not in config.exclude_patterns:
@@ -90,11 +85,6 @@ def _configure_needs(config: Config) -> None:
         config.needs_flow_direction = "left"
     if config.needs_role_need_max_title_length == _DEFAULT_NEED_ROLE_TITLE_LENGTH:
         config.needs_role_need_max_title_length = -1
-    card_layouts = dict(config.needs_card_layouts)
-    card_layouts.setdefault("portal", _PORTAL_CARD_LAYOUT)
-    config.needs_card_layouts = card_layouts
-    if config.needs_default_layout == "clean":
-        config.needs_default_layout = "portal"
 
 
 def _configure_test_reports(config: Config) -> None:
@@ -139,13 +129,11 @@ def setup(app: Sphinx) -> dict[str, Any]:
     for extension in _EXTENSIONS:
         app.setup_extension(extension)
     app.add_css_file("ternforge-docops.css")
-    app.add_js_file("ternforge-docops.js")
     register_verification_view(app)
     app.connect("config-inited", configure_experiment_mounts, priority=5)
     app.connect("config-inited", _configure_graph, priority=6)
     app.connect("config-inited", _ensure_source_url_field, priority=12)
     app.connect("builder-inited", publish_experiment_inputs, priority=600)
-    app.connect("html-page-context", inject_experiment_page_metadata, priority=600)
     return {
         "version": "1",
         "parallel_read_safe": True,

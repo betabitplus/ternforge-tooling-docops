@@ -138,7 +138,8 @@ def test_living_specs_render_current_narrative_and_rich_evidence(
     assert "**When** the route analyzes the example traffic image:" in report.source
     assert "**Prompt**" in report.source
     assert "Describe the attached image." in report.source
-    assert "living-json-raw" in report.source
+    assert ".. data-viewer::" in report.source
+    assert ":title: Captured JSON" in report.source
     assert ".. dropdown:: Technical details" in report.source
     assert ".. dropdown:: Gherkin source" in report.source
     assert (
@@ -157,12 +158,15 @@ def test_living_specs_publish_only_linked_binary_assets(tmp_path: Path) -> None:
     feature.parent.mkdir(parents=True)
     feature.write_text("Feature: Structured image understanding\n", encoding="utf-8")
     (raw / "prompt.txt").write_text("prompt", encoding="utf-8")
-    (raw / "result.json").write_text("{}", encoding="utf-8")
+    (raw / "result.json").write_text(
+        '{"message":"provider\u0027s response"}', encoding="utf-8"
+    )
     (raw / "input.png").write_bytes(b"image-bytes")
     _write_result(raw / "fixture-result.json", stop=200, status="passed")
     report = render_living_specifications(root, raw)
     output = tmp_path / "site"
 
+    assert "provider\\u0027s response" in report.source
     publish_living_assets(report, output)
 
     assets = output / "_living-specs" / "assets"
