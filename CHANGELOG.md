@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.0](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.7.0...v0.8.0) (2026-09-09)
+
+
+### Features
+
+* enrich BDD living specifications ([#57](https://github.com/betabitplus/ternforge-tooling-docops/issues/57)) ([c6dd823](https://github.com/betabitplus/ternforge-tooling-docops/commit/c6dd823039ec05550d0f8e77d6b8eb46c414d7a5))
+
 ## [0.7.0](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.6.9...v0.7.0) (2026-09-09)
 
 
