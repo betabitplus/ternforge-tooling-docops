@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.8](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.6.7...v0.6.8) (2026-09-09)
+
+
+### Bug Fixes
+
+* improve JSON evidence readability ([#51](https://github.com/betabitplus/ternforge-tooling-docops/issues/51)) ([0718120](https://github.com/betabitplus/ternforge-tooling-docops/commit/0718120b19fbddba16166be4c3b5bf65375b4e00))
+
 ## [0.6.7](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.6.6...v0.6.7) (2026-09-09)
 
 
