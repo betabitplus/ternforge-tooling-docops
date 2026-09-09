@@ -217,7 +217,11 @@ def _write_contract_fixtures(raw: Path) -> None:
                 "name": "Response schema",
                 "kind": "schema",
                 "qualified_name": "tests.support.SceneSummary",
-                "description": "Grounded scene response.",
+                "description": (
+                    "Grounded scene response.\n\n"
+                    "Attributes:\n"
+                    "    setting: The grounded scene setting."
+                ),
                 "schema": {
                     "title": "SceneSummary",
                     "type": "object",
@@ -292,6 +296,10 @@ def _assert_rich_feature_page(docname: str, source: str) -> None:
     assert ".. dropdown:: Public contract" in source
     assert "Derived from the exact schema classes and callables" in source
     assert "**Response schema**" in source
+    assert (
+        "Grounded scene response. Attributes: setting: The grounded scene setting."
+        in source
+    )
     assert '"title": "SceneSummary"' in source
     assert "**Tool · add**" in source
     assert "add(a: int, b: int) -> dict[str, int]" in source
