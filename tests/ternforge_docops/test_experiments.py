@@ -145,14 +145,16 @@ def test_digest_ignores_python_comments_but_detects_semantic_changes(
 
 
 def test_digest_treats_experiment_source_as_causal(tmp_path: Path) -> None:
-    """Experiment orchestration is causal now that report presentation is upstream."""
+    """Experiment source is causal while Python comments remain presentation-neutral."""
     capsule = _make_capsule(tmp_path)
     source = capsule / "src" / "experiment.py"
     source.write_text("VALUE = 1\n", encoding="utf-8")
     capture_experiment(capsule)
 
-    source.write_text("VALUE = 2\n", encoding="utf-8")
+    source.write_text("# prose only\nVALUE = 1\n", encoding="utf-8")
+    assert validate_report(capsule) == []
 
+    source.write_text("VALUE = 2\n", encoding="utf-8")
     assert validate_report(capsule) == [
         "capsule digest is stale; causal capsule state changed"
     ]
