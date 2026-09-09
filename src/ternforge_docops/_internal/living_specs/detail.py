@@ -82,23 +82,24 @@ def _render_attachment(
 ) -> None:
     """Render retained evidence inline using a media-appropriate representation."""
     label = "Prompt" if attachment.name == "Doc string" else attachment.name
-    append_rst(lines, indent, f"**{rst_inline(label)}**")
-    append_rst(lines, 0)
     if attachment.source is None:
+        append_rst(lines, indent, f"**{rst_inline(label)}**")
+        append_rst(lines, 0)
         append_rst(lines, indent, "*Captured attachment is unavailable.*")
         append_rst(lines, 0)
         return
     if attachment.media_type == "application/json":
-        rendered = attachment.source.read_text(
-            encoding="utf-8", errors="replace"
-        ).replace("'", "\\u0027")
-        append_rst(lines, indent, ".. data-viewer::")
-        append_rst(lines, indent + 3, ":title: Captured JSON")
+        append_rst(lines, indent, ".. dropdown:: Raw captured result")
         append_rst(lines, 0)
-        for line in rendered.splitlines():
-            append_rst(lines, indent + 3, line)
-        append_rst(lines, 0)
+        _code_block(
+            lines,
+            indent + 3,
+            "json",
+            attachment.source.read_text(encoding="utf-8", errors="replace"),
+        )
         return
+    append_rst(lines, indent, f"**{rst_inline(label)}**")
+    append_rst(lines, 0)
     if attachment.media_type == "text/plain":
         _code_block(
             lines,
