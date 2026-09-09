@@ -139,7 +139,8 @@ def _render_contract(
         append_rst(lines, indent, f"``{rst_inline(contract.qualified_name)}``")
         append_rst(lines, 0)
     if contract.description:
-        append_rst(lines, indent, rst_inline(contract.description))
+        description = " ".join(contract.description.split())
+        append_rst(lines, indent, rst_inline(description))
         append_rst(lines, 0)
     if contract.kind == "schema" and contract.schema is not None:
         code_block(
