@@ -13,7 +13,10 @@ from ternforge_docops._internal.living_specs.models import (
     LivingExample,
     LivingSpecificationsReport,
 )
-from ternforge_docops._internal.living_specs.presentation import render_source
+from ternforge_docops._internal.living_specs.presentation import (
+    render_pages,
+    render_source,
+)
 
 _EMPTY_SOURCE = (
     "No BDD execution evidence was supplied to this build. "
@@ -57,9 +60,11 @@ def render_living_specifications(
     )
     if not examples:
         return LivingSpecificationsReport(source=_EMPTY_SOURCE, assets=())
+    pages = render_pages(examples)
     return LivingSpecificationsReport(
-        source=render_source(examples),
+        source=render_source(examples, pages),
         assets=_published_assets(examples),
+        pages=pages,
     )
 
 

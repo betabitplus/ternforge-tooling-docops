@@ -3,9 +3,9 @@
 Executable specifications
 =========================
 
-This is the current, narrative-first view of executable behavior. Gherkin remains the
+This is the current, narrative-first index of executable behavior. Gherkin remains the
 human-authored specification; pytest remains the executor; retained test evidence supplies
-the current outcome and rich inputs/outputs. The page presents only derived views of those
-sources, with technical execution details available on demand.
+the current outcome and rich inputs/outputs. Capabilities are grouped by functional area;
+each Gherkin Feature opens as its own page with Rule and Scenario evidence underneath it.
 
 .. include:: ternforge-living-specifications.inc
