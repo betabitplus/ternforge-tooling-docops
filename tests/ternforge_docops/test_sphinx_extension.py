@@ -87,6 +87,8 @@ Verification matrix
     assert "MISSING" not in index
     assert "_static/ternforge-docops.css" in index
     assert (output / "_static" / "ternforge-docops.css").is_file()
+    assert "_static/ternforge-data-viewer.js" in index
+    assert (output / "_static" / "ternforge-data-viewer.js").is_file()
     assert "_static/ternforge-docops.js" not in index
 
 
