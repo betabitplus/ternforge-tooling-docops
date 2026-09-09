@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.3](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.8.2...v0.8.3) (2026-09-09)
+
+
+### Bug Fixes
+
+* publish experiment source digest semantics ([#64](https://github.com/betabitplus/ternforge-tooling-docops/issues/64)) ([40d92a9](https://github.com/betabitplus/ternforge-tooling-docops/commit/40d92a9901fd1395e106a5a1949724a0c96afd38))
+
 ## [0.8.2](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.8.1...v0.8.2) (2026-09-09)
 
 
