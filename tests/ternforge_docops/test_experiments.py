@@ -116,6 +116,17 @@ def test_capture_uses_capsule_owned_jupyter_kernel(tmp_path: Path) -> None:
     assert notebook.cells[4].outputs[0]["text"] == "42\n"
 
 
+def test_step_prefix_must_be_a_valid_myst_target(tmp_path: Path) -> None:
+    """Do not skip arbitrary prose that merely ends like a MyST target."""
+    capsule = _make_capsule(tmp_path)
+    report = capsule / "report" / "report.ipynb"
+    notebook = nbformat.read(report, as_version=4)
+    notebook.cells[3].source = "not a target)=\n## 1. Observe output\n\nRun the probe."
+    nbformat.write(notebook, report)
+
+    assert "step 1 must start with '## 1. <title>'" in validate_report(capsule)
+
+
 def test_digest_ignores_python_comments_but_detects_semantic_changes(
     tmp_path: Path,
 ) -> None:
