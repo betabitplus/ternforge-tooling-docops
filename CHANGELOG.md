@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.6](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.6.5...v0.6.6) (2026-09-09)
+
+
+### Performance Improvements
+
+* **allure:** keep single-file report lightweight ([#46](https://github.com/betabitplus/ternforge-tooling-docops/issues/46)) ([78783f2](https://github.com/betabitplus/ternforge-tooling-docops/commit/78783f20ca4a3386b29fecedd5e2a8e9121510d1))
+
 ## [0.6.5](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.6.4...v0.6.5) (2026-09-08)
 
 
