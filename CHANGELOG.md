@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.8.2](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.8.1...v0.8.2) (2026-09-09)
+
+
+### Bug Fixes
+
+* keep contract names readable on mobile ([#61](https://github.com/betabitplus/ternforge-tooling-docops/issues/61)) ([b529ff6](https://github.com/betabitplus/ternforge-tooling-docops/commit/b529ff64787b8d186faa206067d757251691eee8))
+
 ## [0.8.1](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.8.0...v0.8.1) (2026-09-09)
 
 
