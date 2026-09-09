@@ -109,6 +109,55 @@ def test_curate_results_keeps_only_current_execution_and_referenced_evidence(
     assert all(name != "requirement_view" for name, _ in labels)
 
 
+def test_curate_results_excludes_binary_evidence_from_single_file_allure(
+    tmp_path: Path,
+) -> None:
+    """Binary evidence stays out of Allure while text diagnostics remain available."""
+    raw = tmp_path / "raw"
+    curated = tmp_path / "curated"
+    raw.mkdir()
+    result_path = raw / "scenario-result.json"
+    _write_result(
+        result_path,
+        name="scenario",
+        layer="bdd",
+        requirement="REQ_BDD",
+        attachment="step.txt",
+        history_id="scenario-history",
+        stop=200,
+    )
+    result = json.loads(result_path.read_text(encoding="utf-8"))
+    result["attachments"] = [
+        {"name": "image", "source": "image.png", "type": "image/png"},
+        {"name": "video", "source": "video.mp4", "type": "video/mp4"},
+        {"name": "pdf", "source": "paper.pdf", "type": "application/pdf"},
+        {"name": "json", "source": "result.json", "type": "application/json"},
+        {"name": "trace", "source": "trace.txt", "type": "text/plain; charset=utf-8"},
+    ]
+    result_path.write_text(json.dumps(result), encoding="utf-8")
+    for name in (
+        "step.txt",
+        "image.png",
+        "video.mp4",
+        "paper.pdf",
+        "result.json",
+        "trace.txt",
+    ):
+        (raw / name).write_bytes(name.encode())
+
+    curate_results(raw, curated_results=curated)
+
+    current = json.loads((curated / result_path.name).read_text(encoding="utf-8"))
+    retained = {attachment["source"] for attachment in current["attachments"]}
+    assert retained == {"result.json", "trace.txt"}
+    assert (curated / "step.txt").is_file()
+    assert (curated / "result.json").is_file()
+    assert (curated / "trace.txt").is_file()
+    assert not (curated / "image.png").exists()
+    assert not (curated / "video.mp4").exists()
+    assert not (curated / "paper.pdf").exists()
+
+
 def test_generate_report_delegates_forensic_html_to_allure(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
