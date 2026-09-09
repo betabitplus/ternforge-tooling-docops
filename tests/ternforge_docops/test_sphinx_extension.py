@@ -8,6 +8,8 @@ from pathlib import Path
 
 import nbformat
 
+from ternforge_docops._internal.sphinx import verification
+
 
 def test_sphinx_extension_builds_current_graph(tmp_path: Path) -> None:
     """A consumer builds requirements without copying the graph ontology."""
@@ -89,6 +91,42 @@ Verification matrix
     assert (output / "_static" / "ternforge-docops.css").is_file()
     assert "_static/ternforge-data-viewer.js" not in index
     assert "_static/ternforge-docops.js" not in index
+
+
+def test_contract_provenance_follows_declared_graph_relations() -> None:
+    """Contract provenance exposes only relations already present in the Needs graph."""
+    needs = {
+        "REQ_DEMO": {
+            "id": "REQ_DEMO",
+            "type": "req",
+            "derives_back": ["TREQ_DEMO"],
+            "affects_back": ["ADR_DEMO"],
+            "implements_back": ["IMPL_REQ"],
+        },
+        "TREQ_DEMO": {
+            "id": "TREQ_DEMO",
+            "type": "treq",
+            "affects_back": ["ADR_DEMO"],
+            "informs_back": ["EXP_DEMO"],
+            "implements_back": ["IMPL_TREQ"],
+        },
+        "ADR_DEMO": {
+            "id": "ADR_DEMO",
+            "type": "adr",
+            "informs_back": ["EXP_DEMO"],
+        },
+        "EXP_DEMO": {"id": "EXP_DEMO", "type": "exp"},
+        "IMPL_REQ": {"id": "IMPL_REQ", "type": "impl"},
+        "IMPL_TREQ": {"id": "IMPL_TREQ", "type": "impl"},
+    }
+
+    assert verification._provenance_groups(needs, ("REQ_DEMO",)) == (
+        ("Verified contract", ("REQ_DEMO",)),
+        ("Engineering constraints", ("TREQ_DEMO",)),
+        ("Architecture decisions", ("ADR_DEMO",)),
+        ("Research evidence", ("EXP_DEMO",)),
+        ("Implementation loci", ("IMPL_REQ", "IMPL_TREQ")),
+    )
 
 
 def test_sphinx_extension_mounts_experiment_reports_in_place(tmp_path: Path) -> None:

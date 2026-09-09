@@ -132,6 +132,16 @@ def test_curate_results_excludes_binary_evidence_from_single_file_allure(
         {"name": "video", "source": "video.mp4", "type": "video/mp4"},
         {"name": "pdf", "source": "paper.pdf", "type": "application/pdf"},
         {"name": "json", "source": "result.json", "type": "application/json"},
+        {
+            "name": "BDD implementation",
+            "source": "implementation.json",
+            "type": "application/vnd.ternforge.bdd-implementation+json",
+        },
+        {
+            "name": "Public contract",
+            "source": "contract.json",
+            "type": "application/vnd.ternforge.contract+json",
+        },
         {"name": "trace", "source": "trace.txt", "type": "text/plain; charset=utf-8"},
     ]
     result_path.write_text(json.dumps(result), encoding="utf-8")
@@ -141,6 +151,8 @@ def test_curate_results_excludes_binary_evidence_from_single_file_allure(
         "video.mp4",
         "paper.pdf",
         "result.json",
+        "implementation.json",
+        "contract.json",
         "trace.txt",
     ):
         (raw / name).write_bytes(name.encode())
@@ -153,6 +165,8 @@ def test_curate_results_excludes_binary_evidence_from_single_file_allure(
     assert (curated / "step.txt").is_file()
     assert (curated / "result.json").is_file()
     assert (curated / "trace.txt").is_file()
+    assert not (curated / "implementation.json").exists()
+    assert not (curated / "contract.json").exists()
     assert not (curated / "image.png").exists()
     assert not (curated / "video.mp4").exists()
     assert not (curated / "paper.pdf").exists()

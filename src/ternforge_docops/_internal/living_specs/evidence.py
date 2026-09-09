@@ -14,6 +14,11 @@ from ternforge_docops._internal.allure.results import (
     execution_key,
     labels,
 )
+from ternforge_docops._internal.living_specs.execution_evidence import (
+    INTERNAL_ATTACHMENT_TYPES,
+    contracts as _contracts,
+    implementation as _implementation,
+)
 from ternforge_docops._internal.living_specs.models import (
     LivingAttachment,
     LivingExample,
@@ -112,7 +117,7 @@ def _attachment(raw_results: Path, value: dict[str, Any]) -> LivingAttachment:
 def _attachments(
     raw_results: Path, value: dict[str, Any]
 ) -> tuple[LivingAttachment, ...]:
-    """Normalize the attachment list carried by one Allure result or step."""
+    """Normalize user-facing attachments carried by one Allure result or step."""
     values = value.get("attachments")
     if not isinstance(values, list):
         return ()
@@ -120,6 +125,7 @@ def _attachments(
         _attachment(raw_results, attachment)
         for attachment in values
         if isinstance(attachment, dict)
+        and str(attachment.get("type") or "") not in INTERNAL_ATTACHMENT_TYPES
     )
 
 
@@ -133,6 +139,8 @@ def _steps(raw_results: Path, result: dict[str, Any]) -> tuple[LivingStep, ...]:
             name=str(step.get("name") or "Step"),
             status=str(step.get("status") or "unknown"),
             attachments=_attachments(raw_results, step),
+            implementation=_implementation(raw_results, step),
+            contracts=_contracts(raw_results, step),
         )
         for step in values
         if isinstance(step, dict)

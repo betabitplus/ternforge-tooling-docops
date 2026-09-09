@@ -5,46 +5,24 @@ from __future__ import annotations
 import html
 from datetime import UTC, datetime
 
+from ternforge_docops._internal.living_specs.execution_detail import (
+    implementation_url,
+    render_executable_usage,
+    render_observed_outcome,
+    render_public_contract,
+)
 from ternforge_docops._internal.living_specs.models import (
     LivingAttachment,
     LivingExample,
     LivingStep,
 )
+from ternforge_docops._internal.living_specs.rst import (
+    append_rst,
+    code_block,
+    rst_inline,
+)
 
 _TECHNICAL_ATTACHMENT_NAMES = {"log", "stderr", "stdout"}
-
-
-def rst_inline(value: str) -> str:
-    """Escape a short value for inline RST text."""
-    return (
-        value.replace("\\", "\\\\")
-        .replace("`", "\\`")
-        .replace("*", "\\*")
-        .replace("|", "\\|")
-    )
-
-
-def heading(lines: list[str], title: str, marker: str) -> None:
-    """Append one RST section heading."""
-    lines.extend((title, marker * max(3, len(title)), ""))
-
-
-def append_rst(lines: list[str], indent: int, text: str = "") -> None:
-    """Append one optionally-indented RST line."""
-    lines.append(f"{' ' * indent}{text}" if text else "")
-
-
-def _code_block(
-    lines: list[str], indent: int, language: str, content: str, css: str = ""
-) -> None:
-    """Append a literal code block with optional presentation class."""
-    append_rst(lines, indent, f".. code-block:: {language}")
-    if css:
-        append_rst(lines, indent + 3, f":class: {css}")
-    append_rst(lines, 0)
-    for line in content.splitlines() or [""]:
-        append_rst(lines, indent + 3, line)
-    append_rst(lines, 0)
 
 
 def status_summary(values: list[LivingExample]) -> tuple[str, str]:
@@ -95,9 +73,10 @@ def _render_attachment(
         append_rst(lines, 0)
         return
     if attachment.media_type == "application/json":
+        render_observed_outcome(lines, attachment, indent)
         append_rst(lines, indent, ".. dropdown:: Raw captured result")
         append_rst(lines, 0)
-        _code_block(
+        code_block(
             lines,
             indent + 3,
             "json",
@@ -107,7 +86,7 @@ def _render_attachment(
     append_rst(lines, indent, f"**{rst_inline(label)}**")
     append_rst(lines, 0)
     if attachment.media_type == "text/plain":
-        _code_block(
+        code_block(
             lines,
             indent,
             "text",
@@ -156,17 +135,37 @@ def _step_parts(name: str) -> tuple[str, str]:
 
 
 def _render_step(
-    lines: list[str], step: LivingStep, indent: int, link_prefix: str
+    lines: list[str],
+    step: LivingStep,
+    indent: int,
+    link_prefix: str,
+    repository_source_base: str,
 ) -> None:
-    """Render one executed BDD step with non-forensic attachments beside it."""
+    """Render one executed BDD step with evidence and implementation provenance."""
     keyword, text = _step_parts(step.name)
     sentence = f"**{keyword}** {rst_inline(text)}".rstrip()
     append_rst(lines, indent, sentence)
+    if step.implementation is not None:
+        source_url = implementation_url(step.implementation, repository_source_base)
+        if source_url:
+            append_rst(
+                lines,
+                indent,
+                f":bdg-link-secondary-line:`Implementation ↗ <{source_url}>`",
+            )
     append_rst(lines, 0)
     for attachment in step.attachments:
         if attachment.name.casefold() in _TECHNICAL_ATTACHMENT_NAMES:
             continue
         _render_attachment(lines, attachment, indent, link_prefix)
+    if keyword == "When" and step.implementation is not None:
+        render_executable_usage(
+            lines,
+            step.implementation,
+            indent,
+            repository_source_base,
+        )
+    render_public_contract(lines, step.contracts, indent)
 
 
 def _render_technical_metadata(
@@ -206,11 +205,11 @@ def _render_technical_failures(
     if example.status_message:
         append_rst(lines, body, "**Failure message**")
         append_rst(lines, 0)
-        _code_block(lines, body, "text", example.status_message)
+        code_block(lines, body, "text", example.status_message)
     if example.status_trace:
         append_rst(lines, body, "**Failure trace**")
         append_rst(lines, 0)
-        _code_block(lines, body, "text", example.status_trace)
+        code_block(lines, body, "text", example.status_trace)
 
 
 def _render_technical_attachments(
@@ -244,6 +243,7 @@ def render_example(
     indent: int,
     *,
     link_prefix: str = "",
+    repository_source_base: str = "",
 ) -> None:
     """Render one current BDD example and its evidence."""
     if example.allure_url:
@@ -260,5 +260,11 @@ def render_example(
         )
         append_rst(lines, 0)
     for step in example.steps:
-        _render_step(lines, step, indent, link_prefix)
+        _render_step(
+            lines,
+            step,
+            indent,
+            link_prefix,
+            repository_source_base,
+        )
     _render_technical(lines, example, indent, link_prefix)
