@@ -52,8 +52,17 @@ class LivingExample:
 
 
 @dataclass(frozen=True)
+class LivingSpecificationPage:
+    """One generated feature-level Living Specifications document."""
+
+    docname: str
+    source: str
+
+
+@dataclass(frozen=True)
 class LivingSpecificationsReport:
-    """Generated RST plus the referenced binary assets that must be published."""
+    """Generated index/pages plus referenced binary assets that must be published."""
 
     source: str
     assets: tuple[LivingAttachment, ...]
+    pages: tuple[LivingSpecificationPage, ...] = ()

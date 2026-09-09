@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
+from pathlib import PurePosixPath
 
 from ternforge_docops._internal.living_specs.detail import (
     append_rst,
@@ -13,9 +14,15 @@ from ternforge_docops._internal.living_specs.detail import (
     status_icon,
     status_summary,
 )
-from ternforge_docops._internal.living_specs.models import LivingExample
+from ternforge_docops._internal.living_specs.models import (
+    LivingExample,
+    LivingSpecificationPage,
+)
 
 type ScenarioRow = tuple[int, str, str, list[LivingExample]]
+type GroupedExamples = dict[str, dict[str, dict[str, dict[str, list[LivingExample]]]]]
+
+_FEATURE_SOURCE_MIN_PARTS = 3
 
 
 def _slug(value: str) -> str:
@@ -36,12 +43,10 @@ def _scenario_anchor(epic: str, feature: str, rule: str, story: str) -> str:
     )
 
 
-def _group_examples(
-    examples: tuple[LivingExample, ...],
-) -> dict[str, dict[str, dict[str, dict[str, list[LivingExample]]]]]:
+def _group_examples(examples: tuple[LivingExample, ...]) -> GroupedExamples:
     """Group examples into the Epic → Feature → Rule → Scenario hierarchy."""
-    grouped: dict[str, dict[str, dict[str, dict[str, list[LivingExample]]]]] = (
-        defaultdict(lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list))))
+    grouped: GroupedExamples = defaultdict(
+        lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
     )
     for example in examples:
         grouped[example.epic][example.feature][example.rule][example.story].append(
@@ -50,13 +55,63 @@ def _group_examples(
     return grouped
 
 
-def _render_overview(lines: list[str], examples: tuple[LivingExample, ...]) -> None:
-    """Render decision-first verification totals and the clickable feature overview."""
-    features: dict[tuple[str, str], list[LivingExample]] = defaultdict(list)
-    stories: set[tuple[str, str, str, str]] = set()
-    for example in examples:
-        features[(example.epic, example.feature)].append(example)
-        stories.add((example.epic, example.feature, example.rule, example.story))
+def _feature_examples(
+    rules: dict[str, dict[str, list[LivingExample]]],
+) -> list[LivingExample]:
+    """Flatten all examples belonging to one feature."""
+    return [
+        example
+        for stories in rules.values()
+        for examples in stories.values()
+        for example in examples
+    ]
+
+
+def _feature_docname(epic: str, feature: str, examples: list[LivingExample]) -> str:
+    """Return a stable generated document name, preferring the Gherkin hierarchy."""
+    source = next(
+        (example.source_path for example in examples if example.source_path), ""
+    )
+    if source:
+        path = PurePosixPath(source)
+        if len(path.parts) >= _FEATURE_SOURCE_MIN_PARTS and path.parts[0] == "features":
+            return (
+                f"specifications/_generated/{_slug(path.parts[1])}/{_slug(path.stem)}"
+            )
+    return f"specifications/_generated/{_slug(epic)}/{_slug(feature)}"
+
+
+def _page_prefix(docname: str) -> str:
+    """Return the relative URL/source prefix from a generated page to docs root."""
+    return "../" * docname.count("/")
+
+
+def _scenario_rows(
+    rules: dict[str, dict[str, list[LivingExample]]],
+) -> list[ScenarioRow]:
+    """Return deterministically numbered acceptance scenarios for one feature."""
+    rows: list[ScenarioRow] = []
+    number = 1
+    for rule in sorted(rules, key=str.casefold):
+        for story in sorted(rules[rule], key=str.casefold):
+            rows.append((number, rule, story, rules[rule][story]))
+            number += 1
+    return rows
+
+
+def _render_overview(
+    lines: list[str],
+    examples: tuple[LivingExample, ...],
+    pages: tuple[LivingSpecificationPage, ...],
+) -> None:
+    """Render verification totals and a lightweight capability index."""
+    grouped = _group_examples(examples)
+    page_by_docname = {page.docname: page for page in pages}
+
+    stories = {
+        (example.epic, example.feature, example.rule, example.story)
+        for example in examples
+    }
     passed = sum(example.status == "passed" for example in examples)
 
     heading(lines, "Current verification", "-")
@@ -64,7 +119,7 @@ def _render_overview(lines: list[str], examples: tuple[LivingExample, ...]) -> N
     append_rst(lines, 3, ":gutter: 2")
     append_rst(lines, 0)
     for title, value in (
-        ("Features", str(len(features))),
+        ("Features", str(len(pages))),
         ("Scenarios", str(len(stories))),
         ("Examples", str(len(examples))),
         ("Passing", f"{passed}/{len(examples)}"),
@@ -74,22 +129,32 @@ def _render_overview(lines: list[str], examples: tuple[LivingExample, ...]) -> N
         append_rst(lines, 6, value)
         append_rst(lines, 0)
 
-    heading(lines, "Feature overview", "-")
-    append_rst(lines, 0, ".. list-table::")
-    append_rst(lines, 3, ":header-rows: 1")
-    append_rst(lines, 0)
-    append_rst(lines, 3, "* - Area")
-    append_rst(lines, 5, "- Capability")
-    append_rst(lines, 5, "- Outcome")
-    append_rst(lines, 5, "- Examples")
-    for (epic, feature), values in sorted(features.items(), key=lambda item: item[0]):
-        outcome, count = status_summary(values)
-        anchor = _feature_anchor(epic, feature)
-        append_rst(lines, 3, f"* - {rst_inline(epic)}")
-        append_rst(lines, 5, f"- :ref:`{rst_inline(feature)} <{anchor}>`")
-        append_rst(lines, 5, f"- {outcome}")
-        append_rst(lines, 5, f"- {count}")
-    append_rst(lines, 0)
+    heading(lines, "Capabilities by area", "-")
+    for epic in sorted(grouped, key=str.casefold):
+        heading(lines, epic, "^")
+        append_rst(lines, 0, ".. list-table::")
+        append_rst(lines, 3, ":header-rows: 1")
+        append_rst(lines, 0)
+        append_rst(lines, 3, "* - Capability")
+        append_rst(lines, 5, "- Outcome")
+        append_rst(lines, 5, "- Scenarios")
+        append_rst(lines, 5, "- Examples")
+        for feature in sorted(grouped[epic], key=str.casefold):
+            rules = grouped[epic][feature]
+            feature_examples = _feature_examples(rules)
+            outcome, count = status_summary(feature_examples)
+            scenario_count = len(_scenario_rows(rules))
+            docname = _feature_docname(epic, feature, feature_examples)
+            page = page_by_docname[docname]
+            append_rst(
+                lines,
+                3,
+                f"* - :doc:`{rst_inline(feature)} <{page.docname}>`",
+            )
+            append_rst(lines, 5, f"- {outcome}")
+            append_rst(lines, 5, f"- {scenario_count}")
+            append_rst(lines, 5, f"- {count}")
+        append_rst(lines, 0)
 
 
 def _render_story(
@@ -97,6 +162,8 @@ def _render_story(
     epic: str,
     feature: str,
     row: ScenarioRow,
+    *,
+    link_prefix: str,
 ) -> None:
     """Render one numbered scenario using the stock Sphinx Design disclosure."""
     number, rule, story, examples = row
@@ -116,7 +183,7 @@ def _render_story(
         append_rst(lines, 3, f"**Verifies:** {links}")
         append_rst(lines, 0)
     if len(ordered) == 1 and ordered[0].name == "Scenario":
-        render_example(lines, ordered[0], 3)
+        render_example(lines, ordered[0], 3, link_prefix=link_prefix)
         return
     append_rst(lines, 3, ".. tab-set::")
     append_rst(lines, 0)
@@ -124,20 +191,7 @@ def _render_story(
         label = f"{status_icon(example.status)} {example.name}"
         append_rst(lines, 6, f".. tab-item:: {rst_inline(label)}")
         append_rst(lines, 0)
-        render_example(lines, example, 9)
-
-
-def _scenario_rows(
-    rules: dict[str, dict[str, list[LivingExample]]],
-) -> list[ScenarioRow]:
-    """Return deterministically numbered acceptance scenarios for one feature."""
-    rows: list[ScenarioRow] = []
-    number = 1
-    for rule in sorted(rules, key=str.casefold):
-        for story in sorted(rules[rule], key=str.casefold):
-            rows.append((number, rule, story, rules[rule][story]))
-            number += 1
-    return rows
+        render_example(lines, example, 9, link_prefix=link_prefix)
 
 
 def _render_scenario_index(
@@ -163,6 +217,8 @@ def _render_scenario_index(
 def _render_feature_source(
     lines: list[str],
     examples: list[LivingExample],
+    *,
+    link_prefix: str,
 ) -> None:
     """Render exact Gherkin source as an optional drill-down for one feature."""
     sources = tuple(
@@ -181,34 +237,30 @@ def _render_feature_source(
         append_rst(lines, 0)
         append_rst(lines, 3, f"``{rst_inline(source)}``")
         append_rst(lines, 0)
-        append_rst(lines, 3, f".. literalinclude:: ../{source}")
+        append_rst(lines, 3, f".. literalinclude:: {link_prefix}../{source}")
         append_rst(lines, 6, ":language: gherkin")
         append_rst(lines, 6, ":linenos:")
         append_rst(lines, 0)
 
 
-def _feature_examples(
-    rules: dict[str, dict[str, list[LivingExample]]],
-) -> list[LivingExample]:
-    """Flatten all examples belonging to one feature."""
-    return [
-        example
-        for stories in rules.values()
-        for examples in stories.values()
-        for example in examples
-    ]
-
-
-def _render_feature(
-    lines: list[str],
+def _render_feature_page(
     epic: str,
     feature: str,
     rules: dict[str, dict[str, list[LivingExample]]],
-) -> None:
-    """Render one feature summary, rules, scenarios, and source disclosure."""
+    docname: str,
+) -> str:
+    """Render one self-contained Feature document with Rule/Scenario drill-down."""
+    lines = [
+        ":orphan:",
+        "",
+        ":doc:`← Executable specifications </specifications>`",
+        "",
+    ]
     feature_examples = _feature_examples(rules)
+    link_prefix = _page_prefix(docname)
     lines.extend((f".. _{_feature_anchor(epic, feature)}:", ""))
-    heading(lines, feature, "~")
+    heading(lines, feature, "=")
+    lines.extend((f"**Area:** {rst_inline(epic)}", ""))
     description = next(
         (
             example.feature_description
@@ -224,21 +276,51 @@ def _render_feature(
     rows = _scenario_rows(rules)
     _render_scenario_index(lines, epic, feature, rows)
     current_rule = ""
-    for number, rule, story, examples in rows:
+    for number, rule, story, scenario_examples in rows:
         if rule != current_rule:
-            heading(lines, f"Rule · {rule}", "^")
+            heading(lines, f"Rule · {rule}", "-")
             current_rule = rule
-        _render_story(lines, epic, feature, (number, rule, story, examples))
-    _render_feature_source(lines, feature_examples)
+        _render_story(
+            lines,
+            epic,
+            feature,
+            (number, rule, story, scenario_examples),
+            link_prefix=link_prefix,
+        )
+    _render_feature_source(lines, feature_examples, link_prefix=link_prefix)
+    return "\n".join(lines).rstrip() + "\n"
 
 
-def render_source(examples: tuple[LivingExample, ...]) -> str:
-    """Render normalized BDD examples into narrative-first RST."""
-    lines: list[str] = []
-    _render_overview(lines, examples)
+def render_pages(
+    examples: tuple[LivingExample, ...],
+) -> tuple[LivingSpecificationPage, ...]:
+    """Render one generated Sphinx document per Gherkin Feature."""
     grouped = _group_examples(examples)
+    pages: list[LivingSpecificationPage] = []
+    seen: set[str] = set()
     for epic in sorted(grouped, key=str.casefold):
-        heading(lines, epic, "-")
         for feature in sorted(grouped[epic], key=str.casefold):
-            _render_feature(lines, epic, feature, grouped[epic][feature])
+            rules = grouped[epic][feature]
+            docname = _feature_docname(epic, feature, _feature_examples(rules))
+            if docname in seen:
+                message = f"Duplicate Living Specifications document name: {docname}"
+                raise RuntimeError(message)
+            seen.add(docname)
+            pages.append(
+                LivingSpecificationPage(
+                    docname=docname,
+                    source=_render_feature_page(epic, feature, rules, docname),
+                )
+            )
+    return tuple(pages)
+
+
+def render_source(
+    examples: tuple[LivingExample, ...],
+    pages: tuple[LivingSpecificationPage, ...] | None = None,
+) -> str:
+    """Render the lightweight Living Specifications index."""
+    resolved_pages = pages if pages is not None else render_pages(examples)
+    lines: list[str] = []
+    _render_overview(lines, examples, resolved_pages)
     return "\n".join(lines).rstrip() + "\n"

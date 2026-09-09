@@ -109,43 +109,51 @@ def test_living_specs_render_current_narrative_and_rich_evidence(
 
     report = render_living_specifications(root, raw, result_links=result_links)
 
-    assert "Structured image understanding" in report.source
-    assert "The same image contract should remain valid" in report.source
-    assert ":bdg-success:`Verified` **1/1 passed**" in report.source
-    assert ":need:`REQ_IMAGE_INPUT`" in report.source
-    assert ".. tab-item:: ✓ QwenChat" in report.source
+    assert "Capabilities by area" in report.source
+    assert "Structured Output" in report.source
+    assert (
+        ":doc:`Structured image understanding "
+        "<specifications/_generated/structured-output/images>`" in report.source
+    )
+    assert "Describe the attached image." not in report.source
+    assert len(report.pages) == 1
+    page = report.pages[0]
+    assert page.docname == "specifications/_generated/structured-output/images"
+    assert "Structured image understanding" in page.source
+    assert "The same image contract should remain valid" in page.source
+    assert ":bdg-success:`Verified` **1/1 passed**" in page.source
+    assert ":need:`REQ_IMAGE_INPUT`" in page.source
+    assert ".. tab-item:: ✓ QwenChat" in page.source
     assert (
         ":bdg-link-secondary-line:`Execution evidence ↗ "
-        "<test-results/index.html#abc123>`" in report.source
+        "<../../../test-results/index.html#abc123>`" in page.source
     )
-    assert ".. rubric:: Scenarios" in report.source
+    assert ".. rubric:: Scenarios" in page.source
     assert (
         ".. dropdown:: Scenario 01 · A provider route describes the example "
-        "traffic image" in report.source
+        "traffic image" in page.source
     )
-    assert ":open:" in report.source
+    assert ":open:" in page.source
+    assert "Rule · A traffic image produces grounded structured evidence" in page.source
+    assert ":bdg-secondary-line:`Rule`" not in page.source
+    assert ":shadow: none" not in page.source
+    assert ":margin:" not in page.source
+    assert ".. container:: living-scenario" not in page.source
+    assert ".. container:: living-step" not in page.source
+    assert ":class-card: portal-card" not in page.source
+    assert "**Executed:**" in page.source
+    assert '**Given** the "QwenChat" image route' in page.source
+    assert "**When** the route analyzes the example traffic image:" in page.source
+    assert "**Prompt**" in page.source
+    assert "Describe the attached image." in page.source
+    assert ".. dropdown:: Raw captured result" in page.source
+    assert ".. code-block:: json" in page.source
+    assert ".. data-viewer::" not in page.source
+    assert ".. dropdown:: Technical details" in page.source
+    assert ".. dropdown:: Gherkin source" in page.source
     assert (
-        "Rule · A traffic image produces grounded structured evidence" in report.source
-    )
-    assert ":bdg-secondary-line:`Rule`" not in report.source
-    assert ":shadow: none" not in report.source
-    assert ":margin:" not in report.source
-    assert ".. container:: living-scenario" not in report.source
-    assert ".. container:: living-step" not in report.source
-    assert ":class-card: portal-card" not in report.source
-    assert "**Executed:**" in report.source
-    assert '**Given** the "QwenChat" image route' in report.source
-    assert "**When** the route analyzes the example traffic image:" in report.source
-    assert "**Prompt**" in report.source
-    assert "Describe the attached image." in report.source
-    assert ".. dropdown:: Raw captured result" in report.source
-    assert ".. code-block:: json" in report.source
-    assert ".. data-viewer::" not in report.source
-    assert ".. dropdown:: Technical details" in report.source
-    assert ".. dropdown:: Gherkin source" in report.source
-    assert (
-        ".. literalinclude:: ../features/structured_output/images.feature"
-        in report.source
+        ".. literalinclude:: ../../../../features/structured_output/images.feature"
+        in page.source
     )
     assert [asset.output_name for asset in report.assets] == ["input.png"]
 
@@ -167,7 +175,7 @@ def test_living_specs_publish_only_linked_binary_assets(tmp_path: Path) -> None:
     report = render_living_specifications(root, raw)
     output = tmp_path / "site"
 
-    assert "provider's response" in report.source
+    assert "provider's response" in report.pages[0].source
     publish_living_assets(report, output)
 
     assets = output / "_living-specs" / "assets"

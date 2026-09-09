@@ -70,15 +70,21 @@ def status_icon(status: str) -> str:
     }.get(status, "?")
 
 
-def _asset_url(attachment: LivingAttachment) -> str:
+def _asset_url(attachment: LivingAttachment, link_prefix: str) -> str:
     """Return the published relative URL for one retained binary attachment."""
     if attachment.output_name is None:
         return ""
-    return f"_living-specs/assets/{html.escape(attachment.output_name, quote=True)}"
+    return (
+        f"{link_prefix}_living-specs/assets/"
+        f"{html.escape(attachment.output_name, quote=True)}"
+    )
 
 
 def _render_attachment(
-    lines: list[str], attachment: LivingAttachment, indent: int
+    lines: list[str],
+    attachment: LivingAttachment,
+    indent: int,
+    link_prefix: str,
 ) -> None:
     """Render retained evidence inline using a media-appropriate representation."""
     label = "Prompt" if attachment.name == "Doc string" else attachment.name
@@ -108,7 +114,7 @@ def _render_attachment(
             attachment.source.read_text(encoding="utf-8", errors="replace"),
         )
         return
-    url = _asset_url(attachment)
+    url = _asset_url(attachment, link_prefix)
     label_html = html.escape(label)
     if attachment.media_type.startswith("image/"):
         append_rst(lines, indent, f".. image:: {url}")
@@ -149,7 +155,9 @@ def _step_parts(name: str) -> tuple[str, str]:
     return "Step", name
 
 
-def _render_step(lines: list[str], step: LivingStep, indent: int) -> None:
+def _render_step(
+    lines: list[str], step: LivingStep, indent: int, link_prefix: str
+) -> None:
     """Render one executed BDD step with non-forensic attachments beside it."""
     keyword, text = _step_parts(step.name)
     sentence = f"**{keyword}** {rst_inline(text)}".rstrip()
@@ -158,7 +166,7 @@ def _render_step(lines: list[str], step: LivingStep, indent: int) -> None:
     for attachment in step.attachments:
         if attachment.name.casefold() in _TECHNICAL_ATTACHMENT_NAMES:
             continue
-        _render_attachment(lines, attachment, indent)
+        _render_attachment(lines, attachment, indent, link_prefix)
 
 
 def _render_technical_metadata(
@@ -206,18 +214,20 @@ def _render_technical_failures(
 
 
 def _render_technical_attachments(
-    lines: list[str], example: LivingExample, body: int
+    lines: list[str], example: LivingExample, body: int, link_prefix: str
 ) -> None:
     """Render root and technical step attachments inside the forensic disclosure."""
     for attachment in example.attachments:
-        _render_attachment(lines, attachment, body)
+        _render_attachment(lines, attachment, body, link_prefix)
     for step in example.steps:
         for attachment in step.attachments:
             if attachment.name.casefold() in _TECHNICAL_ATTACHMENT_NAMES:
-                _render_attachment(lines, attachment, body)
+                _render_attachment(lines, attachment, body, link_prefix)
 
 
-def _render_technical(lines: list[str], example: LivingExample, indent: int) -> None:
+def _render_technical(
+    lines: list[str], example: LivingExample, indent: int, link_prefix: str
+) -> None:
     """Render the collapsed forensic disclosure for one current example."""
     append_rst(lines, indent, ".. dropdown:: Technical details")
     append_rst(lines, indent + 3, ":class-container: living-technical-details")
@@ -225,16 +235,23 @@ def _render_technical(lines: list[str], example: LivingExample, indent: int) -> 
     body = indent + 3
     _render_technical_metadata(lines, example, body)
     _render_technical_failures(lines, example, body)
-    _render_technical_attachments(lines, example, body)
+    _render_technical_attachments(lines, example, body, link_prefix)
 
 
-def render_example(lines: list[str], example: LivingExample, indent: int) -> None:
+def render_example(
+    lines: list[str],
+    example: LivingExample,
+    indent: int,
+    *,
+    link_prefix: str = "",
+) -> None:
     """Render one current BDD example and its evidence."""
     if example.allure_url:
         append_rst(
             lines,
             indent,
-            f":bdg-link-secondary-line:`Execution evidence ↗ <{example.allure_url}>`",
+            f":bdg-link-secondary-line:`Execution evidence ↗ "
+            f"<{link_prefix}{example.allure_url}>`",
         )
         append_rst(lines, 0)
     if example.status != "passed" and example.status_message:
@@ -243,5 +260,5 @@ def render_example(lines: list[str], example: LivingExample, indent: int) -> Non
         )
         append_rst(lines, 0)
     for step in example.steps:
-        _render_step(lines, step, indent)
-    _render_technical(lines, example, indent)
+        _render_step(lines, step, indent, link_prefix)
+    _render_technical(lines, example, indent, link_prefix)
