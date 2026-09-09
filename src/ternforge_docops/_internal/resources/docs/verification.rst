@@ -14,22 +14,18 @@ Release outcome
    :gutter: 2
 
    .. grid-item-card:: Executed
-      :class-card: portal-card
 
       :need_count:`type == "testcase"` tests
 
    .. grid-item-card:: Passed
-      :class-card: portal-card
 
       :need_count:`type == "testcase" and result == "passed"` passed
 
    .. grid-item-card:: Failed / errored
-      :class-card: portal-card
 
       :need_count:`type == "testcase" and (result == "failed" or result == "error")` failed or errored
 
    .. grid-item-card:: Skipped
-      :class-card: portal-card
 
       :need_count:`type == "testcase" and result == "skipped"` skipped
 
@@ -40,13 +36,7 @@ Rows are product requirements and engineering constraints; columns are verificat
 ``x/x`` means all executions in that layer passed. ``missing`` means the object requests that
 verification kind but no execution was found. A dash means the layer is not requested.
 
-.. raw:: html
-
-   <iframe
-     class="verification-matrix-frame"
-     src="verification-matrix.html"
-     title="Requirement verification matrix"
-   ></iframe>
+.. ternforge-verification-matrix::
 
 Inspect concrete evidence
 -------------------------
@@ -57,7 +47,6 @@ Inspect concrete evidence
    .. grid-item-card:: Executable specifications
       :link: specifications
       :link-type: doc
-      :class-card: portal-card
 
       Inspect current BDD behavior as Feature → Rule → Scenario → Given/When/Then with rich
       evidence beside the step that produced it.
@@ -65,7 +54,6 @@ Inspect concrete evidence
    .. grid-item-card:: All test execution
       :link: test-results/index.html
       :link-type: url
-      :class-card: portal-card
 
       Browse the complete current execution inventory across all verification layers in Allure.
 

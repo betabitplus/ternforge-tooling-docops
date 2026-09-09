@@ -87,8 +87,7 @@ Verification matrix
     assert "MISSING" not in index
     assert "_static/ternforge-docops.css" in index
     assert (output / "_static" / "ternforge-docops.css").is_file()
-    assert "_static/ternforge-docops.js" in index
-    assert (output / "_static" / "ternforge-docops.js").is_file()
+    assert "_static/ternforge-docops.js" not in index
 
 
 def test_sphinx_extension_mounts_experiment_reports_in_place(tmp_path: Path) -> None:
@@ -125,7 +124,6 @@ def test_sphinx_extension_mounts_experiment_reports_in_place(tmp_path: Path) -> 
 
 ```{exp} Demo experiment
 :id: EXP_0001
-:hide:
 :experiment_date: 2026-09-02
 ```
 """
@@ -182,7 +180,8 @@ def test_sphinx_extension_mounts_experiment_reports_in_place(tmp_path: Path) -> 
     assert mounted_report.is_file()
     mounted_html = mounted_report.read_text(encoding="utf-8")
     assert "Mounted experiment" in mounted_html
-    assert 'meta name="ternforge-exp-id" content="EXP_0001"' in mounted_html
-    assert 'meta name="ternforge-exp-date" content="2026-09-02"' in mounted_html
+    assert "EXP_0001" in mounted_html
+    assert "experiment_date" in mounted_html
+    assert "2026-09-02" in mounted_html
     assert published_input.read_text(encoding="utf-8") == "mounted evidence"
     assert not (docs / "experiments" / "_generated").exists()

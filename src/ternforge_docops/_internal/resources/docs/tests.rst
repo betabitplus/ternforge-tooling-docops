@@ -14,22 +14,18 @@ Current verification inventory
    :gutter: 2
 
    .. grid-item-card:: BDD
-      :class-card: portal-card
 
       :need_count:`type == "testcase" and verification_kind == "bdd"` executable scenarios
 
    .. grid-item-card:: Unit
-      :class-card: portal-card
 
       :need_count:`type == "testcase" and verification_kind == "unit"` unit tests
 
    .. grid-item-card:: Integration
-      :class-card: portal-card
 
       :need_count:`type == "testcase" and verification_kind == "integration"` integration tests
 
    .. grid-item-card:: Property
-      :class-card: portal-card
 
       :need_count:`type == "testcase" and verification_kind == "property"` property tests
 
@@ -42,7 +38,6 @@ Choose a perspective
    .. grid-item-card:: Executable specifications
       :link: specifications
       :link-type: doc
-      :class-card: portal-card
 
       Read Feature → Rule → Scenario → Given/When/Then as current living documentation with
       rich evidence beside the step that produced it.
@@ -50,7 +45,6 @@ Choose a perspective
    .. grid-item-card:: All test execution
       :link: test-results/index.html
       :link-type: url
-      :class-card: portal-card
 
       Browse the complete current BDD, unit, integration, and property execution inventory in
       the generic Allure forensic view.
@@ -65,11 +59,3 @@ Forensic execution browser
    :shadow:
 
    Open all test results full screen
-
-.. raw:: html
-
-   <iframe
-     class="test-portal-frame"
-     src="test-results/index.html"
-     title="All test results"
-   ></iframe>

@@ -89,13 +89,15 @@ def _render_attachment(
         append_rst(lines, 0)
         return
     if attachment.media_type == "application/json":
-        _code_block(
-            lines,
-            indent,
-            "json",
-            attachment.source.read_text(encoding="utf-8", errors="replace"),
-            "living-json-raw",
-        )
+        rendered = attachment.source.read_text(
+            encoding="utf-8", errors="replace"
+        ).replace("'", "\\u0027")
+        append_rst(lines, indent, ".. data-viewer::")
+        append_rst(lines, indent + 3, ":title: Captured JSON")
+        append_rst(lines, 0)
+        for line in rendered.splitlines():
+            append_rst(lines, indent + 3, line)
+        append_rst(lines, 0)
         return
     if attachment.media_type == "text/plain":
         _code_block(
@@ -108,24 +110,30 @@ def _render_attachment(
     url = _asset_url(attachment)
     label_html = html.escape(label)
     if attachment.media_type.startswith("image/"):
-        raw = f'<img class="living-media living-image" src="{url}" alt="{label_html}">'
-    elif attachment.media_type.startswith("video/"):
+        append_rst(lines, indent, f".. image:: {url}")
+        append_rst(lines, indent + 3, f":alt: {rst_inline(label)}")
+        append_rst(lines, indent + 3, ":class: living-image")
+        append_rst(lines, 0)
+        return
+    if attachment.media_type.startswith("video/"):
         media_type = html.escape(attachment.media_type, quote=True)
         raw = (
-            '<video class="living-media living-video" controls preload="metadata">'
+            '<video class="living-video" controls preload="metadata">'
             f'<source src="{url}" type="{media_type}">'
             f'<a href="{url}">Open {label_html}</a>'
             "</video>"
         )
     elif attachment.media_type == "application/pdf":
         raw = (
-            '<object class="living-media living-pdf" data="'
+            '<object class="living-pdf" data="'
             f'{url}" type="application/pdf">'
             f'<a href="{url}">Open {label_html}</a>'
             "</object>"
         )
     else:
-        raw = f'<a class="living-download" href="{url}">Open {label_html}</a>'
+        append_rst(lines, indent, f"`Open {rst_inline(label)} <{url}>`__")
+        append_rst(lines, 0)
+        return
     append_rst(lines, indent, ".. raw:: html")
     append_rst(lines, 0)
     append_rst(lines, indent + 3, raw)
