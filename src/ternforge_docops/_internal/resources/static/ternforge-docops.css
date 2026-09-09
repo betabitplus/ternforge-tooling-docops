@@ -1,6 +1,6 @@
 /* Compatibility-only presentation for upstream Sphinx components.
-   Page layout, cards, tabs, dropdowns, badges, tables, and typography belong to
-   PyData Sphinx Theme, Sphinx Design, Sphinx-Needs, and sphinx-data-viewer. */
+   Page layout, cards, tabs, dropdowns, badges, tables, code blocks, and typography
+   belong to PyData Sphinx Theme, Sphinx Design, and Sphinx-Needs. */
 
 /* Sphinx-Needs still needs explicit PyData dark-theme token mapping. */
 html[data-theme="dark"] {
