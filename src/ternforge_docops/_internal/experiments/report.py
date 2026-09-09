@@ -13,6 +13,7 @@ from ternforge_docops._internal.experiments.digest import capsule_digest
 _CAPSULE_PATTERN = re.compile(r"^exp_(?P<number>[0-9]{4})_[a-z0-9_]+$")
 _ID_PATTERN = re.compile(r"^EXP_[0-9]{4}$")
 _STEP_PATTERN = re.compile(r"^## (?P<number>[1-9][0-9]*)\. (?P<title>\S.+)$")
+_TARGET_PATTERN = re.compile(r"^\([A-Za-z0-9][A-Za-z0-9_.:-]*\)=$")
 _MIN_REPORT_CELLS = 5
 _ROLE_TAGS = {
     "exp-meta",
@@ -164,7 +165,9 @@ def _validate_steps(notebook: NotebookNode) -> list[str]:
         step = notebook.cells[index]
         evidence = notebook.cells[index + 1]
         source_lines = str(step.source).splitlines() if step.source else []
-        heading_index = 1 if source_lines and source_lines[0].endswith(")=") else 0
+        heading_index = (
+            1 if source_lines and _TARGET_PATTERN.fullmatch(source_lines[0]) else 0
+        )
         heading = (
             source_lines[heading_index] if len(source_lines) > heading_index else ""
         )
