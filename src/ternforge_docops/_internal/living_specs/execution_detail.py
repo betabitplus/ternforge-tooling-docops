@@ -136,7 +136,8 @@ def _render_contract(
     append_rst(lines, indent, f"**{rst_inline(contract.name)}**")
     append_rst(lines, 0)
     if contract.qualified_name:
-        append_rst(lines, indent, f"``{rst_inline(contract.qualified_name)}``")
+        display_name = contract.qualified_name.rsplit(".", 1)[-1]
+        append_rst(lines, indent, f"``{rst_inline(display_name)}``")
         append_rst(lines, 0)
     if contract.description:
         description = " ".join(contract.description.split())
