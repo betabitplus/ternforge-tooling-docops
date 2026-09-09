@@ -20,6 +20,10 @@ class _VerificationMatrixNode(nodes.General, nodes.Element):
     """Placeholder replaced after the complete Needs graph is available."""
 
 
+class _ContractProvenanceNode(nodes.General, nodes.Element):
+    """Placeholder for graph-native provenance behind one verified contract."""
+
+
 class _VerificationMatrixDirective(SphinxDirective):
     """Render requirement-by-verification coverage from imported testcase Needs."""
 
@@ -28,6 +32,23 @@ class _VerificationMatrixDirective(SphinxDirective):
     def run(self) -> list[nodes.Node]:
         """Insert a placeholder resolved after the complete Needs graph exists."""
         return [_VerificationMatrixNode()]
+
+
+class _ContractProvenanceDirective(SphinxDirective):
+    """Render graph-native provenance for one or more verified Need identifiers."""
+
+    has_content = False
+    required_arguments = 1
+    final_argument_whitespace = True
+
+    def run(self) -> list[nodes.Node]:
+        """Insert a provenance placeholder resolved against the complete Needs graph."""
+        requirements = tuple(
+            value.strip() for value in self.arguments[0].split(",") if value.strip()
+        )
+        node = _ContractProvenanceNode()
+        node["requirements"] = requirements
+        return [node]
 
 
 def _verification_ids(value: object) -> tuple[str, ...]:
@@ -193,8 +214,133 @@ def _replace_matrix_nodes(
         node.replace_self(replacement)
 
 
+def _needs_by_id(app: Sphinx) -> dict[str, Mapping[str, object]]:
+    """Index the authoritative Needs graph by stable identifier."""
+    return {
+        str(need["id"]): need for need in get_needs_view(app).values() if need.get("id")
+    }
+
+
+def _related_ids(
+    needs: Mapping[str, Mapping[str, object]],
+    source_ids: tuple[str, ...],
+    relation: str,
+    allowed_types: frozenset[str],
+) -> tuple[str, ...]:
+    """Follow one declared relation while preserving graph declaration order."""
+    related: list[str] = []
+    for source_id in source_ids:
+        source = needs.get(source_id)
+        if source is None:
+            continue
+        for target_id in _verification_ids(source.get(relation)):
+            target = needs.get(target_id)
+            if (
+                target is not None
+                and str(target.get("type") or "") in allowed_types
+                and target_id not in related
+            ):
+                related.append(target_id)
+    return tuple(related)
+
+
+def _provenance_groups(
+    needs: Mapping[str, Mapping[str, object]],
+    requirement_ids: tuple[str, ...],
+) -> tuple[tuple[str, tuple[str, ...]], ...]:
+    """Resolve contract → constraint/ADR/EXP/implementation provenance layers."""
+    roots = tuple(
+        requirement_id for requirement_id in requirement_ids if requirement_id in needs
+    )
+    constraints = _related_ids(
+        needs,
+        roots,
+        "derives_back",
+        frozenset({"treq"}),
+    )
+    contract_layer = tuple(dict.fromkeys((*roots, *constraints)))
+    decisions = _related_ids(
+        needs,
+        contract_layer,
+        "affects_back",
+        frozenset({"adr"}),
+    )
+    research = _related_ids(
+        needs,
+        tuple(dict.fromkeys((*contract_layer, *decisions))),
+        "informs_back",
+        frozenset({"exp"}),
+    )
+    implementations = _related_ids(
+        needs,
+        contract_layer,
+        "implements_back",
+        frozenset({"impl"}),
+    )
+    return (
+        ("Verified contract", roots),
+        ("Engineering constraints", constraints),
+        ("Architecture decisions", decisions),
+        ("Research evidence", research),
+        ("Implementation loci", implementations),
+    )
+
+
+def _need_reference(
+    app: Sphinx,
+    fromdocname: str,
+    need: Mapping[str, object],
+) -> nodes.reference:
+    """Build one theme-native internal link to an existing Need."""
+    need_id = str(need["id"])
+    target_doc = str(need.get("docname") or fromdocname)
+    uri = app.builder.get_relative_uri(fromdocname, target_doc)
+    title = str(need.get("title") or "")
+    label = f"{need_id} · {title}" if title else need_id
+    return nodes.reference("", label, refuri=f"{uri}#{need_id}")
+
+
+def _provenance_list(
+    app: Sphinx,
+    fromdocname: str,
+    needs: Mapping[str, Mapping[str, object]],
+    groups: tuple[tuple[str, tuple[str, ...]], ...],
+) -> nodes.bullet_list:
+    """Render provenance layers as a stock docutils bullet list."""
+    result = nodes.bullet_list()
+    for label, need_ids in groups:
+        if not need_ids:
+            continue
+        item = nodes.list_item()
+        paragraph = nodes.paragraph()
+        paragraph += nodes.strong(text=f"{label}: ")
+        for index, need_id in enumerate(need_ids):
+            if index:
+                paragraph += nodes.Text(", ")
+            paragraph += _need_reference(app, fromdocname, needs[need_id])
+        item += paragraph
+        result += item
+    return result
+
+
+def _replace_provenance_nodes(
+    app: Sphinx,
+    doctree: nodes.document,
+    fromdocname: str,
+) -> None:
+    """Resolve contract provenance placeholders from the complete Needs graph."""
+    needs = _needs_by_id(app)
+    for node in list(doctree.findall(_ContractProvenanceNode)):
+        requirement_ids = tuple(str(value) for value in node.get("requirements", ()))
+        groups = _provenance_groups(needs, requirement_ids)
+        node.replace_self(_provenance_list(app, fromdocname, needs, groups))
+
+
 def register_verification_view(app: Sphinx) -> None:
-    """Register the DocOps verification matrix directive."""
+    """Register theme-native verification and contract-provenance views."""
     app.add_node(_VerificationMatrixNode)
+    app.add_node(_ContractProvenanceNode)
     app.add_directive("ternforge-verification-matrix", _VerificationMatrixDirective)
+    app.add_directive("ternforge-contract-provenance", _ContractProvenanceDirective)
     app.connect("doctree-resolved", _replace_matrix_nodes)
+    app.connect("doctree-resolved", _replace_provenance_nodes)

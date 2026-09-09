@@ -9,10 +9,16 @@ from pathlib import Path
 
 from ternforge_docops._internal.allure.results import current_results
 
+_BDD_IMPLEMENTATION_TYPE = "application/vnd.ternforge.bdd-implementation+json"
+_CONTRACT_TYPE = "application/vnd.ternforge.contract+json"
+_INTERNAL_ATTACHMENT_TYPES = frozenset({_BDD_IMPLEMENTATION_TYPE, _CONTRACT_TYPE})
+
 
 def _keep_forensic_attachment(attachment: dict[str, object]) -> bool:
     """Keep only lightweight text-like attachments in the single-file Allure view."""
     media_type = str(attachment.get("type", "")).partition(";")[0].strip().lower()
+    if media_type in _INTERNAL_ATTACHMENT_TYPES:
+        return False
     return (
         media_type.startswith("text/")
         or media_type == "application/json"

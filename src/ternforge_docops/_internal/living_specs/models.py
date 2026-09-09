@@ -17,12 +17,39 @@ class LivingAttachment:
 
 
 @dataclass(frozen=True)
+class LivingImplementation:
+    """Exact Python binding source captured for one executed BDD step."""
+
+    keyword: str
+    text: str
+    function: str
+    path: str
+    start_line: int
+    end_line: int
+    source: str
+
+
+@dataclass(frozen=True)
+class LivingContract:
+    """One live schema/callable contract captured by the executing test."""
+
+    name: str
+    kind: str
+    qualified_name: str
+    description: str
+    signature: str
+    schema: object | None
+
+
+@dataclass(frozen=True)
 class LivingStep:
     """One executed Given/When/Then step with retained evidence."""
 
     name: str
     status: str
     attachments: tuple[LivingAttachment, ...]
+    implementation: LivingImplementation | None = None
+    contracts: tuple[LivingContract, ...] = ()
 
 
 @dataclass(frozen=True)

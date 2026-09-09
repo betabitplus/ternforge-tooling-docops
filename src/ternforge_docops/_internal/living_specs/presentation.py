@@ -4,13 +4,11 @@ from __future__ import annotations
 
 import re
 from collections import defaultdict
+from dataclasses import dataclass
 from pathlib import PurePosixPath
 
 from ternforge_docops._internal.living_specs.detail import (
-    append_rst,
-    heading,
     render_example,
-    rst_inline,
     status_icon,
     status_summary,
 )
@@ -18,11 +16,20 @@ from ternforge_docops._internal.living_specs.models import (
     LivingExample,
     LivingSpecificationPage,
 )
+from ternforge_docops._internal.living_specs.rst import append_rst, heading, rst_inline
 
 type ScenarioRow = tuple[int, str, str, list[LivingExample]]
 type GroupedExamples = dict[str, dict[str, dict[str, dict[str, list[LivingExample]]]]]
 
 _FEATURE_SOURCE_MIN_PARTS = 3
+
+
+@dataclass(frozen=True)
+class _RenderContext:
+    """Feature-page link context shared by nested presentation helpers."""
+
+    link_prefix: str
+    repository_source_base: str
 
 
 def _slug(value: str) -> str:
@@ -163,7 +170,7 @@ def _render_story(
     feature: str,
     row: ScenarioRow,
     *,
-    link_prefix: str,
+    context: _RenderContext,
 ) -> None:
     """Render one numbered scenario using the stock Sphinx Design disclosure."""
     number, rule, story, examples = row
@@ -182,8 +189,22 @@ def _render_story(
         links = ", ".join(f":need:`{rst_inline(req)}`" for req in requirements)
         append_rst(lines, 3, f"**Verifies:** {links}")
         append_rst(lines, 0)
+        append_rst(lines, 3, ".. dropdown:: Contract provenance")
+        append_rst(lines, 0)
+        append_rst(
+            lines,
+            6,
+            f".. ternforge-contract-provenance:: {','.join(requirements)}",
+        )
+        append_rst(lines, 0)
     if len(ordered) == 1 and ordered[0].name == "Scenario":
-        render_example(lines, ordered[0], 3, link_prefix=link_prefix)
+        render_example(
+            lines,
+            ordered[0],
+            3,
+            link_prefix=context.link_prefix,
+            repository_source_base=context.repository_source_base,
+        )
         return
     append_rst(lines, 3, ".. tab-set::")
     append_rst(lines, 0)
@@ -191,7 +212,13 @@ def _render_story(
         label = f"{status_icon(example.status)} {example.name}"
         append_rst(lines, 6, f".. tab-item:: {rst_inline(label)}")
         append_rst(lines, 0)
-        render_example(lines, example, 9, link_prefix=link_prefix)
+        render_example(
+            lines,
+            example,
+            9,
+            link_prefix=context.link_prefix,
+            repository_source_base=context.repository_source_base,
+        )
 
 
 def _render_scenario_index(
@@ -248,6 +275,7 @@ def _render_feature_page(
     feature: str,
     rules: dict[str, dict[str, list[LivingExample]]],
     docname: str,
+    repository_source_base: str,
 ) -> str:
     """Render one self-contained Feature document with Rule/Scenario drill-down."""
     lines = [
@@ -257,7 +285,10 @@ def _render_feature_page(
         "",
     ]
     feature_examples = _feature_examples(rules)
-    link_prefix = _page_prefix(docname)
+    context = _RenderContext(
+        link_prefix=_page_prefix(docname),
+        repository_source_base=repository_source_base,
+    )
     lines.extend((f".. _{_feature_anchor(epic, feature)}:", ""))
     heading(lines, feature, "=")
     lines.extend((f"**Area:** {rst_inline(epic)}", ""))
@@ -285,14 +316,20 @@ def _render_feature_page(
             epic,
             feature,
             (number, rule, story, scenario_examples),
-            link_prefix=link_prefix,
+            context=context,
         )
-    _render_feature_source(lines, feature_examples, link_prefix=link_prefix)
+    _render_feature_source(
+        lines,
+        feature_examples,
+        link_prefix=context.link_prefix,
+    )
     return "\n".join(lines).rstrip() + "\n"
 
 
 def render_pages(
     examples: tuple[LivingExample, ...],
+    *,
+    repository_source_base: str = "",
 ) -> tuple[LivingSpecificationPage, ...]:
     """Render one generated Sphinx document per Gherkin Feature."""
     grouped = _group_examples(examples)
@@ -309,7 +346,13 @@ def render_pages(
             pages.append(
                 LivingSpecificationPage(
                     docname=docname,
-                    source=_render_feature_page(epic, feature, rules, docname),
+                    source=_render_feature_page(
+                        epic,
+                        feature,
+                        rules,
+                        docname,
+                        repository_source_base,
+                    ),
                 )
             )
     return tuple(pages)
