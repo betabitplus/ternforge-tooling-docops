@@ -125,17 +125,30 @@ def _action_text(state: SpecificationHealth) -> str:
     return ". ".join(parts) or "Deep coverage incomplete"
 
 
+def _actionable_states(
+    health: Mapping[str, SpecificationHealth],
+) -> tuple[SpecificationHealth, ...]:
+    """Return direct root causes without duplicating their affected ancestors."""
+    return tuple(
+        sorted(
+            (
+                state
+                for state in health.values()
+                if state.gap_reason or state.missing_evidence
+            ),
+            key=lambda state: (state.need_type, state.need_id),
+        )
+    )
+
+
 def _action_table(
     app: Sphinx,
     fromdocname: str,
     health: Mapping[str, SpecificationHealth],
     needs: Mapping[str, Mapping[str, object]],
 ) -> nodes.table | nodes.paragraph:
-    """Render only active nodes that currently block deep specification coverage."""
-    gaps = sorted(
-        (state for state in health.values() if not state.deep_covered),
-        key=lambda state: (state.need_type, state.need_id),
-    )
+    """Render only actionable root causes; deep impact remains in the summary."""
+    gaps = _actionable_states(health)
     if not gaps:
         return nodes.paragraph(text="No active specification coverage gaps.")
 
@@ -181,10 +194,10 @@ def _replace_health_nodes(
     health = project_specification_health(needs.values())
     for node in list(doctree.findall(_SpecificationHealthNode)):
         replacement: list[nodes.Node] = []
-        replacement.append(nodes.rubric(text="Coverage summary"))
-        replacement.append(_summary_table(health))
-        replacement.append(nodes.rubric(text="Action required"))
+        replacement.append(nodes.rubric(text="What needs attention"))
         replacement.append(_action_table(app, fromdocname, health, needs))
+        replacement.append(nodes.rubric(text="Audit totals"))
+        replacement.append(_summary_table(health))
         node.replace_self(replacement)
 
 

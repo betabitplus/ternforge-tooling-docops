@@ -231,10 +231,12 @@ Specification health
     assert "Product requirements" in index
     assert "REQ_DOCOPS" in index
     assert "✓ 1/1" in index
-    assert "Coverage summary" in index
+    assert "What needs attention" in index
+    assert "No active specification coverage gaps." in index
+    assert "Audit totals" in index
+    assert index.index("What needs attention") < index.index("Audit totals")
     assert "Goals" in index
     assert "Accepted requirements" in index
-    assert "No active specification coverage gaps." in index
     assert "MISSING" not in index
     assert "_static/ternforge-docops.css" in index
     assert (output / "_static" / "ternforge-docops.css").is_file()
