@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.10.0](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.9.0...v0.10.0) (2026-09-10)
+
+
+### Features
+
+* add specification health coverage ([#68](https://github.com/betabitplus/ternforge-tooling-docops/issues/68)) ([1f5b87c](https://github.com/betabitplus/ternforge-tooling-docops/commit/1f5b87c0e6ea69ec92e619ea461266ff7fa932b9))
+
 ## [0.9.0](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.8.3...v0.9.0) (2026-09-10)
 
 
