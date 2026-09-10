@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.10.2](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.10.1...v0.10.2) (2026-09-10)
+
+
+### Bug Fixes
+
+* add living specification area anchors ([#72](https://github.com/betabitplus/ternforge-tooling-docops/issues/72)) ([3bff77b](https://github.com/betabitplus/ternforge-tooling-docops/commit/3bff77b286d1e6b467bf5353fb9fc1c9e09f6953))
+
 ## [0.10.1](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.10.0...v0.10.1) (2026-09-10)
 
 
