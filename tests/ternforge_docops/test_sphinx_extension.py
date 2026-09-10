@@ -8,7 +8,11 @@ from pathlib import Path
 
 import nbformat
 
-from ternforge_docops._internal.sphinx import verification
+from ternforge_docops._internal.experiments.digest import capsule_digest
+from ternforge_docops._internal.sphinx import (
+    experiments as experiment_sphinx,
+    verification,
+)
 
 
 def test_sphinx_extension_builds_current_graph(tmp_path: Path) -> None:
@@ -129,6 +133,74 @@ def test_contract_provenance_follows_declared_graph_relations() -> None:
     )
 
 
+def test_experiment_run_details_are_collapsed_and_surface_stale_state(
+    tmp_path: Path,
+) -> None:
+    """Standard Jupyter timing stays quiet unless Ternforge freshness is stale."""
+    capsule = tmp_path / "exp_0001_demo"
+    capsule.mkdir()
+    notebook = nbformat.v4.new_notebook(
+        cells=[
+            nbformat.v4.new_markdown_cell("# Demo"),
+            nbformat.v4.new_code_cell(
+                "setup = True",
+                execution_count=1,
+                metadata={
+                    "tags": ["exp-setup"],
+                    "execution": {
+                        "iopub.status.busy": "2026-09-10T08:00:00Z",
+                        "iopub.status.idle": "2026-09-10T08:00:01Z",
+                    },
+                },
+            ),
+            nbformat.v4.new_markdown_cell(
+                "## 1. Probe capability",
+                metadata={"tags": ["exp-step"]},
+            ),
+            nbformat.v4.new_code_cell(
+                "print('ok')",
+                execution_count=2,
+                metadata={
+                    "tags": ["exp-evidence"],
+                    "execution": {
+                        "iopub.status.busy": "2026-09-10T08:00:01Z",
+                        "iopub.status.idle": "2026-09-10T08:00:03Z",
+                    },
+                },
+            ),
+        ],
+        metadata={
+            "kernelspec": {
+                "display_name": "Python 3.13.7",
+                "language": "python",
+                "name": "python3",
+            },
+            "language_info": {"name": "python", "version": "3.13.7"},
+            "ternforge": {"capsule_digest": "UNSET"},
+        },
+    )
+    notebook.metadata["ternforge"]["capsule_digest"] = capsule_digest(capsule, notebook)
+
+    current = experiment_sphinx._run_details(capsule, notebook)
+
+    assert current.startswith(":::{dropdown} Run details")
+    assert "**Captured:** 2026-09-10 08:00 UTC" in current
+    assert "**Capture duration:** 3.0 s" in current
+    assert "**Runtime:** Python 3.13.7 (`python3`)" in current
+    assert "**Freshness:** Current" in current
+    assert "| 1. Probe capability | 2.0 s |" in current
+    assert "{warning}" not in current
+
+    inputs = capsule / "inputs"
+    inputs.mkdir()
+    (inputs / "new-causal-input.txt").write_text("changed\n", encoding="utf-8")
+    stale = experiment_sphinx._run_details(capsule, notebook)
+
+    assert stale.startswith(":::{warning}")
+    assert "**Captured evidence is stale.**" in stale
+    assert "**Freshness:** Stale" in stale
+
+
 def test_sphinx_extension_mounts_experiment_reports_in_place(tmp_path: Path) -> None:
     """Captured notebooks stay in capsules while Sphinx sees stable docnames."""
     docs = tmp_path / "docs"
@@ -170,6 +242,12 @@ def test_sphinx_extension_mounts_experiment_reports_in_place(tmp_path: Path) -> 
             nbformat.v4.new_code_cell(
                 "pass",
                 execution_count=1,
+                metadata={
+                    "execution": {
+                        "iopub.status.busy": "2026-09-10T08:00:00Z",
+                        "iopub.status.idle": "2026-09-10T08:00:02Z",
+                    }
+                },
                 outputs=[
                     nbformat.v4.new_output(
                         "display_data",
@@ -187,12 +265,16 @@ def test_sphinx_extension_mounts_experiment_reports_in_place(tmp_path: Path) -> 
         ],
         metadata={
             "kernelspec": {
-                "display_name": "Python 3",
+                "display_name": "Python 3.13.7",
                 "language": "python",
                 "name": "python3",
-            }
+            },
+            "language_info": {"name": "python", "version": "3.13.7"},
+            "ternforge": {"capsule_digest": "UNSET"},
         },
     )
+    notebook.metadata["ternforge"]["capsule_digest"] = capsule_digest(capsule, notebook)
+    retained_source = str(notebook.cells[0].source)
     nbformat.write(notebook, report_dir / "report.ipynb")
 
     subprocess.run(
@@ -222,5 +304,15 @@ def test_sphinx_extension_mounts_experiment_reports_in_place(tmp_path: Path) -> 
     assert "EXP_0001" in mounted_html
     assert "experiment_date" in mounted_html
     assert "2026-09-02" in mounted_html
+    assert "Run details" in mounted_html
+    assert "2026-09-10 08:00 UTC" in mounted_html
+    assert "2.0 s" in mounted_html
+    assert "Python 3.13.7" in mounted_html
+    assert "Freshness:" in mounted_html
+    assert "Current" in mounted_html
+    assert "<details" in mounted_html
     assert published_input.read_text(encoding="utf-8") == "mounted evidence"
+    retained = nbformat.read(report_dir / "report.ipynb", as_version=4)
+    assert str(retained.cells[0].source) == retained_source
+    assert "Run details" not in str(retained.cells[0].source)
     assert not (docs / "experiments" / "_generated").exists()
