@@ -36,10 +36,10 @@ Build documentation from already-produced project evidence:
 ```bash
 ternforge-docops build html --junit test-results/pytest-junit.xml
 ternforge-docops build portal --junit test-results/pytest-junit.xml --allure-results allure-results
-ternforge-docops build dossier --junit test-results/pytest-junit.xml
+ternforge-docops build dossier --junit test-results/pytest-junit.xml --allure-results allure-results
 ```
 
-`build html`, `build portal`, and `build dossier` can import pre-generated JUnit evidence directly; DocOps materializes the Sphinx-Test-Reports source only for the build and cleans it afterwards. `build portal` additionally consumes Allure results to derive current Living Specifications and the generic forensic execution browser. None of the build commands runs the project test suite. HTML and portal builds keep Sphinx-Gallery execution disabled by default; trusted publication may opt in explicitly with `--live-examples`.
+`build html`, `build portal`, and `build dossier` can import pre-generated JUnit evidence directly; DocOps materializes the Sphinx-Test-Reports source only for the build and cleans it afterwards. `build portal` and `build dossier` can consume the same retained Allure results so current Living Specifications are present in both HTML and PDF release views; the portal additionally publishes the generic forensic execution browser. None of the build commands runs the project test suite. HTML and portal builds keep Sphinx-Gallery execution disabled by default; trusted publication may opt in explicitly with `--live-examples`.
 `build dossier` delegates to the upstream Sphinx SimplePDF builder and therefore
 requires the operating-system libraries required by WeasyPrint on the runner.
 

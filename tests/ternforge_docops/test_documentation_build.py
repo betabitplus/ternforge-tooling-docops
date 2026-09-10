@@ -83,6 +83,93 @@ def test_build_dossier_delegates_to_simplepdf(
     assert "pytest" not in command
 
 
+def test_build_dossier_materializes_living_specs_from_allure(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The PDF dossier sees the same Living Specs evidence as the HTML portal."""
+    docs = tmp_path / "docs"
+    docs.mkdir()
+    output = tmp_path / "dossier"
+    raw = tmp_path / "allure-results"
+    raw.mkdir()
+    calls: list[str] = []
+
+    def fake_curate_results(
+        raw_results: Path,
+        *,
+        curated_results: Path,
+    ) -> None:
+        assert raw_results == raw
+        curated_results.mkdir(parents=True)
+        calls.append("curate")
+
+    def fake_generate_report(
+        *,
+        curated_results: Path,
+        output: Path,
+    ) -> Path:
+        assert curated_results.is_dir()
+        calls.append("allure")
+        report = output / "index.html"
+        report.parent.mkdir(parents=True)
+        report.write_text("all", encoding="utf-8")
+        return report
+
+    monkeypatch.setattr(
+        service,
+        "render_living_specifications",
+        lambda root, raw_results, *, result_links: SimpleNamespace(
+            source="Current executable behavior\n",
+            assets=(),
+            pages=(
+                SimpleNamespace(
+                    docname="specifications/_generated/routing/fallback",
+                    source="Route fallback\n==============\n",
+                ),
+            ),
+        ),
+    )
+
+    def fake_run_sphinx(
+        root: Path,
+        docs_root: Path,
+        output_root: Path,
+        builder: str,
+        *,
+        live_examples: bool = False,
+    ) -> None:
+        assert root == tmp_path
+        assert docs_root == docs
+        assert output_root == output
+        assert builder == "simplepdf"
+        assert live_examples is False
+        assert (
+            "Current executable behavior"
+            in (docs_root / service._LIVING_SOURCE).read_text()
+        )
+        feature_page = (
+            docs_root / "specifications" / "_generated" / "routing" / "fallback.rst"
+        )
+        assert feature_page.is_file()
+        calls.append("simplepdf")
+
+    monkeypatch.setattr(service, "curate_results", fake_curate_results)
+    monkeypatch.setattr(service, "generate_report", fake_generate_report)
+    monkeypatch.setattr(service, "_run_sphinx", fake_run_sphinx)
+
+    result = service.build_dossier(
+        tmp_path,
+        docs=docs,
+        output=output,
+        allure_results=raw,
+    )
+
+    assert result == output / "release-dossier.pdf"
+    assert calls == ["curate", "allure", "simplepdf"]
+    assert not (docs / "specifications" / "_generated").exists()
+
+
 def test_build_portal_publishes_living_specs_and_allure_diagnostics(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

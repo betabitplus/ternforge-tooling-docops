@@ -217,6 +217,26 @@ def _materialized_sources(
             trace_dir.rmdir()
 
 
+def _prepare_living_specifications(
+    root: Path,
+    allure_results: Path,
+    temp: Path,
+) -> tuple[Path, LivingSpecificationsReport]:
+    """Prepare Living Specs and the forensic Allure view from exact evidence."""
+    curated = temp / "curated"
+    curate_results(allure_results, curated_results=curated)
+    report = generate_report(
+        curated_results=curated,
+        output=temp / "report",
+    )
+    living_report = render_living_specifications(
+        root,
+        allure_results,
+        result_links=extract_result_links(report),
+    )
+    return report, living_report
+
+
 def build_html(
     root: Path,
     *,
@@ -245,12 +265,29 @@ def build_dossier(
     docs: Path | None = None,
     output: Path | None = None,
     junit: Path | None = None,
+    allure_results: Path | None = None,
 ) -> Path:
     """Build the release dossier through the upstream SimplePDF Sphinx builder."""
     docs_root = docs or root / "docs"
     output_root = output or docs_root / "_build" / "dossier"
-    with _materialized_sources(docs_root, junit):
-        _run_sphinx(root, docs_root, output_root, "simplepdf")
+    if allure_results is None:
+        with _materialized_sources(docs_root, junit):
+            _run_sphinx(root, docs_root, output_root, "simplepdf")
+        return output_root / "release-dossier.pdf"
+
+    with tempfile.TemporaryDirectory(prefix="ternforge-docops-allure-") as temp_dir:
+        _report, living_report = _prepare_living_specifications(
+            root,
+            allure_results,
+            Path(temp_dir),
+        )
+        with _materialized_sources(
+            docs_root,
+            junit,
+            living_report.source,
+            living_report,
+        ):
+            _run_sphinx(root, docs_root, output_root, "simplepdf")
     return output_root / "release-dossier.pdf"
 
 
@@ -266,17 +303,10 @@ def build_portal(
     docs_root = root / "docs"
     output_root = output or docs_root / "_build" / "html"
     with tempfile.TemporaryDirectory(prefix="ternforge-docops-allure-") as temp_dir:
-        temp = Path(temp_dir)
-        curated = temp / "curated"
-        curate_results(allure_results, curated_results=curated)
-        report = generate_report(
-            curated_results=curated,
-            output=temp / "report",
-        )
-        living_report = render_living_specifications(
+        report, living_report = _prepare_living_specifications(
             root,
             allure_results,
-            result_links=extract_result_links(report),
+            Path(temp_dir),
         )
         with _materialized_sources(
             docs_root,

@@ -56,6 +56,11 @@ def _parser() -> argparse.ArgumentParser:
     dossier.add_argument(
         "--output", type=Path, help="Output directory for dossier build files."
     )
+    dossier.add_argument(
+        "--allure-results",
+        type=Path,
+        help="Pre-generated Allure results used to materialize Living Specifications.",
+    )
     portal = build_commands.add_parser(
         "portal",
         help="Build strict HTML with native Living Specs and forensic Allure results.",
@@ -133,6 +138,11 @@ def _capture_experiment(root: Path, experiment: str) -> int:
     return 0
 
 
+def _resolve_optional_path(path: Path | None) -> Path | None:
+    """Resolve an optional CLI path without adding branching to command dispatch."""
+    return None if path is None else path.resolve()
+
+
 def main(argv: list[str] | None = None) -> int:
     """Run the DocOps command-line interface and return its exit status."""
     args = _parser().parse_args(argv)
@@ -144,8 +154,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "check":
         return _check_resources(root)
     if args.command == "build":
-        junit = args.junit.resolve() if args.junit is not None else None
-        build_output = args.output.resolve() if args.output is not None else None
+        junit = _resolve_optional_path(args.junit)
+        build_output = _resolve_optional_path(args.output)
         if args.build_action == "html":
             output = build_html(
                 root,
@@ -154,7 +164,13 @@ def main(argv: list[str] | None = None) -> int:
                 live_examples=args.live_examples,
             )
         elif args.build_action == "dossier":
-            output = build_dossier(root, junit=junit, output=build_output)
+            allure_results = _resolve_optional_path(args.allure_results)
+            output = build_dossier(
+                root,
+                junit=junit,
+                allure_results=allure_results,
+                output=build_output,
+            )
         else:
             output = build_portal(
                 root,
