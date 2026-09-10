@@ -9,6 +9,9 @@ import pytest
 from ternforge_docops._internal.sphinx.specification_health import (
     project_specification_health,
 )
+from ternforge_docops._internal.sphinx.specification_health_view import (
+    _actionable_states,
+)
 
 
 def _healthy_graph() -> list[dict[str, object]]:
@@ -101,6 +104,18 @@ def test_constraint_gap_blocks_parent_requirement_deep_coverage_only() -> None:
     assert health["REQ_DEMO"].blocked_by == ("TREQ_DEMO",)
     assert health["REQ_DEMO"].deep_covered is False
     assert health["TREQ_DEMO"].missing_evidence == ("unit",)
+
+
+def test_actionable_states_report_root_cause_without_ancestor_duplicates() -> None:
+    """One descendant evidence gap stays one action even when deep impact propagates."""
+    graph = [need for need in _healthy_graph() if need["id"] != "TEST_UNIT_DEMO"]
+
+    health = project_specification_health(graph)
+
+    assert [state.need_id for state in _actionable_states(health)] == ["TREQ_DEMO"]
+    assert health["REQ_DEMO"].deep_covered is False
+    assert health["FEAT_DEMO"].deep_covered is False
+    assert health["GOAL_DEMO"].deep_covered is False
 
 
 @pytest.mark.parametrize("pin", [1, 3])
