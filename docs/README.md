@@ -25,12 +25,16 @@ is written to `docs/_build/html/`, including `needs.json`, `llms.txt`, and
 ## Build The Release Dossier
 
 ```bash
-uv run ternforge-docops build dossier
+uv run ternforge-docops build dossier \
+    --junit test-results/pytest-junit.xml \
+    --allure-results allure-results
 ```
 
-This delegates PDF generation to the upstream SimplePDF Sphinx builder. The local
-machine or CI runner must provide the operating-system libraries required by
-WeasyPrint. DocOps does not install or emulate those system dependencies.
+This composes the retained JUnit and Allure evidence into the same Living
+Specifications used by the HTML portal, then delegates PDF generation to the
+upstream SimplePDF Sphinx builder. The local machine or CI runner must provide the
+operating-system libraries required by WeasyPrint. DocOps does not install or
+emulate those system dependencies.
 
 ## Engineering Experiments
 
