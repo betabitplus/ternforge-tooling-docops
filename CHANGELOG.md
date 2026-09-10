@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.9.0](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.8.3...v0.9.0) (2026-09-10)
+
+
+### Features
+
+* add low-noise experiment run details ([#66](https://github.com/betabitplus/ternforge-tooling-docops/issues/66)) ([137bfb0](https://github.com/betabitplus/ternforge-tooling-docops/commit/137bfb0cc6dbfb86666d646c69577928d792d04a))
+
 ## [0.8.3](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.8.2...v0.8.3) (2026-09-09)
 
 
