@@ -342,6 +342,7 @@ def test_living_specs_render_current_narrative_and_rich_evidence(
     report = render_living_specifications(root, raw, result_links=result_links)
 
     assert "Capabilities by area" in report.source
+    assert ".. _living-specs-area-structured-output:" in report.source
     assert "Structured Output" in report.source
     assert (
         ":doc:`Structured image understanding "
