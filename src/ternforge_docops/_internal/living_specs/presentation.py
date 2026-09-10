@@ -138,6 +138,7 @@ def _render_overview(
 
     heading(lines, "Capabilities by area", "-")
     for epic in sorted(grouped, key=str.casefold):
+        lines.extend((f".. _living-specs-area-{_slug(epic)}:", ""))
         heading(lines, epic, "^")
         append_rst(lines, 0, ".. list-table::")
         append_rst(lines, 3, ":header-rows: 1")
