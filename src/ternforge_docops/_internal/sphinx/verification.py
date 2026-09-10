@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections import defaultdict
 from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
@@ -10,10 +9,14 @@ from docutils import nodes
 from sphinx.util.docutils import SphinxDirective
 from sphinx_needs.api import get_needs_view
 
+from ternforge_docops._internal.sphinx.revision_evidence import (
+    VERIFICATION_KINDS as _VERIFICATION_KINDS,
+    EvidenceCounts as _EvidenceCounts,
+    verification_counts_from_needs as _verification_counts_from_needs,
+)
+
 if TYPE_CHECKING:
     from sphinx.application import Sphinx
-
-_VERIFICATION_KINDS = ("bdd", "unit", "integration", "property", "e2e")
 
 
 class _VerificationMatrixNode(nodes.General, nodes.Element):
@@ -64,36 +67,29 @@ def _verification_ids(value: object) -> tuple[str, ...]:
     )
 
 
-def _verification_counts(app: Sphinx) -> dict[str, dict[str, tuple[int, int]]]:
-    """Count total and passed testcase evidence by requirement and verification kind."""
-    totals: dict[str, dict[str, list[int]]] = defaultdict(
-        lambda: defaultdict(lambda: [0, 0])
-    )
-    for need in get_needs_view(app).filter_types(["testcase"]).values():
-        kind = str(need.get("verification_kind") or "")
-        if kind not in _VERIFICATION_KINDS:
-            continue
-        passed = str(need.get("result") or "") == "passed"
-        for requirement_id in _verification_ids(need.get("verifies")):
-            totals[requirement_id][kind][0] += 1
-            if passed:
-                totals[requirement_id][kind][1] += 1
-    return {
-        requirement_id: {
-            kind: (counts[0], counts[1]) for kind, counts in by_kind.items()
-        }
-        for requirement_id, by_kind in totals.items()
-    }
+def _verification_counts(app: Sphinx) -> dict[str, dict[str, _EvidenceCounts]]:
+    """Count revision-current verification evidence from the authoritative graph."""
+    return _verification_counts_from_needs(list(get_needs_view(app).values()))
 
 
-def _status_text(counts: tuple[int, int] | None, *, required: bool) -> str:
-    """Render evidence counts with required/optional verification semantics."""
+def _status_text(counts: _EvidenceCounts | None, *, required: bool) -> str:
+    """Render current evidence plus any stale revision references."""
     if counts is None:
         return "MISSING" if required else "—"
-    total, passed = counts
-    if passed == total:
-        return f"✓ {passed}/{total}" if required else f"+ {passed}/{total}"
-    return f"✗ {passed}/{total}"
+    total, passed, outdated, predated = counts
+    parts: list[str] = []
+    if total:
+        if passed == total:
+            parts.append(f"✓ {passed}/{total}" if required else f"+ {passed}/{total}")
+        else:
+            parts.append(f"✗ {passed}/{total}")
+    if outdated:
+        parts.append(f"OUTDATED {outdated}")
+    if predated:
+        parts.append(f"PREDATED {predated}")
+    if parts:
+        return " · ".join(parts)
+    return "MISSING" if required else "—"
 
 
 def _entry(text: str, *, header: bool = False) -> nodes.entry:
@@ -137,7 +133,7 @@ def _matrix_table(
     app: Sphinx,
     fromdocname: str,
     needs: list[Mapping[str, object]],
-    counts: dict[str, dict[str, tuple[int, int]]],
+    counts: dict[str, dict[str, _EvidenceCounts]],
 ) -> nodes.table:
     """Build a theme-native verification matrix for one Need category."""
     table = nodes.table(classes=["docutils", "align-default"])

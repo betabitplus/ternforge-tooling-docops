@@ -187,6 +187,7 @@ def test_build_materializes_shared_views_and_junit_only_for_build(
         del arguments
         assert (docs / "traceability.rst").is_file()
         assert (docs / "verification.rst").is_file()
+        assert (docs / "specification-health.rst").is_file()
         assert (docs / "tests.rst").is_file()
         evidence = docs / "ternforge-test-evidence.rst"
         imported = docs / "_traceability" / "ternforge-test-evidence.xml"
@@ -200,6 +201,7 @@ def test_build_materializes_shared_views_and_junit_only_for_build(
 
     assert not (docs / "traceability.rst").exists()
     assert not (docs / "verification.rst").exists()
+    assert not (docs / "specification-health.rst").exists()
     assert not (docs / "tests.rst").exists()
     assert not (docs / "ternforge-test-evidence.rst").exists()
     assert not (docs / "_traceability" / "ternforge-test-evidence.xml").exists()
@@ -229,7 +231,12 @@ def test_build_recovers_transient_sources_left_by_interrupted_build(
     docs = tmp_path / "docs"
     docs.mkdir()
     shared = service.shared_docs_dir_path()
-    for name in ("traceability.rst", "verification.rst", "tests.rst"):
+    for name in (
+        "traceability.rst",
+        "verification.rst",
+        "specification-health.rst",
+        "tests.rst",
+    ):
         (docs / name).write_bytes((shared / name).read_bytes())
 
     trace_dir = docs / "_traceability"
@@ -255,7 +262,12 @@ def test_build_recovers_transient_sources_left_by_interrupted_build(
 
     service.build_html(tmp_path, docs=docs, junit=junit)
 
-    for name in ("traceability.rst", "verification.rst", "tests.rst"):
+    for name in (
+        "traceability.rst",
+        "verification.rst",
+        "specification-health.rst",
+        "tests.rst",
+    ):
         assert not (docs / name).exists()
     assert not (docs / "ternforge-test-evidence.rst").exists()
     assert not (trace_dir / "ternforge-test-evidence.xml").exists()

@@ -7,12 +7,148 @@ import sys
 from pathlib import Path
 
 import nbformat
+import pytest
 
 from ternforge_docops._internal.experiments.digest import capsule_digest
 from ternforge_docops._internal.sphinx import (
     experiments as experiment_sphinx,
     verification,
 )
+
+
+def _run_graph_build(
+    tmp_path: Path,
+    source: str,
+    *,
+    evidence: str | None = None,
+    warnings_as_errors: bool = True,
+) -> subprocess.CompletedProcess[str]:
+    """Build one minimal consumer graph and retain native Sphinx diagnostics."""
+    docs = tmp_path / "docs"
+    output = tmp_path / "html"
+    docs.mkdir()
+    (docs / "conf.py").write_text(
+        'extensions = ["ternforge_docops._api.sphinx"]\nroot_doc = "index"\n',
+        encoding="utf-8",
+    )
+    if evidence is not None:
+        (docs / "evidence.xml").write_text(evidence, encoding="utf-8")
+    (docs / "index.rst").write_text(source, encoding="utf-8")
+    command = [sys.executable, "-m", "sphinx"]
+    if warnings_as_errors:
+        command.append("-W")
+    command.extend(
+        [
+            "--keep-going",
+            "-b",
+            "html",
+            str(docs),
+            str(output),
+        ]
+    )
+    return subprocess.run(
+        command,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+
+@pytest.mark.parametrize(
+    ("source", "expected_rule"),
+    [
+        (
+            """Missing goal decomposition
+==========================
+
+.. goal:: Orphan goal
+   :id: GOAL_ORPHAN
+""",
+            "goal-decomposition",
+        ),
+        (
+            """Missing feature decomposition
+=============================
+
+.. goal:: Parent goal
+   :id: GOAL_PARENT
+
+.. feature:: Empty feature
+   :id: FEAT_EMPTY
+   :derives: GOAL_PARENT
+""",
+            "feature-decomposition",
+        ),
+    ],
+)
+def test_graph_schema_rejects_missing_normative_decomposition(
+    tmp_path: Path,
+    source: str,
+    expected_rule: str,
+) -> None:
+    """Native Sphinx-Needs schema validation owns shallow decomposition laws."""
+    result = _run_graph_build(tmp_path, source)
+
+    assert result.returncode != 0
+    assert expected_rule in result.stderr
+    assert "sn_schema_violation.network_contains_too_few" in result.stderr
+
+
+@pytest.mark.parametrize("status", ["draft", "deprecated"])
+def test_inactive_contract_does_not_require_execution_evidence(
+    tmp_path: Path,
+    status: str,
+) -> None:
+    """Keep inactive contract intent without creating release obligations."""
+    source = f"""Inactive contract
+=================
+
+.. goal:: Parent goal
+   :id: GOAL_PARENT
+
+.. feature:: Parent feature
+   :id: FEAT_PARENT
+   :derives: GOAL_PARENT
+
+.. req:: Inactive requirement
+   :id: REQ_INACTIVE
+   :status: {status}
+   :revision: 1
+   :required_evidence: bdd
+   :derives: FEAT_PARENT
+"""
+
+    result = _run_graph_build(tmp_path, source)
+
+    assert result.returncode == 0
+    assert "requested-bdd" not in result.stderr
+
+
+def test_accepted_contract_still_requires_declared_evidence(tmp_path: Path) -> None:
+    """Lifecycle scoping cannot weaken accepted release obligations."""
+    source = """Accepted contract
+=================
+
+.. goal:: Parent goal
+   :id: GOAL_PARENT
+
+.. feature:: Parent feature
+   :id: FEAT_PARENT
+   :derives: GOAL_PARENT
+
+.. req:: Accepted requirement
+   :id: REQ_ACCEPTED
+   :status: accepted
+   :revision: 1
+   :required_evidence: bdd
+   :derives: FEAT_PARENT
+"""
+
+    result = _run_graph_build(tmp_path, source)
+
+    assert result.returncode != 0
+    assert "requested-bdd" in result.stderr
+    assert "sn_schema_violation.network_contains_too_few" in result.stderr
 
 
 def test_sphinx_extension_builds_current_graph(tmp_path: Path) -> None:
@@ -66,6 +202,11 @@ Verification matrix
 -------------------
 
 .. ternforge-verification-matrix::
+
+Specification health
+--------------------
+
+.. ternforge-specification-health::
 """,
         encoding="utf-8",
     )
@@ -90,11 +231,148 @@ Verification matrix
     assert "Product requirements" in index
     assert "REQ_DOCOPS" in index
     assert "✓ 1/1" in index
+    assert "Coverage summary" in index
+    assert "Goals" in index
+    assert "Accepted requirements" in index
+    assert "No active specification coverage gaps." in index
     assert "MISSING" not in index
     assert "_static/ternforge-docops.css" in index
     assert (output / "_static" / "ternforge-docops.css").is_file()
     assert "_static/ternforge-data-viewer.js" not in index
     assert "_static/ternforge-docops.js" not in index
+
+
+@pytest.mark.parametrize(
+    ("pinned_revision", "expected_status"),
+    [(1, "OUTDATED 1"), (3, "PREDATED 1")],
+)
+def test_verification_matrix_surfaces_noncurrent_revision_evidence(
+    tmp_path: Path,
+    pinned_revision: int,
+    expected_status: str,
+) -> None:
+    """Resolved Needs keep stale backlinks, but the matrix never calls them current."""
+    source = """Revision-aware matrix
+=====================
+
+.. goal:: Shared graph
+   :id: GOAL_DOCOPS
+
+.. feature:: Shared feature
+   :id: FEAT_DOCOPS
+   :derives: GOAL_DOCOPS
+
+.. req:: Shared requirement
+   :id: REQ_DOCOPS
+   :status: accepted
+   :revision: 2
+   :required_evidence: integration
+   :derives: FEAT_DOCOPS
+
+.. test-file:: Shared execution evidence
+   :id: TEST_DOCOPS
+   :file: evidence.xml
+   :auto_suites:
+   :auto_cases:
+
+Verification matrix
+-------------------
+
+.. ternforge-verification-matrix::
+"""
+    evidence = f"""<testsuites>
+<testsuite name="docops">
+<testcase classname="tests.test_docops" name="test_shared_requirement">
+<properties>
+<property name="verification_kind" value="integration"/>
+<property name="verifies" value="REQ_DOCOPS[revision=={pinned_revision}]"/>
+</properties>
+</testcase>
+</testsuite>
+</testsuites>
+"""
+
+    result = _run_graph_build(
+        tmp_path,
+        source,
+        evidence=evidence,
+        warnings_as_errors=False,
+    )
+
+    assert result.returncode == 0
+    assert "needs.link_condition_failed" in result.stderr
+    index = (tmp_path / "html" / "index.html").read_text(encoding="utf-8")
+    assert expected_status in index
+    assert "✓ 1/1" not in index
+
+
+def test_verification_counts_respect_revision_pins() -> None:
+    """Verification presentation never treats stale conditional links as current."""
+    needs = [
+        {
+            "id": "REQ_DEMO",
+            "type": "req",
+            "revision": 2,
+            "required_evidence": ["integration"],
+        },
+        {
+            "id": "TEST_CURRENT",
+            "type": "testcase",
+            "result": "passed",
+            "verification_kind": "integration",
+            "verifies": ["REQ_DEMO[revision==2]"],
+        },
+        {
+            "id": "TEST_OUTDATED",
+            "type": "testcase",
+            "result": "passed",
+            "verification_kind": "integration",
+            "verifies": ["REQ_DEMO[revision==1]"],
+        },
+        {
+            "id": "TEST_PREDATED",
+            "type": "testcase",
+            "result": "passed",
+            "verification_kind": "integration",
+            "verifies": ["REQ_DEMO[revision==3]"],
+        },
+        {
+            "id": "TEST_UNPINNED",
+            "type": "testcase",
+            "result": "passed",
+            "verification_kind": "integration",
+            "verifies": ["REQ_DEMO"],
+        },
+    ]
+
+    counts = verification._verification_counts_from_needs(needs)
+
+    assert counts["REQ_DEMO"]["integration"] == (1, 1, 1, 1)
+    assert (
+        verification._status_text(counts["REQ_DEMO"]["integration"], required=True)
+        == "✓ 1/1 · OUTDATED 1 · PREDATED 1"
+    )
+
+
+def test_stale_verification_without_current_evidence_is_not_green() -> None:
+    """A stale passed testcase is visible but cannot satisfy current evidence."""
+    needs = [
+        {"id": "REQ_DEMO", "type": "req", "revision": 2},
+        {
+            "id": "TEST_OUTDATED",
+            "type": "testcase",
+            "result": "passed",
+            "verification_kind": "bdd",
+            "verifies": ["REQ_DEMO[revision==1]"],
+        },
+    ]
+
+    counts = verification._verification_counts_from_needs(needs)
+
+    assert counts["REQ_DEMO"]["bdd"] == (0, 0, 1, 0)
+    assert verification._status_text(counts["REQ_DEMO"]["bdd"], required=True) == (
+        "OUTDATED 1"
+    )
 
 
 def test_contract_provenance_follows_declared_graph_relations() -> None:
