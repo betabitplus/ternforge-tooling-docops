@@ -32,7 +32,7 @@ Release outcome
 Verification matrix
 -------------------
 
-Rows are product requirements and engineering constraints; columns are verification layers.
+Rows are Requirements and Technical requirements; columns are verification layers.
 ``x/x`` means all executions in that layer passed. ``missing`` means the object requests that
 verification kind but no execution was found. A dash means the layer is not requested.
 

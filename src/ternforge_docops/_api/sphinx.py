@@ -11,6 +11,7 @@ from ternforge_docops._internal import (
     configure_experiment_mounts,
     graph_config_path,
     publish_experiment_inputs,
+    register_review_views,
     register_specification_health_view,
     register_verification_view,
     static_dir_path,
@@ -130,6 +131,7 @@ def setup(app: Sphinx) -> dict[str, Any]:
         app.setup_extension(extension)
     app.add_css_file("ternforge-docops.css")
     register_specification_health_view(app)
+    register_review_views(app)
     register_verification_view(app)
     app.connect("config-inited", configure_experiment_mounts, priority=5)
     app.connect("config-inited", _configure_graph, priority=6)

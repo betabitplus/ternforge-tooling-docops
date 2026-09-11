@@ -84,9 +84,9 @@ def _summary_table(health: Mapping[str, SpecificationHealth]) -> nodes.table:
 
     labels = (
         ("goal", "Goals"),
-        ("feature", "Features"),
-        ("req", "Accepted requirements"),
-        ("treq", "Accepted constraints"),
+        ("feature", "Capabilities"),
+        ("req", "Requirements"),
+        ("treq", "Technical requirements"),
     )
     tbody = nodes.tbody()
     for need_type, label in labels:

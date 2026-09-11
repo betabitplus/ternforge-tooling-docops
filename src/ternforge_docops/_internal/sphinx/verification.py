@@ -194,14 +194,14 @@ def _replace_matrix_nodes(
         if requirements:
             replacement.extend(
                 _section(
-                    "Product requirements",
+                    "Requirements",
                     _matrix_table(app, fromdocname, requirements, counts),
                 )
             )
         if constraints:
             replacement.extend(
                 _section(
-                    "Engineering constraints",
+                    "Technical requirements",
                     _matrix_table(app, fromdocname, constraints, counts),
                 )
             )
@@ -275,7 +275,7 @@ def _provenance_groups(
     )
     return (
         ("Verified contract", roots),
-        ("Engineering constraints", constraints),
+        ("Technical requirements", constraints),
         ("Architecture decisions", decisions),
         ("Research evidence", research),
         ("Implementation loci", implementations),

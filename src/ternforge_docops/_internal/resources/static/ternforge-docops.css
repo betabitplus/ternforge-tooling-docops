@@ -73,3 +73,600 @@ html[data-theme="dark"] table.need a {
   overflow-wrap: anywhere;
   word-break: break-word;
 }
+
+/* Human review projections: normal document flow plus one-screen overview. */
+body:has(.ternforge-traceability-reader) .bd-sidebar-primary,
+body:has(.ternforge-traceability-reader) .bd-sidebar-secondary,
+body:has(.ternforge-specification-map-shell) .bd-sidebar-primary,
+body:has(.ternforge-specification-map-shell) .bd-sidebar-secondary {
+  display: none;
+}
+
+body:has(.ternforge-traceability-reader) .bd-content,
+body:has(.ternforge-traceability-reader) .bd-article-container {
+  width: 100%;
+  max-width: none !important;
+}
+
+body:has(.ternforge-traceability-reader) .bd-article-container {
+  overflow: visible !important;
+}
+
+body:has(.ternforge-specification-map-shell) .bd-content,
+body:has(.ternforge-specification-map-shell) .bd-article-container {
+  width: 100%;
+  max-width: none !important;
+}
+
+body:has(.ternforge-specification-map-shell) .prev-next-footer,
+body:has(.ternforge-specification-map-shell) .bd-footer {
+  display: none;
+}
+
+.ternforge-review-layout {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  gap: 1rem;
+  width: min(100%, 98rem);
+  margin: 0 auto 4rem;
+}
+
+.ternforge-review-layout:has(.ternforge-review-navigation[open]) {
+  grid-template-columns: 17rem minmax(0, 1fr);
+}
+
+.ternforge-traceability-reader {
+  min-width: 0;
+  max-width: 81rem;
+  margin: 0 auto;
+}
+
+.ternforge-review-navigation {
+  position: sticky;
+  top: calc(var(--pst-header-height) + 3rem);
+  align-self: start;
+  max-height: calc(100vh - var(--pst-header-height) - 4rem);
+  overflow: hidden;
+  border-right: 1px solid var(--pst-color-border);
+  background: var(--pst-color-background);
+}
+
+.ternforge-review-navigation > summary {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.45rem 0.6rem;
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.ternforge-review-navigation > summary::-webkit-details-marker {
+  display: none;
+}
+
+.ternforge-review-nav-toggle::before {
+  content: "›";
+  display: inline-block;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.ternforge-review-navigation[open] .ternforge-review-nav-toggle::before {
+  content: "‹";
+}
+
+.ternforge-review-navigation:not([open]) .ternforge-review-nav-title {
+  display: none;
+}
+
+.ternforge-review-navigation nav {
+  max-height: calc(100vh - 8.5rem);
+  overflow-y: auto;
+  padding: 0.25rem 0.75rem 1rem 0.25rem;
+}
+
+.ternforge-review-nav-goals,
+.ternforge-review-nav-features {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ternforge-review-nav-goal {
+  margin-bottom: 0.8rem;
+}
+
+.ternforge-review-nav-goal > a,
+.ternforge-review-nav-feature > a {
+  display: grid;
+  grid-template-columns: 2.6rem minmax(0, 1fr);
+  gap: 0.35rem;
+  padding: 0.28rem 0.35rem;
+  border-radius: 0.25rem;
+  color: var(--pst-color-text-base);
+  text-decoration: none;
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.ternforge-review-nav-goal > a {
+  font-weight: 650;
+}
+
+.ternforge-review-nav-feature > a {
+  color: var(--pst-color-text-muted);
+}
+
+.ternforge-review-nav-goal > a:hover,
+.ternforge-review-nav-feature > a:hover {
+  background: var(--pst-color-surface);
+  color: var(--pst-color-link-hover);
+}
+
+.ternforge-review-nav-features {
+  margin: 0.25rem 0 0 0.8rem;
+}
+
+.ternforge-review-feature {
+  scroll-margin-top: 5rem;
+}
+
+.ternforge-review-goal {
+  position: relative;
+  margin: 2.5rem 0 6rem;
+  scroll-margin-top: 5rem;
+}
+
+.ternforge-trace-reading-order {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem 0 2.5rem;
+  color: var(--pst-color-text-muted);
+  font-size: 0.86rem;
+}
+
+.ternforge-trace-reading-order i {
+  font-style: normal;
+}
+
+.ternforge-trace-card {
+  position: relative;
+  min-width: 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--pst-color-border);
+  border-radius: 0.35rem;
+  background: var(--pst-color-surface);
+}
+
+.ternforge-trace-card p {
+  margin: 0.45rem 0 0;
+}
+
+.ternforge-trace-heading {
+  display: flex;
+  gap: 0.5rem;
+  align-items: baseline;
+  margin-bottom: 0.35rem;
+}
+
+.ternforge-trace-number {
+  display: inline-flex;
+  align-items: baseline;
+  color: var(--pst-color-text-base);
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ternforge-trace-number::after {
+  margin-left: 0.45rem;
+  color: var(--pst-color-text-muted);
+  content: "·";
+  font-weight: 400;
+}
+
+.ternforge-trace-kind {
+  color: var(--pst-color-text-muted);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.ternforge-hierarchy-card {
+  width: 21rem;
+  font-size: 0.94rem;
+}
+
+.ternforge-hierarchy-card p {
+  color: var(--pst-color-text-muted);
+  font-size: 0.86rem;
+  line-height: 1.4;
+}
+
+.ternforge-feature-list {
+  position: relative;
+  margin: 1.1rem 0 0 10.5rem;
+}
+
+.ternforge-feature-list::before {
+  position: absolute;
+  top: -1.1rem;
+  left: 0;
+  width: 1px;
+  height: 2.55rem;
+  background: var(--pst-color-border);
+  content: "";
+}
+
+.ternforge-review-feature:not(:last-child)::before {
+  position: absolute;
+  top: 1.45rem;
+  left: 0;
+  width: 1px;
+  height: calc(100% + 3rem);
+  background: var(--pst-color-border);
+  content: "";
+}
+
+.ternforge-review-feature {
+  position: relative;
+  margin: 0 0 3rem;
+  padding-left: 2rem;
+}
+
+.ternforge-feature-connector {
+  position: absolute;
+  top: 1.45rem;
+  left: 0;
+  width: 2rem;
+  height: 1px;
+  background: var(--pst-color-border);
+}
+
+.ternforge-feature-connector::after,
+.ternforge-requirement-connector::after {
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-top: 0.3rem solid transparent;
+  border-bottom: 0.3rem solid transparent;
+  border-left: 0.42rem solid var(--pst-color-text-muted);
+  content: "";
+  transform: translateY(-50%);
+}
+
+.ternforge-requirement-list {
+  position: relative;
+  margin: 1rem 0 0 10.5rem;
+  padding-left: 2rem;
+}
+
+.ternforge-requirement-list::before {
+  position: absolute;
+  top: -1rem;
+  left: 0;
+  width: 1px;
+  height: 2.5rem;
+  background: var(--pst-color-border);
+  content: "";
+}
+
+.ternforge-requirement-flow:not(:last-child)::after {
+  position: absolute;
+  top: 1.5rem;
+  left: -2rem;
+  width: 1px;
+  height: calc(100% + 2.25rem);
+  background: var(--pst-color-border);
+  content: "";
+}
+
+.ternforge-requirement-flow {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(20rem, 22rem) minmax(18rem, 1fr);
+  gap: 2rem;
+  align-items: start;
+  margin: 0 0 2.25rem;
+}
+
+.ternforge-requirement-flow:not(:has(.ternforge-trace-children)) {
+  grid-template-columns: minmax(20rem, 22rem);
+}
+
+.ternforge-requirement-connector {
+  position: absolute;
+  top: 1.5rem;
+  left: -2rem;
+  width: 2rem;
+  height: 1px;
+  background: var(--pst-color-border);
+}
+
+.ternforge-trace-current {
+  width: 100%;
+  padding: 1rem;
+}
+
+.ternforge-trace-current h4 {
+  margin: 0.25rem 0 0.75rem;
+  font-size: 1.1rem;
+}
+
+.ternforge-trace-statement {
+  font-size: 0.96rem;
+  line-height: 1.48;
+}
+
+.ternforge-trace-secondary,
+.ternforge-review-technical {
+  margin-top: 0.65rem;
+  color: var(--pst-color-text-muted);
+  font-size: 0.82rem;
+}
+
+.ternforge-trace-secondary p,
+.ternforge-trace-secondary ul {
+  margin: 0.5rem 0 0;
+}
+
+.ternforge-trace-children {
+  position: relative;
+  min-width: 0;
+  padding-left: 2rem;
+}
+
+.ternforge-trace-children::before {
+  position: absolute;
+  top: 1.45rem;
+  left: -2rem;
+  width: 4rem;
+  height: 1px;
+  background: var(--pst-color-border);
+  content: "";
+}
+
+.ternforge-trace-branch {
+  position: relative;
+  display: grid;
+  gap: 0.75rem;
+  padding-left: 1rem;
+}
+
+.ternforge-trace-branch-item {
+  position: relative;
+}
+
+.ternforge-trace-branch-item::before {
+  position: absolute;
+  top: 1.45rem;
+  left: -1rem;
+  width: 1rem;
+  height: 1px;
+  background: var(--pst-color-border);
+  content: "";
+}
+
+.ternforge-trace-branch-item:not(:last-child)::after {
+  position: absolute;
+  top: 1.45rem;
+  left: -1rem;
+  width: 1px;
+  height: calc(100% + 0.75rem);
+  background: var(--pst-color-border);
+  content: "";
+}
+
+.ternforge-trace-child-card {
+  width: min(100%, 20rem);
+}
+
+.ternforge-trace-branch-item > .ternforge-trace-child-card::before {
+  position: absolute;
+  top: 1.45rem;
+  left: -0.42rem;
+  width: 0;
+  height: 0;
+  border-top: 0.3rem solid transparent;
+  border-bottom: 0.3rem solid transparent;
+  border-left: 0.42rem solid var(--pst-color-text-muted);
+  content: "";
+  transform: translateY(-50%);
+}
+
+.ternforge-trace-child-card.is-present {
+  border-left: 3px solid var(--pst-color-success);
+}
+
+.ternforge-trace-child-card.is-missing {
+  border-left: 3px solid var(--pst-color-danger);
+}
+
+.ternforge-trace-rule-card {
+  border-left: 3px solid var(--pst-color-border);
+}
+
+.ternforge-trace-rule-card > p {
+  color: var(--pst-color-text-muted);
+  font-size: 0.84rem;
+  line-height: 1.35;
+}
+
+.ternforge-trace-count {
+  color: var(--pst-color-text-muted);
+  font-size: 0.84rem;
+}
+
+.ternforge-trace-nested-proof {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.7rem;
+}
+
+.ternforge-trace-nested-proof .ternforge-trace-child-card {
+  flex: 1 1 7rem;
+  width: auto;
+  padding: 0.45rem 0.55rem;
+  border-width: 1px;
+  font-size: 0.78rem;
+}
+
+.ternforge-trace-nested-proof .ternforge-trace-child-card::before,
+.ternforge-trace-nested-proof .ternforge-trace-child-card::after {
+  display: none;
+}
+
+.ternforge-trace-nested-proof .ternforge-trace-kind {
+  font-size: 0.7rem;
+}
+
+.ternforge-review-technical {
+  color: var(--pst-color-text-muted);
+}
+
+@media (max-width: 1150px) {
+  .ternforge-review-layout:has(.ternforge-review-navigation[open]) {
+    grid-template-columns: 14rem minmax(0, 1fr);
+  }
+
+  .ternforge-feature-list {
+    margin-left: 5rem;
+  }
+
+  .ternforge-requirement-list {
+    margin-left: 5rem;
+  }
+
+  .ternforge-requirement-flow {
+    grid-template-columns: minmax(18rem, 1fr);
+    gap: 1rem;
+  }
+
+  .ternforge-trace-children {
+    padding-left: 2rem;
+  }
+}
+
+@media (max-width: 700px) {
+  .ternforge-review-layout,
+  .ternforge-review-layout:has(.ternforge-review-navigation[open]) {
+    display: block;
+  }
+
+  .ternforge-review-navigation {
+    position: relative;
+    top: auto;
+    max-height: none;
+    margin-bottom: 1rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--pst-color-border);
+  }
+
+  .ternforge-review-navigation nav {
+    max-height: 16rem;
+  }
+
+  .ternforge-trace-reading-order {
+    display: none;
+  }
+
+  .ternforge-feature-list,
+  .ternforge-requirement-list {
+    margin-left: 1rem;
+  }
+
+  .ternforge-hierarchy-card {
+    width: 100%;
+  }
+
+  .ternforge-review-feature,
+  .ternforge-requirement-list {
+    padding-left: 1.25rem;
+  }
+
+  .ternforge-feature-connector,
+  .ternforge-requirement-connector {
+    width: 1.25rem;
+  }
+
+  .ternforge-requirement-connector {
+    left: -1.25rem;
+  }
+
+  .ternforge-trace-children {
+    padding-left: 0;
+  }
+
+  .ternforge-trace-children::before,
+  .ternforge-trace-branch-item::before,
+  .ternforge-trace-branch-item::after,
+  .ternforge-trace-branch-item > .ternforge-trace-child-card::before {
+    display: none;
+  }
+
+  .ternforge-requirement-flow:not(:last-child)::after {
+    left: -1.25rem;
+  }
+
+  .ternforge-trace-branch {
+    padding-left: 0;
+  }
+
+  .ternforge-trace-child-card {
+    width: 100%;
+  }
+}
+
+.ternforge-specification-map-shell {
+  width: 100%;
+  margin: 0 auto 2rem;
+}
+
+.ternforge-specification-map {
+  width: 100%;
+  min-height: 24rem;
+}
+
+.ternforge-health-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem 1rem;
+  margin: 0.5rem 0 0.75rem;
+  font-size: 0.88rem;
+  color: var(--pst-color-text-muted);
+}
+
+.ternforge-health-legend span {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.ternforge-health-legend i {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 0.15rem;
+}
+
+.ternforge-health-legend .is-good {
+  background: #2f8f5b;
+}
+
+.ternforge-health-legend .is-gap {
+  background: #c84b4b;
+}
+
+.ternforge-health-legend .is-warning {
+  background: #d39b2a;
+}
+
+.ternforge-health-legend .is-inactive {
+  background: #7b818a;
+}

@@ -5,6 +5,7 @@ from __future__ import annotations
 import subprocess
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import nbformat
 import pytest
@@ -14,6 +15,7 @@ from ternforge_docops._internal.sphinx import (
     experiments as experiment_sphinx,
     verification,
 )
+from ternforge_docops._internal.sphinx.review_common import bdd_scenario_url
 
 
 def _run_graph_build(
@@ -151,7 +153,7 @@ def test_accepted_contract_still_requires_declared_evidence(tmp_path: Path) -> N
     assert "sn_schema_violation.network_contains_too_few" in result.stderr
 
 
-def test_sphinx_extension_builds_current_graph(tmp_path: Path) -> None:
+def test_sphinx_extension_builds_current_graph(tmp_path: Path) -> None:  # noqa: PLR0915
     """A consumer builds requirements without copying the graph ontology."""
     docs = tmp_path / "docs"
     output = tmp_path / "html"
@@ -181,9 +183,13 @@ def test_sphinx_extension_builds_current_graph(tmp_path: Path) -> None:
 .. goal:: Shared graph
    :id: GOAL_DOCOPS
 
+   Keep shared engineering intent readable end to end.
+
 .. feature:: Shared feature
    :id: FEAT_DOCOPS
    :derives: GOAL_DOCOPS
+
+   Preserve a human-readable capability branch.
 
 .. req:: Shared requirement
    :id: REQ_DOCOPS
@@ -191,6 +197,12 @@ def test_sphinx_extension_builds_current_graph(tmp_path: Path) -> None:
    :revision: 1
    :required_evidence: integration
    :derives: FEAT_DOCOPS
+
+   **Statement.** Shared behavior shall remain reviewable.
+
+   **Rationale.** Human reviewers need useful prose before technical identity.
+
+   **Verification intent.** Verify the shared behavior through integration evidence.
 
 .. test-file:: Shared execution evidence
    :id: TEST_DOCOPS
@@ -207,6 +219,16 @@ Specification health
 --------------------
 
 .. ternforge-specification-health::
+
+Traceability reader
+-------------------
+
+.. ternforge-traceability-reader::
+
+Specification map
+-----------------
+
+.. ternforge-specification-map::
 """,
         encoding="utf-8",
     )
@@ -228,7 +250,7 @@ Specification health
 
     index = (output / "index.html").read_text(encoding="utf-8")
     assert (output / "needs.json").is_file()
-    assert "Product requirements" in index
+    assert "Requirements" in index
     assert "REQ_DOCOPS" in index
     assert "✓ 1/1" in index
     assert "What needs attention" in index
@@ -236,12 +258,89 @@ Specification health
     assert "Audit totals" in index
     assert index.index("What needs attention") < index.index("Audit totals")
     assert "Goals" in index
-    assert "Accepted requirements" in index
+    assert "Capabilities" in index
     assert "MISSING" not in index
     assert "_static/ternforge-docops.css" in index
     assert (output / "_static" / "ternforge-docops.css").is_file()
     assert "_static/ternforge-data-viewer.js" not in index
     assert "_static/ternforge-docops.js" not in index
+    assert "_static/ternforge-traceability-canvas.js" not in index
+    assert not (output / "_static" / "ternforge-traceability-canvas.js").exists()
+    assert all(
+        marker in index
+        for marker in (
+            "ternforge-review-layout",
+            "ternforge-review-navigation",
+            "Goals &amp; capabilities",
+            'href="#review-GOAL_DOCOPS"',
+            'href="#review-FEAT_DOCOPS"',
+        )
+    )
+    assert "ternforge-review-jumps" not in index
+    assert "ternforge-traceability-reader" in index
+    assert "ternforge-hierarchy-card" in index
+    assert "ternforge-requirement-flow" in index
+    assert "Why this exists" in index
+    assert "What must be true" in index
+    assert "What proves it now" in index
+    assert '<span class="ternforge-trace-number">1</span>' in index
+    assert '<span class="ternforge-trace-number">1.1</span>' in index
+    assert '<span class="ternforge-trace-number">1.1.1</span>' in index
+    assert "Goal" in index
+    assert "Preserve a human-readable capability branch." in index
+    assert "Shared behavior shall remain reviewable." in index
+    assert "Human reviewers need useful prose before technical identity." in index
+    assert "Current proof is complete" in index
+    assert "Integration verification" in index
+    assert ">1 check</summary>" in index
+    assert "IDs and revision" in index
+    assert "ternforge-specification-map" in index
+    assert "plotly-2.35.2.min.js" in index
+    assert "Specification health" in index
+    assert "GOAL_DOCOPS" in index
+    assert "FEAT_DOCOPS" in index
+    assert "REQ_DOCOPS" in index
+
+
+def test_bdd_reader_link_targets_living_scenario_page() -> None:
+    """Behavior verification links open the human Living Specifications scenario."""
+    label = (
+        "living-scenario-configuration-configuration-overrides-"
+        "more-specific-settings-take-precedence-"
+        "an-explicit-empty-value-removes-an-inherited-optional-setting"
+    )
+    app = SimpleNamespace(
+        builder=SimpleNamespace(
+            get_relative_uri=lambda source, target: f"{target}.html",
+        ),
+        env=SimpleNamespace(
+            domaindata={
+                "std": {
+                    "anonlabels": {
+                        label: (
+                            "specifications/_generated/configuration/overrides",
+                            label,
+                        )
+                    }
+                }
+            }
+        ),
+    )
+    item = {
+        "gherkin_feature": "features/configuration/overrides.feature",
+        "gherkin_scenario": (
+            "An explicit empty value removes an inherited optional setting"
+        ),
+    }
+
+    assert (
+        bdd_scenario_url(
+            app,
+            "traceability-reader",
+            item,
+        )
+        == f"specifications/_generated/configuration/overrides.html#{label}"
+    )
 
 
 @pytest.mark.parametrize(
@@ -406,7 +505,7 @@ def test_contract_provenance_follows_declared_graph_relations() -> None:
 
     assert verification._provenance_groups(needs, ("REQ_DEMO",)) == (
         ("Verified contract", ("REQ_DEMO",)),
-        ("Engineering constraints", ("TREQ_DEMO",)),
+        ("Technical requirements", ("TREQ_DEMO",)),
         ("Architecture decisions", ("ADR_DEMO",)),
         ("Research evidence", ("EXP_DEMO",)),
         ("Implementation loci", ("IMPL_REQ", "IMPL_TREQ")),

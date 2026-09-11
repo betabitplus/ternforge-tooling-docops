@@ -15,6 +15,7 @@ from ternforge_docops._internal.living_specs.models import (
     LivingAttachment,
     LivingExample,
     LivingStep,
+    LivingVerificationBoundary,
 )
 from ternforge_docops._internal.living_specs.rst import (
     append_rst,
@@ -166,6 +167,49 @@ def _render_step(
             repository_source_base,
         )
     render_public_contract(lines, step.contracts, indent)
+
+
+def render_verification_boundary(
+    lines: list[str],
+    boundary: LivingVerificationBoundary,
+    indent: int,
+) -> None:
+    """Render the tested boundary without turning it into a status report."""
+    append_rst(lines, indent, ".. card:: Verification boundary")
+    append_rst(lines, 0)
+    body = indent + 3
+    append_rst(lines, body, f"**Path:** ``{rst_inline(boundary.path)}``")
+    append_rst(lines, 0)
+    if boundary.provenance != "source-derived fallback":
+        append_rst(
+            lines,
+            body,
+            (
+                "**Execution envelope:** "
+                f":bdg-secondary:`Process · {rst_inline(boundary.process)}` "
+                f":bdg-secondary:`Network · {rst_inline(boundary.network)}` "
+                f":bdg-secondary:`Filesystem · {rst_inline(boundary.filesystem)}` "
+                f":bdg-secondary:`External · {rst_inline(boundary.external)}`"
+            ),
+        )
+        append_rst(lines, 0)
+    append_rst(lines, body, f"* **Real path:** {rst_inline(boundary.real_path)}")
+    append_rst(lines, body, f"* **Substitute:** {rst_inline(boundary.substitute)}")
+    append_rst(lines, body, f"* **Not covered:** {rst_inline(boundary.not_covered)}")
+    append_rst(lines, 0)
+    append_rst(lines, body, ".. dropdown:: How this scenario establishes the proof")
+    append_rst(lines, 0)
+    detail = body + 3
+    injected = (
+        boundary.injected_condition or "No separate injected condition is declared."
+    )
+    observed = boundary.observed_proof or "The scenario's explicit Then assertions."
+    append_rst(lines, detail, f"**Injected condition:** {rst_inline(injected)}")
+    append_rst(lines, 0)
+    append_rst(lines, detail, f"**Observed proof:** {rst_inline(observed)}")
+    append_rst(lines, 0)
+    append_rst(lines, detail, f"**Boundary basis:** {boundary.provenance}")
+    append_rst(lines, 0)
 
 
 def _render_technical_metadata(

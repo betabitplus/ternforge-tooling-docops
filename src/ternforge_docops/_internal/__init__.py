@@ -33,8 +33,12 @@ from ternforge_docops._internal.resources import (
 from ternforge_docops._internal.sphinx import (
     configure_experiment_mounts as configure_experiment_mounts,
     publish_experiment_inputs as publish_experiment_inputs,
+    register_review_views as register_review_views,
     register_specification_health_view as register_specification_health_view,
     register_verification_view as register_verification_view,
+)
+from ternforge_docops._internal.verification.evidence import (
+    VerificationEvidencePaths as VerificationEvidencePaths,
 )
 
 DocOpsConfig = _Config
