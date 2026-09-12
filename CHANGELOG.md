@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.14.0](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.13.3...v0.14.0) (2026-09-12)
+
+
+### Features
+
+* add evidence assurance scope and producer trust ([#89](https://github.com/betabitplus/ternforge-tooling-docops/issues/89)) ([c4c7ec0](https://github.com/betabitplus/ternforge-tooling-docops/commit/c4c7ec0f6c1e5174aff1683448427eb98147de2f))
+
+
+### Bug Fixes
+
+* avoid false live gap without execution proof ([#91](https://github.com/betabitplus/ternforge-tooling-docops/issues/91)) ([ce50ad6](https://github.com/betabitplus/ternforge-tooling-docops/commit/ce50ad600c2a0d18c3f194eeaffdf1b8d158e72d))
+
 ## [0.13.3](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.13.2...v0.13.3) (2026-09-12)
 
 
