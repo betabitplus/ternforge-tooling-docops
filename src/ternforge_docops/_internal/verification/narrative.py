@@ -27,6 +27,11 @@ from ternforge_docops._internal.verification.evidence import (
     load_runtime_evidence,
     resolve_runtime_evidence,
 )
+from ternforge_docops._internal.verification.narrative_assurance import (
+    method_sentence as _method_sentence,
+    render_boundary as _render_boundary,
+    render_case_specialization as _render_case_specialization,
+)
 from ternforge_docops._internal.verification.source_analysis import (
     extract_checks,
     extract_exercises,
@@ -265,29 +270,6 @@ def _cases(
     return [_function_case(root, request) for request in requests]
 
 
-def _method_sentence(case: _Case) -> str:
-    """Describe the verification method without status or execution trivia."""
-    if case.kind == "unit":
-        return (
-            "Exercises focused logic directly and checks the observable values or "
-            "errors that define this contract."
-        )
-    if case.kind == "integration":
-        return (
-            "Exercises the component through a controlled integration boundary and "
-            "checks the data or errors observed across that boundary."
-        )
-    if case.kind == "property":
-        return (
-            "Generates many inputs from the declared strategies and checks that the "
-            "same invariant holds for every generated example."
-        )
-    return (
-        "Exercises the public workflow end to end and checks the resulting observable "
-        "behavior."
-    )
-
-
 def _literal(value: str) -> str:
     """Render one compact RST inline literal."""
     return f"{_TICK}{_TICK}{value.replace(_TICK, '')}{_TICK}{_TICK}"
@@ -318,34 +300,55 @@ def _list(lines: list[str], values: tuple[str, ...], indent: int) -> None:
     lines.append("")
 
 
-def _render_boundary(lines: list[str], boundary: VerificationBoundary) -> None:
-    """Render the verification scope before exercise/assertion details."""
+def _render_case_detail_grid(lines: list[str], case: _Case) -> None:
+    """Render property-domain detail or the normal exercise/check grid."""
+    if case.kind == "property" and case.generated_inputs:
+        lines.extend(
+            (
+                ".. grid:: 1 2 2 2",
+                "   :gutter: 2",
+                "",
+                "   .. grid-item-card:: Declared generators",
+                "",
+            )
+        )
+        _list(lines, case.generated_inputs, 6)
+        lines.extend(("   .. grid-item-card:: Invariant", ""))
+        _list(lines, case.checks, 6)
+        return
     lines.extend(
         (
-            ".. card:: Verification boundary",
+            ".. grid:: 1 2 2 2",
+            "   :gutter: 2",
             "",
-            f"   **Path:** {_literal(boundary.path)}",
-            "",
-            (
-                "   **Execution envelope:** "
-                f":bdg-secondary:{_TICK}Process · {boundary.process}{_TICK} "
-                f":bdg-secondary:{_TICK}Network · {boundary.network}{_TICK} "
-                f":bdg-secondary:{_TICK}Filesystem · {boundary.filesystem}{_TICK} "
-                f":bdg-secondary:{_TICK}External · {boundary.external}{_TICK}"
-            ),
-            "",
-            f"   * **Real path:** {boundary.real_path}",
-            f"   * **Substitute:** {boundary.substitute}",
-            f"   * **Not covered:** {boundary.not_covered}",
-            "",
-            "   .. dropdown:: How this verification establishes the proof",
-            "",
-            f"      **Observed proof:** {_literal(boundary.observed_proof)}",
-            "",
-            f"      **Boundary basis:** {boundary.provenance}",
+            "   .. grid-item-card:: Exercise",
             "",
         )
     )
+    _list(lines, case.exercises, 6)
+    lines.extend(("   .. grid-item-card:: Checks", ""))
+    _list(lines, case.checks, 6)
+
+
+def _case_code_location(case: _Case) -> str:
+    """Render the exact project-owned source location for one testcase."""
+    location = case.source_path
+    if case.line_start is None:
+        return location
+    location = f"{location}:{case.line_start}"
+    if case.line_end is None or case.line_end == case.line_start:
+        return location
+    return f"{location}-{case.line_end}"
+
+
+def _render_case_code(lines: list[str], case: _Case) -> None:
+    """Render retained testcase source when available."""
+    if not case.code:
+        return
+    lines.extend(
+        (".. dropdown:: Test code", "", f"   {_literal(_case_code_location(case))}", "")
+    )
+    _code_block(lines, case.code, 3)
 
 
 def _render_case(case: _Case) -> str:
@@ -359,42 +362,9 @@ def _render_case(case: _Case) -> str:
     lines.extend((_method_sentence(case), ""))
     if case.boundary is not None:
         _render_boundary(lines, case.boundary)
-
-    if case.kind == "property" and case.generated_inputs:
-        lines.extend(
-            (
-                ".. grid:: 1 2 2 2",
-                "   :gutter: 2",
-                "",
-                "   .. grid-item-card:: Generated inputs",
-                "",
-            )
-        )
-        _list(lines, case.generated_inputs, 6)
-        lines.extend(("   .. grid-item-card:: Invariant", ""))
-        _list(lines, case.checks, 6)
-    else:
-        lines.extend(
-            (
-                ".. grid:: 1 2 2 2",
-                "   :gutter: 2",
-                "",
-                "   .. grid-item-card:: Exercise",
-                "",
-            )
-        )
-        _list(lines, case.exercises, 6)
-        lines.extend(("   .. grid-item-card:: Checks", ""))
-        _list(lines, case.checks, 6)
-
-    if case.code:
-        location = case.source_path
-        if case.line_start is not None:
-            location = f"{location}:{case.line_start}"
-            if case.line_end is not None and case.line_end != case.line_start:
-                location = f"{location}-{case.line_end}"
-        lines.extend((".. dropdown:: Test code", "", f"   {_literal(location)}", ""))
-        _code_block(lines, case.code, 3)
+    _render_case_specialization(lines, case)
+    _render_case_detail_grid(lines, case)
+    _render_case_code(lines, case)
     return "\n".join(lines).rstrip() + "\n"
 
 

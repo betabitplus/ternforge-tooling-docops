@@ -546,6 +546,55 @@ def test_boundary_prefers_captured_runtime_evidence_over_source_guessing() -> No
     assert "scripted HTTP server" not in boundary.path
 
 
+def test_boundary_uses_typed_direct_external_interaction() -> None:
+    """A direct interaction is runtime evidence, not an E2E/integration guess."""
+    steps = (
+        _boundary_step("Given a provider case", source="def given(): pass"),
+        _boundary_step(
+            "When the route executes",
+            source="def run(router):\n    return router.query('hello')",
+        ),
+        _boundary_step("Then the response is normalized", source="def then(): pass"),
+    )
+    nodeid = "tests/bdd/test_demo.py::test_route"
+    runtime = VerificationRuntimeEvidence(
+        nodeid=nodeid,
+        observations=(
+            VerificationObservation(
+                name="Ternforge test execution",
+                kind="test-execution",
+                payload={
+                    "nodeid": nodeid,
+                    "path": "tests/bdd/test_demo.py",
+                    "verification_kind": "bdd",
+                    "fixtures": [],
+                    "markers": [],
+                },
+            ),
+            VerificationObservation(
+                name="provider-http boundary interaction",
+                kind="boundary-interaction",
+                payload={
+                    "boundary": "provider-http",
+                    "interaction": "direct",
+                    "participant": "HTTP client",
+                    "target": "live provider",
+                    "transport": "HTTPS",
+                },
+            ),
+        ),
+    )
+
+    boundary = infer_boundary(tags=(), steps=steps, runtime=runtime)
+
+    assert boundary is not None
+    assert boundary.path == "LLMRouter.query → production code → live external boundary"
+    assert boundary.network == "direct HTTPS"
+    assert boundary.external == "direct live provider"
+    assert boundary.interactions[0].interaction == "direct"
+    assert "No substitute is recorded" in boundary.substitute
+
+
 def test_living_specs_publish_only_linked_binary_assets(tmp_path: Path) -> None:
     """Inline JSON/text stay in the page while media is published beside it."""
     root = tmp_path / "repo"
