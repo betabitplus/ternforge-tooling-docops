@@ -73,6 +73,7 @@ class _Case:
     classname: str
     name: str
     verifies: str
+    nodeid: str
     source_path: str
     line_start: int | None
     line_end: int | None
@@ -93,6 +94,7 @@ class _CaseRequest:
     classname: str
     name: str
     verifies: str
+    nodeid: str
     runtime: VerificationRuntimeEvidence | None
     coverage: CoverageFootprint | None
 
@@ -148,6 +150,7 @@ def _empty_case(request: _CaseRequest, source_path: str = "") -> _Case:
         classname=request.classname,
         name=request.name,
         verifies=request.verifies,
+        nodeid=request.nodeid,
         source_path=source_path,
         line_start=None,
         line_end=None,
@@ -202,6 +205,7 @@ def _function_case(root: Path, request: _CaseRequest) -> _Case:
         classname=request.classname,
         name=request.name,
         verifies=request.verifies,
+        nodeid=request.nodeid,
         source_path=source_path,
         line_start=function.lineno,
         line_end=getattr(function, "end_lineno", None),
@@ -241,6 +245,7 @@ def _case_request(
         classname=classname,
         name=name,
         verifies=props.get("verifies", ""),
+        nodeid=nodeid,
         runtime=runtime,
         coverage=coverage_footprints.get(nodeid),
     )
@@ -278,6 +283,15 @@ def _literal(value: str) -> str:
 def _need_role(target: str) -> str:
     """Render one Sphinx-Needs reference without hard-coding markup punctuation."""
     return f":need:{_TICK}{target}{_TICK}"
+
+
+def _verification_targets(value: str) -> tuple[str, ...]:
+    """Normalize revision-pinned verifies metadata to current contract IDs."""
+    return tuple(
+        dict.fromkeys(
+            item.strip().split("[", 1)[0] for item in value.split(",") if item.strip()
+        )
+    )
 
 
 def _code_block(lines: list[str], code: str, indent: int = 3) -> None:
@@ -356,12 +370,21 @@ def _render_case(case: _Case) -> str:
     anchor = verification_anchor(case.kind, case.classname, case.name)
     title = _title(case.name)
     lines = [f".. _{anchor}:", "", title, "-" * len(title), ""]
-    target = case.verifies.split("[", 1)[0].strip()
-    if target:
-        lines.extend((f"**Verifies:** {_need_role(target)}", ""))
+    targets = _verification_targets(case.verifies)
+    if targets:
+        links = ", ".join(_need_role(target) for target in targets)
+        lines.extend((f"**Verifies:** {links}", ""))
     lines.extend((_method_sentence(case), ""))
     if case.boundary is not None:
         _render_boundary(lines, case.boundary)
+    if targets:
+        lines.extend(
+            (
+                f".. ternforge-evidence-context:: {','.join(targets)}",
+                f"   :current-nodeids: {case.nodeid}",
+                "",
+            )
+        )
     _render_case_specialization(lines, case)
     _render_case_detail_grid(lines, case)
     _render_case_code(lines, case)

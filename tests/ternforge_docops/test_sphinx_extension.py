@@ -11,6 +11,7 @@ import nbformat
 import pytest
 
 from ternforge_docops._internal.experiments.digest import capsule_digest
+from ternforge_docops._internal.resources import shared_docs_dir_path
 from ternforge_docops._internal.sphinx import (
     experiments as experiment_sphinx,
     verification,
@@ -201,6 +202,233 @@ def test_supplemental_verification_evidence_is_allowed(tmp_path: Path) -> None:
     assert result.returncode == 0
     assert "requested-bdd" not in result.stderr
     assert "unwanted-unit" not in result.stderr
+
+
+def test_shared_evidence_trust_registry_builds(tmp_path: Path) -> None:
+    """The package-owned generic producer registry is a valid strict Needs graph."""
+    source = (shared_docs_dir_path() / "evidence-trust.rst").read_text(encoding="utf-8")
+
+    result = _run_graph_build(tmp_path, source)
+
+    assert result.returncode == 0, result.stderr
+    html = (tmp_path / "html" / "index.html").read_text(encoding="utf-8")
+    assert "Ternforge py-testkit evidence transport" in html
+    assert "Scripted HTTP server" in html
+    assert "not calibrated against live external reality" in html
+    assert "Revision pin graph cross-check" in html
+
+
+def test_complementary_evidence_context_links_same_claim_scope(
+    tmp_path: Path,
+) -> None:
+    """Narratives expose nearby current proof and an explicit remaining reach gap."""
+    source = """Complementary evidence
+======================
+
+.. goal:: Parent goal
+   :id: GOAL_PARENT
+
+.. feature:: Parent capability
+   :id: FEAT_PARENT
+   :derives: GOAL_PARENT
+
+.. req:: Shared claim
+   :id: REQ_SHARED
+   :status: accepted
+   :revision: 1
+   :required_evidence: unit
+   :derives: FEAT_PARENT
+
+.. test-file:: Execution evidence
+   :id: TEST_FILE
+   :file: evidence.xml
+   :auto_suites:
+   :auto_cases:
+
+.. ternforge-evidence-context:: REQ_SHARED
+   :current-nodeids: tests/test_shared.py::test_focused
+"""
+    evidence = """<testsuites>
+<testsuite name="scope">
+<testcase classname="tests.test_shared" name="test_focused">
+<properties>
+<property name="verification_kind" value="unit"/>
+<property name="verifies" value="REQ_SHARED[revision==1]"/>
+<property name="nodeid" value="tests/test_shared.py::test_focused"/>
+<property name="scope_reach" value="focused_logic"/>
+<property name="scope_basis" value="captured production coverage"/>
+<property name="external_reach" value="local"/>
+</properties>
+</testcase>
+<testcase classname="tests.test_shared" name="test_boundary">
+<properties>
+<property name="verification_kind" value="integration"/>
+<property name="verifies" value="REQ_SHARED[revision==1]"/>
+<property name="nodeid" value="tests/test_shared.py::test_boundary"/>
+<property name="scope_reach" value="transport_sdk_filesystem"/>
+<property name="scope_basis" value="captured boundary interaction"/>
+<property name="external_reach" value="substitute"/>
+</properties>
+</testcase>
+</testsuite>
+</testsuites>
+"""
+
+    result = _run_graph_build(tmp_path, source, evidence=evidence)
+
+    assert result.returncode == 0, result.stderr
+    html = (tmp_path / "html" / "index.html").read_text(encoding="utf-8")
+    assert "Covered elsewhere:" in html
+    assert "Boundary (Transport / SDK / filesystem)" in html
+    assert "Remaining gap:" in html
+    assert "no direct live external interaction is retained" in html
+
+
+def test_evidence_producer_graph_accepts_trust_and_calibration_links(
+    tmp_path: Path,
+) -> None:
+    """Keep producer trust graph-native and link testcase evidence to its producer."""
+    source = """Evidence producer assurance
+===========================
+
+.. goal:: Parent goal
+   :id: GOAL_PARENT
+
+.. feature:: Parent capability
+   :id: FEAT_PARENT
+   :derives: GOAL_PARENT
+
+.. req:: Provider behavior
+   :id: REQ_PROVIDER
+   :status: accepted
+   :revision: 1
+   :required_evidence: integration
+   :derives: FEAT_PARENT
+
+.. qualification:: HTTP helper contract tests
+   :id: QUAL_HTTP_UNIT
+   :qualification_kind: unit-contract
+   :target_version: py-lib-testkit-v1
+   :evidence_url: https://example.invalid/http-unit
+
+.. qualification:: HTTP helper integration tests
+   :id: QUAL_HTTP_INTEGRATION
+   :qualification_kind: integration-contract
+   :target_version: py-lib-testkit-v1
+   :evidence_url: https://example.invalid/http-integration
+
+.. producer:: Scripted provider HTTP
+   :id: PRODUCER_SCRIPTED_HTTP
+   :producer_role: test-substitute
+   :producer_version: py-lib-testkit-v1
+   :producer_impact: high
+   :producer_purpose: Emit deterministic provider-shaped HTTP behavior.
+   :risk_if_wrong: Integration evidence can overstate provider behavior.
+   :residual_doubt: A live provider may change after calibration.
+   :qualified_by: QUAL_HTTP_UNIT;QUAL_HTTP_INTEGRATION
+
+.. manual:: Live HTTP comparison
+   :id: MANUAL_HTTP_CALIBRATION
+   :manual_date: 2026-09-12
+   :target_version: provider-current
+   :performed_by: controlled procedure
+   :artifact_url: https://example.invalid/http-live
+   :manual_scope: provider HTTP response and retry shape
+   :limitation: one provider path and captured provider revision
+   :calibrates: PRODUCER_SCRIPTED_HTTP
+
+.. test-file:: Execution evidence
+   :id: TEST_FILE
+   :file: evidence.xml
+   :auto_suites:
+   :auto_cases:
+
+.. ternforge-verification-assurance-map::
+
+.. ternforge-evidence-trust::
+"""
+    evidence = """<testsuites>
+<testsuite name="producer">
+<testcase classname="tests.test_provider" name="test_provider">
+<properties>
+<property name="verification_kind" value="integration"/>
+<property name="verifies" value="REQ_PROVIDER[revision==1]"/>
+<property name="produced_by" value="PRODUCER_SCRIPTED_HTTP"/>
+<property name="nodeid" value="tests/test_provider.py::test_provider"/>
+<property name="scope_reach" value="transport_sdk_filesystem"/>
+<property name="scope_basis" value="captured boundary interaction"/>
+<property name="external_reach" value="substitute"/>
+</properties>
+</testcase>
+</testsuite>
+</testsuites>
+"""
+
+    result = _run_graph_build(tmp_path, source, evidence=evidence)
+
+    assert result.returncode == 0, result.stderr
+    needs = (tmp_path / "html" / "needs.json").read_text(encoding="utf-8")
+    assert "PRODUCER_SCRIPTED_HTTP" in needs
+    assert "transport_sdk_filesystem" in needs
+    assert "QUAL_HTTP_INTEGRATION" in needs
+    assert "MANUAL_HTTP_CALIBRATION" in needs
+    html = (tmp_path / "html" / "index.html").read_text(encoding="utf-8")
+    assert "Verification scope:" in html
+    assert "Transport / SDK / filesystem" in html
+    assert "Live reality gap:" in html
+    assert "Trust of evidence:" in html
+    assert "Trust basis" in html
+    assert "calibration evidence linked" in html
+
+
+def test_high_impact_producer_requires_stronger_trust_basis(tmp_path: Path) -> None:
+    """One trust record cannot silently qualify a high-impact producer."""
+    source = """Producer trust gap
+==================
+
+.. qualification:: One check
+   :id: QUAL_ONE
+   :qualification_kind: unit-contract
+   :target_version: helper-v1
+   :evidence_url: https://example.invalid/one
+
+.. producer:: High impact helper
+   :id: PRODUCER_HIGH
+   :producer_role: evidence-transformer
+   :producer_version: helper-v1
+   :producer_impact: high
+   :producer_purpose: Select evidence.
+   :risk_if_wrong: False confidence.
+   :residual_doubt: Integration behavior remains independent.
+   :qualified_by: QUAL_ONE
+"""
+
+    result = _run_graph_build(tmp_path, source)
+
+    assert result.returncode != 0
+    assert "high-impact-producer-trust" in result.stderr
+
+
+def test_manual_verification_requires_retained_calibration_metadata(
+    tmp_path: Path,
+) -> None:
+    """Manual calibration cannot exist without date/version/artifact/scope/limit."""
+    source = """Manual calibration
+==================
+
+.. manual:: Incomplete live comparison
+   :id: MANUAL_PROVIDER
+   :manual_date: 2026-09-12
+   :target_version: provider-current
+   :performed_by: operator
+   :manual_scope: response shape
+   :limitation: one provider path only
+"""
+
+    result = _run_graph_build(tmp_path, source)
+
+    assert result.returncode != 0
+    assert "manual-verification-contract" in result.stderr
 
 
 def test_sphinx_extension_builds_current_graph(tmp_path: Path) -> None:  # noqa: PLR0915

@@ -209,6 +209,7 @@ def _example(
         duration_ms=_duration_ms(result),
         started_ms=_started_ms(result),
         full_name=str(result.get("fullName") or ""),
+        nodeid="" if runtime is None else runtime.nodeid,
         allure_url=result_links.get(execution_key(result), ""),
         source_path=source_path,
         source_line=source_line,

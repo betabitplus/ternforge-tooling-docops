@@ -73,7 +73,11 @@ def assurance_nodes(
         message = "No accepted Requirements or Technical requirements found."
         return [nodes.paragraph(text=message)]
 
-    context = AssuranceRenderContext(app=app, fromdocname=fromdocname)
+    context = AssuranceRenderContext(
+        app=app,
+        fromdocname=fromdocname,
+        needs=needs,
+    )
     result: list[nodes.Node] = []
     for contract in contracts:
         contract_id = str(contract["id"])

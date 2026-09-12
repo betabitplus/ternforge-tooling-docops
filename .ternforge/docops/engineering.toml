@@ -42,6 +42,84 @@ schema.type = "string"
 description = "Gherkin scenario name for BDD evidence."
 schema.type = "string"
 
+[needs.fields.nodeid]
+description = "Exact pytest nodeid retained for one imported testcase."
+schema.type = "string"
+
+[needs.fields.scope_reach]
+description = "Highest verification-scope rung established by captured execution facts."
+schema.type = "string"
+schema.enum = ["focused_logic", "component", "integration_boundary", "transport_sdk_filesystem", "public_workflow", "live_external_reality"]
+
+[needs.fields.scope_basis]
+description = "Captured-fact basis used to place verification evidence on the scope ladder."
+schema.type = "string"
+
+[needs.fields.external_reach]
+description = "Observed terminal external relation for one verification execution."
+schema.type = "string"
+schema.enum = ["local", "substitute", "replay", "direct"]
+
+[needs.fields.producer_role]
+description = "Role played by an evidence producer in the verification chain."
+schema.type = "string"
+schema.enum = ["upstream-tool", "capture-pipeline", "evidence-transformer", "test-substitute", "presentation"]
+
+[needs.fields.producer_version]
+description = "Tool, owner release, or runtime-lock version basis for an evidence producer."
+schema.type = "string"
+
+[needs.fields.producer_impact]
+description = "Consequence if an evidence producer is wrong and creates false confidence."
+schema.type = "string"
+schema.enum = ["low", "medium", "high"]
+
+[needs.fields.producer_purpose]
+description = "Concise purpose of an evidence producer."
+schema.type = "string"
+
+[needs.fields.risk_if_wrong]
+description = "Assurance consequence if an evidence producer is wrong."
+schema.type = "string"
+
+[needs.fields.residual_doubt]
+description = "Known residual uncertainty after qualification or calibration."
+schema.type = "string"
+
+[needs.fields.qualification_kind]
+description = "Kind of evidence supporting trust in an evidence producer."
+schema.type = "string"
+schema.enum = ["upstream-trust", "unit-contract", "integration-contract", "cross-check", "golden-fixture"]
+
+[needs.fields.evidence_url]
+description = "Repository or retained-artifact URL supporting one qualification record."
+schema.type = "string"
+
+[needs.fields.target_version]
+description = "Version, provider revision, or immutable target checked by qualification/manual evidence."
+schema.type = "string"
+
+[needs.fields.manual_date]
+description = "Date on which a manual verification or calibration record was performed."
+schema.type = "string"
+schema.pattern = "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+
+[needs.fields.performed_by]
+description = "Person, automation, or controlled procedure that performed a manual verification."
+schema.type = "string"
+
+[needs.fields.artifact_url]
+description = "Retained artifact or immutable source URL supporting a manual verification record."
+schema.type = "string"
+
+[needs.fields.manual_scope]
+description = "What the manual verification establishes."
+schema.type = "string"
+
+[needs.fields.limitation]
+description = "Explicit limit of a manual verification or calibration record."
+schema.type = "string"
+
 [needs.fields.issue]
 description = "GitHub issue numbers tracking this object; Sphinx-Needs remains authoritative."
 schema.type = "array"
@@ -71,6 +149,22 @@ incoming = "superseded by"
 [needs.links.informs]
 outgoing = "informs"
 incoming = "informed by experiment"
+
+[needs.links.produced_by]
+outgoing = "produced by"
+incoming = "produces evidence"
+
+[needs.links.qualified_by]
+outgoing = "qualified by"
+incoming = "qualifies producer"
+
+[needs.links.calibrated_by]
+outgoing = "calibrated by"
+incoming = "calibrates producer"
+
+[needs.links.calibrates]
+outgoing = "calibrates"
+incoming = "calibrated by record"
 
 [[needs.types]]
 directive = "goal"
@@ -118,5 +212,26 @@ style = "node"
 directive = "impl"
 title = "Implementation"
 prefix = "IMPL_"
+color = ""
+style = "artifact"
+
+[[needs.types]]
+directive = "producer"
+title = "Evidence Producer"
+prefix = "PRODUCER_"
+color = ""
+style = "artifact"
+
+[[needs.types]]
+directive = "qualification"
+title = "Producer Qualification"
+prefix = "QUAL_"
+color = ""
+style = "artifact"
+
+[[needs.types]]
+directive = "manual"
+title = "Manual Verification"
+prefix = "MANUAL_"
 color = ""
 style = "artifact"

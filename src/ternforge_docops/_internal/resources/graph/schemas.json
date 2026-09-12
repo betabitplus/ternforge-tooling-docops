@@ -7,7 +7,16 @@
     "type-adr": {"properties": {"type": {"const": "adr"}}},
     "type-exp": {"properties": {"type": {"const": "exp"}}},
     "type-impl": {"properties": {"type": {"const": "impl"}}},
+    "type-producer": {"properties": {"type": {"const": "producer"}}},
+    "type-qualification": {"properties": {"type": {"const": "qualification"}}},
+    "type-manual": {"properties": {"type": {"const": "manual"}}},
     "type-testcase": {"properties": {"type": {"const": "testcase"}}},
+    "trust-evidence": {
+      "properties": {"type": {"enum": ["qualification", "manual"]}}
+    },
+    "calibration-evidence": {
+      "properties": {"type": {"enum": ["qualification", "manual", "exp"]}}
+    },
     "requirement-like": {
       "properties": {"type": {"enum": ["req", "treq"]}}
     },
@@ -203,6 +212,150 @@
       "message": "The informs relation is reserved for engineering experiments.",
       "select": {"properties": {"informs": {"items": {}, "minItems": 1}}, "required": ["informs"]},
       "validate": {"local": {"properties": {"type": {"const": "exp"}}}}
+    },
+    {
+      "id": "producer-contract",
+      "message": "An evidence producer must declare purpose, impact, risk, residual doubt, and at least one trust-basis record.",
+      "select": {"$ref": "#/$defs/type-producer"},
+      "validate": {
+        "local": {
+          "properties": {
+            "id": {"pattern": "^PRODUCER_[A-Z0-9_]+$"},
+            "producer_role": {},
+            "producer_version": {"minLength": 1},
+            "producer_impact": {},
+            "producer_purpose": {"minLength": 1},
+            "risk_if_wrong": {"minLength": 1},
+            "residual_doubt": {"minLength": 1},
+            "derives": {"maxItems": 0},
+            "implements": {"maxItems": 0},
+            "verifies": {"maxItems": 0}
+          },
+          "required": ["producer_role", "producer_version", "producer_impact", "producer_purpose", "risk_if_wrong", "residual_doubt"]
+        },
+        "network": {
+          "qualified_by": {
+            "contains": {"local": {"$ref": "#/$defs/trust-evidence"}},
+            "items": {"local": {"$ref": "#/$defs/trust-evidence"}},
+            "minContains": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "high-impact-producer-trust",
+      "message": "A high-impact evidence producer must have at least two independent trust-basis records.",
+      "select": {
+        "properties": {
+          "type": {"const": "producer"},
+          "producer_impact": {"const": "high"}
+        },
+        "required": ["producer_impact"]
+      },
+      "validate": {
+        "network": {
+          "qualified_by": {
+            "contains": {"local": {"$ref": "#/$defs/trust-evidence"}},
+            "items": {"local": {"$ref": "#/$defs/trust-evidence"}},
+            "minContains": 2
+          }
+        }
+      }
+    },
+    {
+      "id": "qualification-contract",
+      "message": "Producer qualification must identify a concrete trust mechanism, target version, and retained evidence URL.",
+      "select": {"$ref": "#/$defs/type-qualification"},
+      "validate": {
+        "local": {
+          "properties": {
+            "id": {"pattern": "^QUAL_[A-Z0-9_]+$"},
+            "qualification_kind": {},
+            "target_version": {"minLength": 1},
+            "evidence_url": {"minLength": 1},
+            "derives": {"maxItems": 0},
+            "implements": {"maxItems": 0},
+            "verifies": {"maxItems": 0}
+          },
+          "required": ["qualification_kind", "target_version", "evidence_url"]
+        }
+      }
+    },
+    {
+      "id": "manual-verification-contract",
+      "message": "Manual verification must retain date, target version, performer, artifact, scope, and limitation.",
+      "select": {"$ref": "#/$defs/type-manual"},
+      "validate": {
+        "local": {
+          "properties": {
+            "id": {"pattern": "^MANUAL_[A-Z0-9_]+$"},
+            "manual_date": {},
+            "target_version": {"minLength": 1},
+            "performed_by": {"minLength": 1},
+            "artifact_url": {"minLength": 1},
+            "manual_scope": {"minLength": 1},
+            "limitation": {"minLength": 1},
+            "derives": {"maxItems": 0},
+            "implements": {"maxItems": 0},
+            "verifies": {"maxItems": 0}
+          },
+          "required": ["manual_date", "target_version", "performed_by", "artifact_url", "manual_scope", "limitation"]
+        }
+      }
+    },
+    {
+      "id": "produced-by-source-contract",
+      "message": "Only imported testcase evidence may declare evidence producers, and every target must be an evidence producer.",
+      "select": {"properties": {"produced_by": {"items": {}, "minItems": 1}}, "required": ["produced_by"]},
+      "validate": {
+        "local": {"$ref": "#/$defs/type-testcase"},
+        "network": {
+          "produced_by": {
+            "contains": {"local": {"$ref": "#/$defs/type-producer"}},
+            "items": {"local": {"$ref": "#/$defs/type-producer"}},
+            "minContains": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "qualified-by-source-contract",
+      "message": "Trust-basis relations originate from evidence producers and target qualification/manual evidence.",
+      "select": {"properties": {"qualified_by": {"items": {}, "minItems": 1}}, "required": ["qualified_by"]},
+      "validate": {
+        "local": {"$ref": "#/$defs/type-producer"},
+        "network": {
+          "qualified_by": {
+            "items": {"local": {"$ref": "#/$defs/trust-evidence"}}
+          }
+        }
+      }
+    },
+    {
+      "id": "calibrated-by-source-contract",
+      "message": "Calibration relations originate from evidence producers and target EXP/manual/qualification evidence.",
+      "select": {"properties": {"calibrated_by": {"items": {}, "minItems": 1}}, "required": ["calibrated_by"]},
+      "validate": {
+        "local": {"$ref": "#/$defs/type-producer"},
+        "network": {
+          "calibrated_by": {
+            "items": {"local": {"$ref": "#/$defs/calibration-evidence"}}
+          }
+        }
+      }
+    },
+    {
+      "id": "calibrates-source-contract",
+      "message": "Calibration evidence may extend a package-owned producer through the calibrates relation.",
+      "select": {"properties": {"calibrates": {"items": {}, "minItems": 1}}, "required": ["calibrates"]},
+      "validate": {
+        "local": {"$ref": "#/$defs/calibration-evidence"},
+        "network": {
+          "calibrates": {
+            "items": {"local": {"$ref": "#/$defs/type-producer"}}
+          }
+        }
+      }
     },
     {
       "id": "impl-contract",

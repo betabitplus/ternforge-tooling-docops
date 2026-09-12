@@ -82,6 +82,7 @@ class LivingExample:
     status_message: str
     status_trace: str
     boundary: LivingVerificationBoundary | None = None
+    nodeid: str = ""
 
 
 @dataclass(frozen=True)

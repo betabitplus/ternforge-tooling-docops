@@ -1,5 +1,11 @@
 """Private Sphinx integration helpers."""
 
+from ternforge_docops._internal.sphinx.evidence_context import (
+    register_evidence_context as register_evidence_context,
+)
+from ternforge_docops._internal.sphinx.evidence_trust import (
+    register_evidence_trust_view as register_evidence_trust_view,
+)
 from ternforge_docops._internal.sphinx.experiments import (
     configure_experiment_mounts as configure_experiment_mounts,
     publish_experiment_inputs as publish_experiment_inputs,

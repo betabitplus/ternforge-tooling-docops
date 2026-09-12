@@ -17,4 +17,6 @@ copy or reinterpret those runtime facts.
 .. ternforge-verification-assurance-map::
 
 For the authored hierarchy around these contracts, use :doc:`traceability-reader`.
-For aggregate layer counts and release outcomes, use :doc:`verification`.
+For the evidence-of-evidence route behind test infrastructure, use
+:doc:`evidence-trust`. For aggregate layer counts and release outcomes, use
+:doc:`verification`.
