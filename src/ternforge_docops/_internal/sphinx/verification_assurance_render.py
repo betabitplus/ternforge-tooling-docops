@@ -22,6 +22,10 @@ from ternforge_docops._internal.sphinx.review_common import (
 )
 from ternforge_docops._internal.sphinx.revision_evidence import EvidenceCounts
 from ternforge_docops._internal.sphinx.specification_health import SpecificationHealth
+from ternforge_docops._internal.sphinx.verification_assurance_layers import (
+    evidence_trust_layer,
+    verification_scope_layer,
+)
 
 if TYPE_CHECKING:
     from sphinx.application import Sphinx
@@ -35,6 +39,7 @@ class AssuranceRenderContext:
 
     app: Sphinx
     fromdocname: str
+    needs: Mapping[str, Mapping[str, object]]
 
 
 def _reference(
@@ -348,7 +353,9 @@ def contract_section(
     layers += _contract_layer(contract)
     layers += _implementation_layer(context, contract, grouped)
     layers += _verification_layer(context, contract, grouped, counts)
+    layers += verification_scope_layer(context, grouped)
     layers += _runtime_assurance_layer(context, grouped)
+    layers += evidence_trust_layer(context, grouped)
     section += layers
 
     gaps = _gap_list(health)

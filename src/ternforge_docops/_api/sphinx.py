@@ -12,6 +12,8 @@ from ternforge_docops._internal import (
     configure_simplepdf_anchors,
     graph_config_path,
     publish_experiment_inputs,
+    register_evidence_context,
+    register_evidence_trust_view,
     register_review_views,
     register_specification_health_view,
     register_verification_assurance_view,
@@ -96,8 +98,15 @@ def _configure_test_reports(config: Config) -> None:
         "verification_kind",
         "gherkin_feature",
         "gherkin_scenario",
+        "nodeid",
+        "scope_reach",
+        "scope_basis",
+        "external_reach",
     ]
-    config.tr_property_link_types = {"verifies": "verifies"}
+    config.tr_property_link_types = {
+        "verifies": "verifies",
+        "produced_by": "produced_by",
+    }
     config.tr_suite_id_length = 8
     config.tr_case_id_length = 8
 
@@ -135,6 +144,8 @@ def setup(app: Sphinx) -> dict[str, Any]:
     register_specification_health_view(app)
     register_review_views(app)
     register_verification_view(app)
+    register_evidence_context(app)
+    register_evidence_trust_view(app)
     register_verification_assurance_view(app)
     app.connect("config-inited", configure_experiment_mounts, priority=5)
     app.connect("config-inited", _configure_graph, priority=6)

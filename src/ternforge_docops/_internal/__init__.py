@@ -34,6 +34,8 @@ from ternforge_docops._internal.resources import (
 from ternforge_docops._internal.sphinx import (
     configure_experiment_mounts as configure_experiment_mounts,
     publish_experiment_inputs as publish_experiment_inputs,
+    register_evidence_context as register_evidence_context,
+    register_evidence_trust_view as register_evidence_trust_view,
     register_review_views as register_review_views,
     register_specification_health_view as register_specification_health_view,
     register_verification_assurance_view as register_verification_assurance_view,

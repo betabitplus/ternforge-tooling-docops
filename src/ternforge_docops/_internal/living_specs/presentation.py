@@ -201,6 +201,29 @@ def _story_boundaries(
     )
 
 
+def _render_evidence_context(
+    lines: list[str],
+    examples: list[LivingExample],
+) -> None:
+    """Render late-bound complementary evidence for one executed BDD scenario."""
+    requirements = tuple(
+        dict.fromkeys(req for example in examples for req in example.requirements)
+    )
+    nodeids = tuple(
+        dict.fromkeys(example.nodeid for example in examples if example.nodeid)
+    )
+    if not requirements:
+        return
+    append_rst(
+        lines,
+        3,
+        f".. ternforge-evidence-context:: {','.join(requirements)}",
+    )
+    if nodeids:
+        append_rst(lines, 6, f":current-nodeids: {','.join(nodeids)}")
+    append_rst(lines, 0)
+
+
 def _render_story_examples(
     lines: list[str],
     examples: list[LivingExample],
@@ -257,6 +280,7 @@ def _render_story(
     boundaries = _story_boundaries(ordered)
     if len(boundaries) == 1:
         render_verification_boundary(lines, boundaries[0], 3)
+    _render_evidence_context(lines, ordered)
     _render_story_examples(lines, ordered, boundaries, context=context)
 
 

@@ -22,6 +22,9 @@ from ternforge_docops._internal.living_specs import (
 from ternforge_docops._internal.living_specs.models import LivingSpecificationsReport
 from ternforge_docops._internal.resources import shared_docs_dir_path
 from ternforge_docops._internal.verification.evidence import VerificationEvidencePaths
+from ternforge_docops._internal.verification.junit_enrichment import (
+    enrich_junit_evidence,
+)
 from ternforge_docops._internal.verification.narrative import (
     render_verification_narratives,
 )
@@ -272,7 +275,12 @@ def _materialized_sources(
             message = f"JUnit evidence does not exist: {junit}"
             raise FileNotFoundError(message)
         trace_dir.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(junit, evidence_target)
+        enrich_junit_evidence(
+            junit,
+            evidence_target,
+            allure_results=evidence.allure_results,
+            coverage=evidence.coverage,
+        )
         evidence_source.write_text(_EVIDENCE_SOURCE_TEXT, encoding="utf-8")
         generated.extend((evidence_source, evidence_target))
 
