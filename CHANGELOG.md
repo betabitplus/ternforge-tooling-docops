@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.13.0](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.12.0...v0.13.0) (2026-09-12)
+
+
+### Features
+
+* add layered verification assurance map ([#81](https://github.com/betabitplus/ternforge-tooling-docops/issues/81)) ([21185ff](https://github.com/betabitplus/ternforge-tooling-docops/commit/21185ff9339f2d298510a98b8d31d54d58428d88))
+
 ## [0.12.0](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.11.0...v0.12.0) (2026-09-12)
 
 
