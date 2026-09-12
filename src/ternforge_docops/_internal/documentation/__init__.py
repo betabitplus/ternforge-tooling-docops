@@ -5,3 +5,6 @@ from ternforge_docops._internal.documentation.service import (
     build_html as build_html,
     build_portal as build_portal,
 )
+from ternforge_docops._internal.documentation.simplepdf import (
+    configure_simplepdf_anchors as configure_simplepdf_anchors,
+)
