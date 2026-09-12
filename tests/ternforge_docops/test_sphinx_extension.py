@@ -380,6 +380,9 @@ def test_evidence_producer_graph_accepts_trust_and_calibration_links(
    :auto_suites:
    :auto_cases:
 
+.. ternforge-evidence-context:: REQ_PROVIDER
+   :current-nodeids: tests/test_provider.py::test_provider
+
 .. ternforge-verification-assurance-map::
 
 .. ternforge-evidence-trust::
@@ -414,6 +417,10 @@ def test_evidence_producer_graph_accepts_trust_and_calibration_links(
     assert "Transport / SDK / filesystem" in html
     assert "Live reality gap:" in html
     assert "Trust of evidence:" in html
+    assert "Evidence producers:" in html
+    assert 'href="evidence-trust.html#evidence-trust-producer-scripted-http"' in html
+    assert "Trust state:" in html
+    assert "multiple trust-basis records satisfy high-impact policy" in html
     assert "Trust basis" in html
     assert "calibration evidence linked" in html
 
