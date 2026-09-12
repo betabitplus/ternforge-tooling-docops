@@ -13,6 +13,7 @@ from ternforge_docops._internal import (
     publish_experiment_inputs,
     register_review_views,
     register_specification_health_view,
+    register_verification_assurance_view,
     register_verification_view,
     static_dir_path,
 )
@@ -133,6 +134,7 @@ def setup(app: Sphinx) -> dict[str, Any]:
     register_specification_health_view(app)
     register_review_views(app)
     register_verification_view(app)
+    register_verification_assurance_view(app)
     app.connect("config-inited", configure_experiment_mounts, priority=5)
     app.connect("config-inited", _configure_graph, priority=6)
     app.connect("config-inited", _ensure_source_url_field, priority=12)

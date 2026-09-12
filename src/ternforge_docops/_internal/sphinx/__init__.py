@@ -13,3 +13,6 @@ from ternforge_docops._internal.sphinx.specification_health_view import (
 from ternforge_docops._internal.sphinx.verification import (
     register_verification_view as register_verification_view,
 )
+from ternforge_docops._internal.sphinx.verification_assurance import (
+    register_verification_assurance_view as register_verification_assurance_view,
+)

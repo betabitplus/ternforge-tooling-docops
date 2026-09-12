@@ -278,6 +278,7 @@ def test_build_materializes_shared_views_and_junit_only_for_build(
         del arguments
         assert (docs / "traceability.rst").is_file()
         assert (docs / "verification.rst").is_file()
+        assert (docs / "verification-assurance.rst").is_file()
         assert (docs / "specification-health.rst").is_file()
         assert (docs / "tests.rst").is_file()
         evidence = docs / "ternforge-test-evidence.rst"
@@ -296,6 +297,7 @@ def test_build_materializes_shared_views_and_junit_only_for_build(
 
     assert not (docs / "traceability.rst").exists()
     assert not (docs / "verification.rst").exists()
+    assert not (docs / "verification-assurance.rst").exists()
     assert not (docs / "specification-health.rst").exists()
     assert not (docs / "tests.rst").exists()
     assert not (docs / "ternforge-test-evidence.rst").exists()
@@ -329,6 +331,7 @@ def test_build_recovers_transient_sources_left_by_interrupted_build(
     for name in (
         "traceability.rst",
         "verification.rst",
+        "verification-assurance.rst",
         "specification-health.rst",
         "tests.rst",
     ):
@@ -364,6 +367,7 @@ def test_build_recovers_transient_sources_left_by_interrupted_build(
     for name in (
         "traceability.rst",
         "verification.rst",
+        "verification-assurance.rst",
         "specification-health.rst",
         "tests.rst",
     ):
