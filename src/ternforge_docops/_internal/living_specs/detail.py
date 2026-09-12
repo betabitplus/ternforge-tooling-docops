@@ -22,6 +22,7 @@ from ternforge_docops._internal.living_specs.rst import (
     code_block,
     rst_inline,
 )
+from ternforge_docops._internal.verification.assurance import boundary_interaction_text
 
 _TECHNICAL_ATTACHMENT_NAMES = {"log", "stderr", "stdout"}
 
@@ -197,6 +198,16 @@ def render_verification_boundary(
     append_rst(lines, body, f"* **Substitute:** {rst_inline(boundary.substitute)}")
     append_rst(lines, body, f"* **Not covered:** {rst_inline(boundary.not_covered)}")
     append_rst(lines, 0)
+    if boundary.interactions:
+        append_rst(lines, body, "**Captured boundary interactions:**")
+        append_rst(lines, 0)
+        for interaction in boundary.interactions:
+            append_rst(
+                lines,
+                body,
+                f"* ``{rst_inline(boundary_interaction_text(interaction))}``",
+            )
+        append_rst(lines, 0)
     append_rst(lines, body, ".. dropdown:: How this scenario establishes the proof")
     append_rst(lines, 0)
     detail = body + 3

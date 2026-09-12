@@ -146,11 +146,25 @@ def test_value_is_bounded(value):
         "tests.pkg.property.test_invariants",
     )
     property_source = by_name[property_name]
-    assert "Generated inputs" in property_source
+    assert "Property proof" in property_source
+    assert (
+        "Proof model:** property classification → production subject → invariant"
+        in property_source
+    )
+    assert "Execution mechanism:** Hypothesis execution not captured" in property_source
+    assert (
+        "Generator declaration basis:** source-derived generator declaration"
+        in property_source
+    )
+    assert (
+        "do not by themselves prove that Hypothesis generated examples"
+        in property_source
+    )
+    assert "Declared generators" in property_source
     assert "value = st.integers(min_value=0, max_value=10)" in property_source
     assert "Invariant" in property_source
     assert "observed <= 11" in property_source
-    assert "generated domain → normalize() → invariant" in property_source
+    assert "property-classified testcase → normalize() → invariant" in property_source
 
     assert "Verification boundary" in unit_source
     assert "test inputs → classify_status_code()" in unit_source
@@ -178,6 +192,9 @@ def test_value_is_bounded(value):
         "┃ live external provider" in e2e_source
     )
     assert "Live external-provider fidelity" in e2e_source
+    assert "End-to-end reach" in e2e_source
+    assert "Terminal interactions:** no captured boundary interaction" in e2e_source
+    assert "Live external-system fidelity is claimed only when" in e2e_source
 
 
 def test_verification_narrative_identity_is_stable() -> None:
@@ -311,3 +328,117 @@ def test_runtime_evidence_overrides_source_fallback_for_boundary(
     assert "live HTTP interaction → retained VCR replay" in page
     assert "Boundary basis:** captured runtime evidence" in page
     assert "local ScriptedHTTPServer" not in page
+
+
+def test_property_narrative_distinguishes_runtime_hypothesis_from_source_domain(
+    tmp_path: Path,
+) -> None:
+    """Property assurance separates runtime Hypothesis evidence from source domain."""
+    source = tmp_path / "tests/pkg/property/test_invariants.py"
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        """from hypothesis import given, strategies as st
+
+
+def normalize(value):
+    return value + 1
+
+
+@given(value=st.integers(min_value=0, max_value=10))
+def test_value_is_bounded(value):
+    observed = normalize(value)
+    assert observed <= 11
+""",
+        encoding="utf-8",
+    )
+    junit = tmp_path / "junit.xml"
+    junit.write_text(
+        """<testsuites><testsuite name="pytest">
+<testcase classname="tests.pkg.property.test_invariants" name="test_value_is_bounded">
+  <properties>
+    <property name="verification_kind" value="property"/>
+    <property name="verifies" value="REQ_BOUNDS[revision==2]"/>
+  </properties>
+</testcase>
+</testsuite></testsuites>""",
+        encoding="utf-8",
+    )
+    allure = tmp_path / "allure-results"
+    allure.mkdir()
+    observation = allure / "execution.json"
+    nodeid = "tests/pkg/property/test_invariants.py::test_value_is_bounded"
+    observation.write_text(
+        json.dumps(
+            {
+                "schema_version": 1,
+                "kind": "test-execution",
+                "payload": {
+                    "nodeid": nodeid,
+                    "path": "tests/pkg/property/test_invariants.py",
+                    "verification_kind": "property",
+                    "fixtures": [],
+                    "markers": ["hypothesis"],
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+    (allure / "result-result.json").write_text(
+        json.dumps(
+            {
+                "uuid": "result",
+                "name": "test_value_is_bounded",
+                "fullName": "tests.pkg.property.test_invariants#test_value_is_bounded",
+                "start": 1,
+                "stop": 2,
+                "attachments": [
+                    {
+                        "name": "Ternforge test execution",
+                        "type": (
+                            "application/vnd.ternforge.verification-observation+json"
+                        ),
+                        "source": observation.name,
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    coverage = tmp_path / "coverage.json"
+    coverage.write_text(
+        json.dumps(
+            {
+                "files": {
+                    "src/pkg/normalize.py": {
+                        "contexts": {
+                            "20": [f"{nodeid}|run"],
+                            "21": [f"{nodeid}|run"],
+                        }
+                    }
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    pages = render_verification_narratives(
+        tmp_path,
+        junit,
+        allure_results=allure,
+        coverage=coverage,
+    )
+    page = pages[0].source
+
+    assert "Captured runtime evidence confirms Hypothesis execution" in page
+    assert (
+        "Proof model:** Hypothesis generated examples → production subject → invariant"
+        in page
+    )
+    assert "Execution mechanism:** Hypothesis · captured runtime evidence" in page
+    assert "Generator declaration basis:** source-derived generator declaration" in page
+    assert "Hypothesis generated domain → normalize → invariant" in page
+    assert (
+        "Boundary basis:** captured runtime evidence + source-derived generator "
+        "declaration" in page
+    )
+    assert "Hypothesis execution not captured" not in page

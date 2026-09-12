@@ -8,6 +8,12 @@ from pathlib import Path
 from typing import Any
 
 from ternforge_docops._internal.allure.results import current_results
+from ternforge_docops._internal.verification.interactions import (
+    BoundaryInteractionObservation,
+    ExternalSubstituteObservation,
+    normalize_boundary_interaction,
+    normalize_external_substitute,
+)
 
 VERIFICATION_OBSERVATION_MEDIA_TYPE = (
     "application/vnd.ternforge.verification-observation+json"
@@ -78,47 +84,56 @@ class VerificationRuntimeEvidence:
         return str(execution.payload.get("path") or "")
 
 
-@dataclass(frozen=True)
-class ExternalSubstituteObservation:
-    """One explicitly captured replacement for an external boundary."""
-
-    producer: str
-    boundary: str
-    mode: str
-    transport: str
-    target: str
-
-
-def _external_substitute(
-    observation: VerificationObservation,
-) -> ExternalSubstituteObservation | None:
-    """Normalize one explicit external-substitute observation."""
-    if observation.kind != "external-substitute":
-        return None
-    payload = observation.payload
-    producer = str(payload.get("producer") or "").strip()
-    if not producer:
-        return None
-    return ExternalSubstituteObservation(
-        producer=producer,
-        boundary=str(payload.get("boundary") or "").strip(),
-        mode=str(payload.get("mode") or "").strip(),
-        transport=str(payload.get("transport") or "").strip(),
-        target=str(payload.get("target") or "").strip(),
-    )
-
-
-def external_substitutes(
+def boundary_interactions(
     runtime: VerificationRuntimeEvidence | None,
-) -> tuple[ExternalSubstituteObservation, ...]:
-    """Return explicitly captured external substitutions for one execution."""
+) -> tuple[BoundaryInteractionObservation, ...]:
+    """Return explicitly captured boundary interactions for one execution."""
     if runtime is None:
         return ()
     values = tuple(
         item
         for observation in runtime.observations
-        if (item := _external_substitute(observation)) is not None
+        if (
+            item := normalize_boundary_interaction(
+                observation.kind,
+                observation.payload,
+            )
+        )
+        is not None
     )
+    return tuple(dict.fromkeys(values))
+
+
+def external_substitutes(
+    runtime: VerificationRuntimeEvidence | None,
+) -> tuple[ExternalSubstituteObservation, ...]:
+    """Return captured substitute interactions through the legacy normalized shape."""
+    if runtime is None:
+        return ()
+    values: list[ExternalSubstituteObservation] = []
+    for observation in runtime.observations:
+        legacy = normalize_external_substitute(
+            observation.kind,
+            observation.payload,
+        )
+        if legacy is not None:
+            values.append(legacy)
+            continue
+        interaction = normalize_boundary_interaction(
+            observation.kind,
+            observation.payload,
+        )
+        if interaction is None or interaction.interaction != "substitute":
+            continue
+        values.append(
+            ExternalSubstituteObservation(
+                producer=interaction.participant,
+                boundary=interaction.boundary,
+                mode="substitute",
+                transport=interaction.transport,
+                target=interaction.target,
+            )
+        )
     return tuple(dict.fromkeys(values))
 
 

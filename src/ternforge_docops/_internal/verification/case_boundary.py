@@ -2,118 +2,21 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from ternforge_docops._internal.verification.assurance import (
     RuntimeAssuranceFacts,
     VerificationBoundary,
-    runtime_assurance_facts,
 )
-from ternforge_docops._internal.verification.coverage_evidence import CoverageFootprint
-from ternforge_docops._internal.verification.evidence import VerificationRuntimeEvidence
+from ternforge_docops._internal.verification.case_signals import (
+    BoundarySignals as _BoundarySignals,
+    CaseBoundaryInput,
+    boundary_signals as _boundary_signals,
+)
+from ternforge_docops._internal.verification.interactions import (
+    BoundaryInteractionObservation,
+)
 from ternforge_docops._internal.verification.source_analysis import (
-    module_title as _module_title,
     observed_proof as _observed_proof,
-    subject as _subject,
-    test_double_names as _test_double_names,
 )
-
-
-@dataclass(frozen=True)
-class CaseBoundaryInput:
-    """Exact testcase facts used to infer the verification boundary."""
-
-    kind: str
-    source_path: str
-    code: str
-    exercises: tuple[str, ...]
-    checks: tuple[str, ...]
-    generated_inputs: tuple[str, ...]
-    runtime: VerificationRuntimeEvidence | None
-    coverage: CoverageFootprint | None
-
-
-@dataclass(frozen=True)
-class _BoundarySignals:
-    """Objective execution signals recovered from one testcase body."""
-
-    scripted_http: bool
-    vcr: bool
-    temporary_filesystem: bool
-    patched_runtime: bool
-    subprocess: bool
-    doubles: tuple[str, ...]
-    module: str
-    subject: str
-    runtime_modules: tuple[str, ...]
-    assurance: RuntimeAssuranceFacts | None
-
-
-def _runtime_or_source(
-    *,
-    has_runtime: bool,
-    captured: bool,
-    source_fallback: bool,
-) -> bool:
-    """Prefer a captured boolean signal over source-derived fallback."""
-    return captured if has_runtime else source_fallback
-
-
-def _boundary_doubles(
-    facts: RuntimeAssuranceFacts | None,
-    mechanism: str,
-    code: str,
-    *,
-    has_runtime: bool,
-) -> tuple[str, ...]:
-    """Return captured substitute producers or source-derived fallback names."""
-    if mechanism == "external-double" and facts is not None:
-        return tuple(dict.fromkeys(item.producer for item in facts.substitutes))
-    return () if has_runtime else _test_double_names(code)
-
-
-def _boundary_signals(value: CaseBoundaryInput) -> _BoundarySignals:
-    """Prefer shared runtime facts and use source inspection only as fallback."""
-    facts = runtime_assurance_facts(value.runtime, value.coverage)
-    has_runtime = value.runtime is not None
-    mechanism = facts.mechanism if facts is not None and has_runtime else ""
-    temporary = facts is not None and facts.filesystem == "temporary"
-    subprocess = facts is not None and facts.process == "subprocess"
-    return _BoundarySignals(
-        scripted_http=_runtime_or_source(
-            has_runtime=has_runtime,
-            captured=mechanism == "scripted-http",
-            source_fallback="ScriptedHTTPServer" in value.code,
-        ),
-        vcr=mechanism == "vcr",
-        temporary_filesystem=_runtime_or_source(
-            has_runtime=has_runtime,
-            captured=temporary,
-            source_fallback=(
-                "tmp_path" in value.code or "TemporaryDirectory" in value.code
-            ),
-        ),
-        patched_runtime=_runtime_or_source(
-            has_runtime=has_runtime,
-            captured=mechanism == "patched-runtime",
-            source_fallback="monkeypatch" in value.code,
-        ),
-        subprocess=_runtime_or_source(
-            has_runtime=has_runtime,
-            captured=subprocess,
-            source_fallback=("subprocess." in value.code or "Popen(" in value.code),
-        ),
-        doubles=_boundary_doubles(
-            facts,
-            mechanism,
-            value.code,
-            has_runtime=has_runtime,
-        ),
-        module=_module_title(value.source_path) if value.source_path else "Component",
-        subject=_subject(value.exercises),
-        runtime_modules=facts.modules if facts is not None else (),
-        assurance=facts,
-    )
 
 
 def _network_envelope(
@@ -184,7 +87,7 @@ def _transport_substitute(signals: _BoundarySignals) -> str:
 def _external_substitute_text(signals: _BoundarySignals) -> tuple[str, ...]:
     """Return captured external SDK/provider substitutions."""
     facts = signals.assurance
-    if facts is not None and facts.mechanism == "external-double":
+    if facts is not None and facts.substitutes:
         return tuple(
             f"{item.target or 'external SDK/provider'} → {item.producer}"
             for item in facts.substitutes
@@ -268,6 +171,27 @@ def _integration_scope(signals: _BoundarySignals) -> tuple[str, str, str]:
                 "changed after the recording was captured."
             ),
         )
+    if signals.replay:
+        return (
+            f"{observed} ┃ captured boundary replay → external system",
+            (
+                "Production integration code executes against the explicitly captured "
+                "replay interaction."
+            ),
+            "Current external-system behavior beyond the captured replay.",
+        )
+    if signals.direct_external:
+        return (
+            f"{observed} → integration boundary → live external system",
+            (
+                "Production integration code executes through an explicitly captured "
+                "direct external interaction."
+            ),
+            (
+                "External behavior outside this captured run and deployment-specific "
+                "environment differences."
+            ),
+        )
     if signals.doubles:
         return (
             (f"{observed} ┃ {', '.join(signals.doubles)} → real SDK/network/provider"),
@@ -297,24 +221,39 @@ def _property_scope(
     value: CaseBoundaryInput,
     signals: _BoundarySignals,
 ) -> tuple[str, str, str]:
-    """Describe generated domain, subject, and invariant boundary."""
+    """Describe captured property execution without promoting source declarations."""
     subject = _observed_runtime_path(signals) or signals.subject
-    path = f"generated domain → {subject} → invariant"
-    if value.generated_inputs:
-        real_path = (
-            "Hypothesis generates values from the declared strategies and repeatedly "
-            "executes the production subject; the invariant is checked for each "
-            "generated example."
-        )
+    if signals.hypothesis:
+        path = f"Hypothesis generated domain → {subject} → invariant"
+        if value.generated_inputs:
+            real_path = (
+                "Captured pytest runtime confirms Hypothesis execution. The declared "
+                "strategies shown below come from source enrichment and describe the "
+                "generator domain; the invariant is checked by the executed testcase."
+            )
+            not_covered = (
+                "Values outside the source-declared Hypothesis strategies and "
+                "higher-level system/external integrations."
+            )
+        else:
+            real_path = (
+                "Captured pytest runtime confirms Hypothesis execution, but retained "
+                "evidence does not expose the generator declaration."
+            )
+            not_covered = (
+                "The exact generated domain is not available from retained evidence, "
+                "plus higher-level system/external integrations."
+            )
     else:
+        path = f"property-classified testcase → {subject} → invariant"
         real_path = (
-            "The property-style testcase executes the production subject repeatedly, "
-            "but no explicit Hypothesis strategy was recoverable from the test body."
+            "The testcase is classified as property verification, but retained runtime "
+            "evidence does not contain the public Hypothesis pytest marker."
         )
-    not_covered = (
-        "Values outside the declared Hypothesis strategies and higher-level "
-        "system/external integrations."
-    )
+        not_covered = (
+            "Generated-domain execution is not established by retained runtime "
+            "evidence, plus higher-level system/external integrations."
+        )
     if signals.temporary_filesystem:
         not_covered = (
             f"{not_covered.rstrip('.')} plus long-lived, cross-process, and "
@@ -341,6 +280,15 @@ def _e2e_scope(signals: _BoundarySignals) -> tuple[str, str, str]:
             "live external provider"
         )
         not_covered = "Current live-provider behavior beyond the retained interaction."
+    elif signals.replay:
+        path = f"public workflow → {observed} ┃ captured replay → external system"
+        not_covered = "Current external-system behavior beyond the captured replay."
+    elif signals.direct_external:
+        path = f"public workflow → {observed} → live external boundary"
+        not_covered = (
+            "Deployment/environment variability and external behavior outside this "
+            "captured live interaction."
+        )
     elif signals.doubles:
         path = f"public workflow → {observed} ┃ test double → real external system"
         not_covered = "Real external-system fidelity beyond the explicit test double."
@@ -357,17 +305,25 @@ def _e2e_scope(signals: _BoundarySignals) -> tuple[str, str, str]:
     return path, real_path, not_covered
 
 
-def infer_case_boundary(value: CaseBoundaryInput) -> VerificationBoundary:
-    """Infer one conservative boundary from exact testcase facts."""
-    signals = _boundary_signals(value)
-    process, network, filesystem, external = _execution_envelope(value, signals)
+def _scope(
+    value: CaseBoundaryInput,
+    signals: _BoundarySignals,
+) -> tuple[str, str, str]:
+    """Select the semantic scope renderer for one verification kind."""
     scopes = {
         "unit": lambda: _unit_scope(signals),
         "integration": lambda: _integration_scope(signals),
         "property": lambda: _property_scope(value, signals),
         "e2e": lambda: _e2e_scope(signals),
     }
-    path, real_path, not_covered = scopes[value.kind]()
+    return scopes[value.kind]()
+
+
+def _with_environment_limits(
+    not_covered: str,
+    signals: _BoundarySignals,
+) -> str:
+    """Append independent environment limits without duplicating existing wording."""
     extra_limits: list[str] = []
     if signals.temporary_filesystem and "filesystem behavior" not in not_covered:
         extra_limits.append(
@@ -375,15 +331,38 @@ def infer_case_boundary(value: CaseBoundaryInput) -> VerificationBoundary:
         )
     if signals.patched_runtime:
         extra_limits.append("the unpatched host environment/runtime state")
-    if extra_limits:
-        not_covered = (
-            f"{not_covered.rstrip('.')}; additionally, {'; '.join(extra_limits)}."
-        )
-    provenance = (
-        "captured runtime evidence"
-        if value.runtime is not None or value.coverage is not None
-        else "source-derived fallback"
-    )
+    if not extra_limits:
+        return not_covered
+    return f"{not_covered.rstrip('.')}; additionally, {'; '.join(extra_limits)}."
+
+
+def _boundary_provenance(
+    value: CaseBoundaryInput,
+    signals: _BoundarySignals,
+) -> str:
+    """Describe which retained sources establish this boundary."""
+    property_runtime = value.kind == "property" and value.runtime is not None
+    if property_runtime and signals.hypothesis and value.generated_inputs:
+        return "captured runtime evidence + source-derived generator declaration"
+    if property_runtime and not signals.hypothesis:
+        return "captured runtime evidence; Hypothesis execution not captured"
+    if value.runtime is not None or value.coverage is not None:
+        return "captured runtime evidence"
+    return "source-derived fallback"
+
+
+def _captured_interactions(
+    signals: _BoundarySignals,
+) -> tuple[BoundaryInteractionObservation, ...]:
+    """Return captured interactions without exposing assurance internals."""
+    return signals.assurance.interactions if signals.assurance is not None else ()
+
+
+def infer_case_boundary(value: CaseBoundaryInput) -> VerificationBoundary:
+    """Infer one conservative boundary from exact testcase facts."""
+    signals = _boundary_signals(value)
+    process, network, filesystem, external = _execution_envelope(value, signals)
+    path, real_path, not_covered = _scope(value, signals)
     return VerificationBoundary(
         path=path,
         process=process,
@@ -392,7 +371,8 @@ def infer_case_boundary(value: CaseBoundaryInput) -> VerificationBoundary:
         external=external,
         real_path=real_path,
         substitute=_substitute(signals),
-        not_covered=not_covered,
+        not_covered=_with_environment_limits(not_covered, signals),
         observed_proof=_observed_proof(value.checks),
-        provenance=provenance,
+        provenance=_boundary_provenance(value, signals),
+        interactions=_captured_interactions(signals),
     )

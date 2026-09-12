@@ -5,6 +5,11 @@ from __future__ import annotations
 import ast
 import re
 
+from ternforge_docops._internal.living_specs.assurance_boundary import (
+    captured_boundary_details as _captured_boundary_details,
+    observed_path as _observed_path,
+    runtime_labels as _runtime_labels,
+)
 from ternforge_docops._internal.living_specs.models import (
     LivingStep,
     LivingVerificationBoundary,
@@ -206,29 +211,6 @@ def _fallback_boundary_kind(tags: tuple[str, ...], captured: str) -> str:
     return kind
 
 
-def _external_double_details(
-    facts: RuntimeAssuranceFacts,
-) -> tuple[str, str, str, str]:
-    """Describe an explicitly captured external test double without source guessing."""
-    producers = ", ".join(item.producer for item in facts.substitutes)
-    targets = ", ".join(
-        dict.fromkeys(item.target for item in facts.substitutes if item.target)
-    )
-    target = targets or "external SDK/provider"
-    return (
-        f"production code ┃ {producers} → {target}",
-        (
-            "Production application/provider mapping executes against the captured "
-            "external client surface."
-        ),
-        f"{target} is replaced by {producers} for this execution.",
-        (
-            "The real external client implementation, network transport, "
-            "authentication, and remote-provider behavior."
-        ),
-    )
-
-
 def _boundary_details(kind: str) -> tuple[str, str, str, str]:
     """Return path suffix, real scope, substitute, and excluded scope."""
     if kind == "scripted-http":
@@ -313,42 +295,13 @@ def _boundary_details(kind: str) -> tuple[str, str, str, str]:
     )
 
 
-def _observed_path(path: str, facts: RuntimeAssuranceFacts | None) -> str:
-    """Replace generic production-code wording with modules observed at runtime."""
-    if facts is None or not facts.modules:
-        return path
-    return path.replace("production code", " → ".join(facts.modules), 1)
-
-
-def _runtime_labels(
-    facts: RuntimeAssuranceFacts | None,
-) -> tuple[str, str, str, str, str]:
-    """Return presentation labels for captured runtime facts or the fallback state."""
-    if facts is None:
-        return (
-            "not captured",
-            "not captured",
-            "not captured",
-            "not captured",
-            "source-derived fallback",
-        )
-    return (
-        facts.process,
-        facts.network or "not explicit",
-        facts.filesystem,
-        facts.external or "not explicit",
-        facts.provenance,
-    )
-
-
 def _boundary_details_for(
     kind: str,
     facts: RuntimeAssuranceFacts | None,
 ) -> tuple[str, str, str, str]:
-    """Select boundary detail text from captured semantics or the generic fallback."""
-    if kind == "external-double" and facts is not None:
-        return _external_double_details(facts)
-    return _boundary_details(kind)
+    """Prefer captured assurance detail and otherwise use the generic fallback."""
+    captured = _captured_boundary_details(kind, facts)
+    return captured if captured is not None else _boundary_details(kind)
 
 
 def infer_boundary(
@@ -382,4 +335,5 @@ def infer_boundary(
         filesystem=filesystem,
         external=external,
         provenance=provenance,
+        interactions=facts.interactions if facts is not None else (),
     )
