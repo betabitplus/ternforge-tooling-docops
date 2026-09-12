@@ -112,6 +112,14 @@ def verification_scope_layer(
 ) -> nodes.list_item:
     """Render the ordered observed scope ladder without inferring from test kind."""
     proof = _scope_items(grouped)
+    if not proof:
+        return _layer_item(
+            "Verification scope",
+            nodes.paragraph(
+                text="No execution evidence is retained for current proof."
+            ),
+        )
+
     table = nodes.table(classes=["docutils", "align-default"])
     tgroup = nodes.tgroup(cols=len(SCOPE_ORDER))
     table += tgroup
