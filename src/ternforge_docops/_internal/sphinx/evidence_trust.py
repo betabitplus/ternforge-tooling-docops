@@ -19,6 +19,9 @@ if TYPE_CHECKING:
     from sphinx.application import Sphinx
 
 
+_HIGH_IMPACT_MIN_TRUST_RECORDS = 2
+
+
 class _EvidenceTrustNode(nodes.General, nodes.Element):
     """Placeholder resolved after producer and qualification Needs are available."""
 
@@ -174,6 +177,19 @@ def _record_list(
     return result
 
 
+def _trust_state(
+    producer: Mapping[str, object],
+    trust: list[Mapping[str, object]],
+) -> str:
+    """Derive confidence from graph evidence instead of storing a manual label."""
+    if not trust:
+        return "unqualified — no trust-basis evidence linked."
+    impact = str(producer.get("producer_impact") or "")
+    if impact == "high" and len(trust) >= _HIGH_IMPACT_MIN_TRUST_RECORDS:
+        return "strong — multiple trust-basis records satisfy high-impact policy."
+    return "qualified — trust-basis evidence is linked."
+
+
 def _producer_section(
     app: Sphinx,
     fromdocname: str,
@@ -189,6 +205,10 @@ def _producer_section(
     section += _metadata(producer)
 
     trust = _linked_records(needs, producer, "qualified_by")
+    trust_state = nodes.paragraph()
+    trust_state += nodes.strong(text="Trust state: ")
+    trust_state += nodes.Text(_trust_state(producer, trust))
+    section += trust_state
     section += nodes.rubric(text="Trust basis")
     section += (
         _record_list(app, fromdocname, trust)

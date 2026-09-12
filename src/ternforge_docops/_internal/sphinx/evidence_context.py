@@ -10,10 +10,12 @@ from docutils.parsers.rst import directives
 from sphinx.util.docutils import SphinxDirective
 from sphinx_needs.api import get_needs_view
 
+from ternforge_docops._internal.sphinx.evidence_trust import producer_trust_url
 from ternforge_docops._internal.sphinx.proof_model import current_proof_by_target
 from ternforge_docops._internal.sphinx.review_common import (
     bdd_scenario_url,
     human_test_title,
+    normalize_ids,
     verification_narrative_url,
 )
 from ternforge_docops._internal.verification.scope import (
@@ -153,6 +155,51 @@ def _complementary(
     return _distinct_candidates(candidates)
 
 
+def _current_items(
+    proof: list[Mapping[str, object]],
+    nodeids: frozenset[str],
+) -> list[Mapping[str, object]]:
+    """Return current executions represented by one human narrative."""
+    return [item for item in proof if str(item.get("nodeid") or "") in nodeids]
+
+
+def _producer_context(
+    app: Sphinx,
+    fromdocname: str,
+    needs: Mapping[str, Mapping[str, object]],
+    proof: list[Mapping[str, object]],
+    nodeids: frozenset[str],
+) -> nodes.paragraph:
+    """Render TEST → producer links directly on the verification narrative."""
+    producer_ids = tuple(
+        dict.fromkeys(
+            producer_id
+            for item in _current_items(proof, nodeids)
+            for producer_id in normalize_ids(item.get("produced_by"))
+        )
+    )
+    paragraph = nodes.paragraph()
+    paragraph += nodes.strong(text="Evidence producers: ")
+    if not producer_ids:
+        paragraph += nodes.Text("no producer identity retained.")
+        return paragraph
+    for index, producer_id in enumerate(producer_ids):
+        if index:
+            paragraph += nodes.Text(" · ")
+        producer = needs.get(producer_id)
+        label = (
+            str(producer.get("title") or producer_id)
+            if producer is not None
+            else producer_id
+        )
+        paragraph += nodes.reference(
+            "",
+            label,
+            refuri=producer_trust_url(app, fromdocname, producer_id),
+        )
+    return paragraph
+
+
 def _covered_elsewhere(
     app: Sphinx,
     fromdocname: str,
@@ -218,10 +265,10 @@ def _replace_evidence_context(
         requirements = tuple(str(value) for value in node.get("requirements", ()))
         nodeids = frozenset(str(value) for value in node.get("nodeids", ()))
         proof = _proof(needs, requirements)
-        replacement: list[nodes.Node] = [
-            _covered_elsewhere(app, fromdocname, proof, nodeids),
-            _remaining_gap(proof),
-        ]
+        replacement: list[nodes.Node] = []
+        replacement.append(_producer_context(app, fromdocname, needs, proof, nodeids))
+        replacement.append(_covered_elsewhere(app, fromdocname, proof, nodeids))
+        replacement.append(_remaining_gap(proof))
         node.replace_self(replacement)
 
 
