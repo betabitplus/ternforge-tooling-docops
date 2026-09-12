@@ -204,6 +204,43 @@ def test_supplemental_verification_evidence_is_allowed(tmp_path: Path) -> None:
     assert "unwanted-unit" not in result.stderr
 
 
+def test_impl_only_assurance_has_no_false_live_reality_gap(
+    tmp_path: Path,
+) -> None:
+    """Implementation-only proof must not imply a missing live execution."""
+    source = """Implementation-only assurance
+=============================
+
+.. goal:: Parent goal
+   :id: GOAL_IMPL_ONLY
+
+.. feature:: Parent capability
+   :id: FEAT_IMPL_ONLY
+   :derives: GOAL_IMPL_ONLY
+
+.. req:: Implementation-only contract
+   :id: REQ_IMPL_ONLY
+   :status: accepted
+   :revision: 1
+   :required_evidence: impl
+   :derives: FEAT_IMPL_ONLY
+
+.. impl:: Implementation
+   :id: IMPL_ONLY
+   :implements: REQ_IMPL_ONLY[revision==1]
+   :source_url: https://example.invalid/src/impl.py
+
+.. ternforge-verification-assurance-map::
+"""
+
+    result = _run_graph_build(tmp_path, source)
+
+    assert result.returncode == 0, result.stderr
+    html = (tmp_path / "html" / "index.html").read_text(encoding="utf-8")
+    assert "No execution evidence is retained for current proof." in html
+    assert "Live reality gap:" not in html
+
+
 def test_shared_evidence_trust_registry_builds(tmp_path: Path) -> None:
     """The package-owned generic producer registry is a valid strict Needs graph."""
     source = (shared_docs_dir_path() / "evidence-trust.rst").read_text(encoding="utf-8")
