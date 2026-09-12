@@ -7,15 +7,14 @@ from collections import defaultdict
 from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
+from ternforge_docops._internal.sphinx.proof_model import current_proof_by_target
 from ternforge_docops._internal.sphinx.review_common import (
     content_fields,
-    current_revision,
     need_sort_key,
     need_url,
     normalize_ids,
     strip_inline_markup,
 )
-from ternforge_docops._internal.sphinx.traceability import revision_pinned_targets
 from ternforge_docops._internal.sphinx.traceability_context import (
     ReaderContext as _ReaderContext,
     compact_need_link as _compact_need_link,
@@ -27,26 +26,6 @@ from ternforge_docops._internal.sphinx.traceability_proof import (
 
 if TYPE_CHECKING:
     from sphinx.application import Sphinx
-
-_PROOF_TYPES = frozenset({"impl", "testcase"})
-
-
-def _proof_by_target(
-    needs: Mapping[str, Mapping[str, object]],
-) -> dict[str, list[Mapping[str, object]]]:
-    """Index current implementation and verification evidence by contract."""
-    proof: dict[str, list[Mapping[str, object]]] = defaultdict(list)
-    for need in needs.values():
-        need_type = str(need.get("type") or "")
-        if need_type not in _PROOF_TYPES:
-            continue
-        link_type = "implements" if need_type == "impl" else "verifies"
-        for target_id, revision in revision_pinned_targets(need, link_type):
-            if current_revision(needs, target_id, revision):
-                proof[target_id].append(need)
-    for values in proof.values():
-        values.sort(key=need_sort_key)
-    return proof
 
 
 def _technical_details(need: Mapping[str, object]) -> str:
@@ -320,7 +299,7 @@ def reader_html(
     context = _ReaderContext(
         app=app,
         fromdocname=fromdocname,
-        proof=_proof_by_target(needs),
+        proof=current_proof_by_target(needs),
         reqs_by_feature=reqs_by_feature,
         constraints_by_req=constraints_by_req,
     )

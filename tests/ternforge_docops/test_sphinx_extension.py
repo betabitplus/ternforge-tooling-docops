@@ -195,7 +195,7 @@ def test_sphinx_extension_builds_current_graph(tmp_path: Path) -> None:  # noqa:
    :id: REQ_DOCOPS
    :status: accepted
    :revision: 1
-   :required_evidence: integration
+   :required_evidence: impl;integration
    :derives: FEAT_DOCOPS
 
    **Statement.** Shared behavior shall remain reviewable.
@@ -203,6 +203,11 @@ def test_sphinx_extension_builds_current_graph(tmp_path: Path) -> None:  # noqa:
    **Rationale.** Human reviewers need useful prose before technical identity.
 
    **Verification intent.** Verify the shared behavior through integration evidence.
+
+.. impl:: Shared implementation
+   :id: IMPL_DOCOPS
+   :implements: REQ_DOCOPS[revision==1]
+   :source_url: https://example.invalid/src/shared.py
 
 .. test-file:: Shared execution evidence
    :id: TEST_DOCOPS
@@ -224,6 +229,11 @@ Traceability reader
 -------------------
 
 .. ternforge-traceability-reader::
+
+Verification assurance
+----------------------
+
+.. ternforge-verification-assurance-map::
 
 Specification map
 -----------------
@@ -294,6 +304,17 @@ Specification map
     assert "Integration verification" in index
     assert ">1 check</summary>" in index
     assert "IDs and revision" in index
+    assert "Verification assurance" in index
+    assert "Current proof: </strong>Complete" in index
+    assert "Contract:" in index
+    assert "Implementation:" in index
+    assert "Verification:" in index
+    assert "Runtime assurance:" in index
+    assert "Required evidence: impl, integration." in index
+    assert "IMPL_DOCOPS" in index
+    assert "1/1 current passed" in index
+    assert "inspect execution path, envelope, captured boundary interactions" in index
+    assert "What needs attention" not in index[index.index("Verification assurance") :]
     assert "ternforge-specification-map" in index
     assert "plotly-2.35.2.min.js" in index
     assert "Specification health" in index
@@ -380,6 +401,11 @@ Verification matrix
 -------------------
 
 .. ternforge-verification-matrix::
+
+Verification assurance
+----------------------
+
+.. ternforge-verification-assurance-map::
 """
     evidence = f"""<testsuites>
 <testsuite name="docops">
@@ -405,6 +431,9 @@ Verification matrix
     index = (tmp_path / "html" / "index.html").read_text(encoding="utf-8")
     assert expected_status in index
     assert "✓ 1/1" not in index
+    assert "Current proof: </strong>Incomplete" in index
+    assert "Missing evidence: integration" in index
+    assert "no current execution" in index
 
 
 def test_verification_counts_respect_revision_pins() -> None:

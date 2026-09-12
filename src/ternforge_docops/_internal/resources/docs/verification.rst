@@ -29,6 +29,14 @@ Release outcome
 
       :need_count:`type == "testcase" and result == "skipped"` skipped
 
+Assurance reading path
+----------------------
+
+Use :doc:`verification-assurance` when reviewing one contract end to end:
+authored obligation → current implementation → requested verification → retained
+runtime-assurance narrative. The view exposes current gaps without creating another
+source of truth.
+
 Verification matrix
 -------------------
 

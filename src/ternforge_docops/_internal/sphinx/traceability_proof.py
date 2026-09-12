@@ -6,6 +6,12 @@ import html
 from collections import defaultdict
 from collections.abc import Mapping
 
+from ternforge_docops._internal.sphinx.proof_model import (
+    PROOF_LABELS as _PROOF_LABELS,
+    ordered_proof_kinds as _ordered_proof_kinds,
+    proof_kind as _proof_kind,
+    required_evidence_kinds as _required_evidence_kinds,
+)
 from ternforge_docops._internal.sphinx.review_common import (
     bdd_scenario_url,
     content_fields,
@@ -17,42 +23,6 @@ from ternforge_docops._internal.sphinx.traceability_context import (
     ReaderContext,
     compact_need_link,
 )
-
-_PROOF_ORDER = ("impl", "bdd", "unit", "property", "integration", "e2e")
-_PROOF_LABELS = {
-    "impl": "Implementation",
-    "bdd": "Behavior verification",
-    "unit": "Unit verification",
-    "property": "Property verification",
-    "integration": "Integration verification",
-    "e2e": "End-to-end verification",
-}
-
-
-def _proof_kind(item: Mapping[str, object]) -> str:
-    """Return the evidence group used by one proof item."""
-    if str(item.get("type") or "") == "impl":
-        return "impl"
-    return str(item.get("verification_kind") or "verification")
-
-
-def _required_evidence_kinds(contract: Mapping[str, object]) -> tuple[str, ...]:
-    """Normalize the authored required-evidence sequence."""
-    required = contract.get("required_evidence") or ()
-    if not isinstance(required, list | tuple):
-        return ()
-    return tuple(str(kind) for kind in required)
-
-
-def _ordered_proof_kinds(
-    grouped: Mapping[str, list[Mapping[str, object]]],
-    required: tuple[str, ...],
-) -> list[str]:
-    """Return known proof kinds first and custom kinds afterwards."""
-    available = set(grouped) | set(required)
-    ordered = [kind for kind in _PROOF_ORDER if kind in available]
-    ordered.extend(kind for kind in sorted(available) if kind not in ordered)
-    return ordered
 
 
 def _proof_groups(

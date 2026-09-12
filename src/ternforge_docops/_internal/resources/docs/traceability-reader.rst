@@ -11,5 +11,6 @@ jump across the document; machine IDs and concrete test records remain secondary
 
 .. ternforge-traceability-reader::
 
-For a one-screen overview of the same specification, open
-:doc:`specification-map`.
+For the contract-by-contract runtime proof path, open
+:doc:`verification-assurance`. For a one-screen overview of the same specification,
+open :doc:`specification-map`.
