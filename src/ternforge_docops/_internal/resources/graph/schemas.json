@@ -27,7 +27,7 @@
     },
     {
       "id": "goal-decomposition",
-      "message": "A goal must be decomposed by at least one feature.",
+      "message": "A goal must be decomposed by at least one capability.",
       "select": {"$ref": "#/$defs/type-goal"},
       "validate": {
         "network_back": {
@@ -41,7 +41,7 @@
     },
     {
       "id": "feature-id-and-parent",
-      "message": "A feature must have a FEAT_ ID and derive from exactly one goal.",
+      "message": "A capability must have a FEAT_ ID and derive from exactly one goal.",
       "select": {"$ref": "#/$defs/type-feature"},
       "validate": {
         "local": {"properties": {"id": {"pattern": "^FEAT_[A-Z0-9_]+$"}}},
@@ -57,7 +57,7 @@
     },
     {
       "id": "feature-decomposition",
-      "message": "A feature must be decomposed by at least one product requirement.",
+      "message": "A capability must be decomposed by at least one requirement.",
       "select": {"$ref": "#/$defs/type-feature"},
       "validate": {
         "network_back": {
@@ -71,7 +71,7 @@
     },
     {
       "id": "req-contract",
-      "message": "A requirement must have a REQ_ ID, lifecycle status, revision, required evidence, and exactly one feature parent.",
+      "message": "A requirement must have a REQ_ ID, lifecycle status, revision, required evidence, and exactly one capability parent.",
       "select": {"$ref": "#/$defs/type-req"},
       "validate": {
         "local": {
@@ -95,7 +95,7 @@
     },
     {
       "id": "treq-contract",
-      "message": "An engineering constraint must have a TREQ_ ID, lifecycle status, revision, required evidence, and exactly one requirement parent.",
+      "message": "A technical requirement must have a TREQ_ ID, lifecycle status, revision, required evidence, and exactly one requirement parent.",
       "select": {"$ref": "#/$defs/type-treq"},
       "validate": {
         "local": {

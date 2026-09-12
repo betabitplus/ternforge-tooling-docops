@@ -4,6 +4,9 @@ from ternforge_docops._internal.sphinx.experiments import (
     configure_experiment_mounts as configure_experiment_mounts,
     publish_experiment_inputs as publish_experiment_inputs,
 )
+from ternforge_docops._internal.sphinx.review_views import (
+    register_review_views as register_review_views,
+)
 from ternforge_docops._internal.sphinx.specification_health_view import (
     register_specification_health_view as register_specification_health_view,
 )

@@ -26,6 +26,7 @@ classifiers = [
 ]
 # --- Main Dependencies ---
 dependencies = [
+  "defusedxml>=0.7,<1",
   "docutils>=0.21,<0.23",
   "jupyter-client>=8.6,<9",
   "myst-nb>=1.4,<2",

@@ -119,7 +119,7 @@ def test_build_dossier_materializes_living_specs_from_allure(
     monkeypatch.setattr(
         service,
         "render_living_specifications",
-        lambda root, raw_results, *, result_links: SimpleNamespace(
+        lambda root, raw_results, *, result_links, coverage=None: SimpleNamespace(
             source="Current executable behavior\n",
             assets=(),
             pages=(
@@ -162,7 +162,7 @@ def test_build_dossier_materializes_living_specs_from_allure(
         tmp_path,
         docs=docs,
         output=output,
-        allure_results=raw,
+        evidence=service.VerificationEvidencePaths(allure_results=raw),
     )
 
     assert result == output / "release-dossier.pdf"
@@ -233,7 +233,7 @@ def test_build_portal_publishes_living_specs_and_allure_diagnostics(
     monkeypatch.setattr(
         service,
         "render_living_specifications",
-        lambda root, raw_results, *, result_links: SimpleNamespace(
+        lambda root, raw_results, *, result_links, coverage=None: SimpleNamespace(
             source="Current executable behavior\n",
             assets=(),
             pages=(
@@ -249,7 +249,11 @@ def test_build_portal_publishes_living_specs_and_allure_diagnostics(
     monkeypatch.setattr(service, "curate_results", fake_curate_results)
     monkeypatch.setattr(service, "generate_report", fake_generate_report)
 
-    result = service.build_portal(tmp_path, allure_results=raw, output=output)
+    result = service.build_portal(
+        tmp_path,
+        evidence=service.VerificationEvidencePaths(allure_results=raw),
+        output=output,
+    )
 
     assert result == output
     assert calls == ["curate", "allure", "html"]
@@ -284,7 +288,11 @@ def test_build_materializes_shared_views_and_junit_only_for_build(
 
     monkeypatch.setattr(service, "build_main", fake_build_main)
 
-    service.build_html(tmp_path, docs=docs, junit=junit)
+    service.build_html(
+        tmp_path,
+        docs=docs,
+        evidence=service.VerificationEvidencePaths(junit=junit),
+    )
 
     assert not (docs / "traceability.rst").exists()
     assert not (docs / "verification.rst").exists()
@@ -347,7 +355,11 @@ def test_build_recovers_transient_sources_left_by_interrupted_build(
 
     monkeypatch.setattr(service, "build_main", fake_build_main)
 
-    service.build_html(tmp_path, docs=docs, junit=junit)
+    service.build_html(
+        tmp_path,
+        docs=docs,
+        evidence=service.VerificationEvidencePaths(junit=junit),
+    )
 
     for name in (
         "traceability.rst",

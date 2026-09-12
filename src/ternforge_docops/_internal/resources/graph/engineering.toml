@@ -4,7 +4,7 @@ build_json = true
 schema_definitions_from_json = "schemas.json"
 
 [needs.fields.status]
-description = "Lifecycle state for requirements, engineering constraints, and architecture decisions."
+description = "Lifecycle state for requirements, technical requirements, and architecture decisions."
 schema.enum = ["draft", "proposed", "accepted", "rejected", "deprecated", "superseded"]
 
 [needs.fields.revision]
@@ -81,7 +81,7 @@ style = "node"
 
 [[needs.types]]
 directive = "feature"
-title = "Feature"
+title = "Capability"
 prefix = "FEAT_"
 color = ""
 style = "node"
@@ -95,7 +95,7 @@ style = "node"
 
 [[needs.types]]
 directive = "treq"
-title = "Engineering Constraint"
+title = "Technical Requirement"
 prefix = "TREQ_"
 color = ""
 style = "node"

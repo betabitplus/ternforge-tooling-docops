@@ -10,7 +10,7 @@ normal reading path.
 
 Structure comes from Sphinx-Needs links. Direct evidence means the current requirement
 revision has every declared ``required_evidence`` kind; deep coverage propagates an
-active descendant gap upward so affected Goals and Features cannot look healthy. Draft
+active descendant gap upward so affected Goals and Capabilities cannot look healthy. Draft
 and deprecated contracts are not counted as active evidence obligations.
 
 .. ternforge-specification-health::

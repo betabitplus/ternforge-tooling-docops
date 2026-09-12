@@ -14,6 +14,7 @@ from ternforge_docops._internal.allure.results import (
     execution_key,
     labels,
 )
+from ternforge_docops._internal.living_specs.boundary import infer_boundary
 from ternforge_docops._internal.living_specs.execution_evidence import (
     INTERNAL_ATTACHMENT_TYPES,
     contracts as _contracts,
@@ -24,6 +25,11 @@ from ternforge_docops._internal.living_specs.models import (
     LivingExample,
     LivingStep,
 )
+from ternforge_docops._internal.verification.coverage_evidence import (
+    CoverageFootprint,
+    load_coverage_footprints,
+)
+from ternforge_docops._internal.verification.evidence import runtime_evidence_for_result
 
 _SPECIFICATION_RE = re.compile(
     r"(?:^|\n)Specification:\s*(?P<path>[^:\n]+):(?P<line>\d+)\s*$"
@@ -175,6 +181,7 @@ def _example(
     raw_results: Path,
     result: dict[str, Any],
     result_links: Mapping[ExecutionKey, str],
+    coverage_footprints: Mapping[str, CoverageFootprint],
 ) -> LivingExample:
     """Normalize one current Allure BDD result into the Living Specs model."""
     feature = _one_label(result, "feature", "Executable behavior")
@@ -183,6 +190,10 @@ def _example(
     description, reported_source, source_line = _description_and_specification(result)
     source_path, source_exists = _resolve_source(root, reported_source)
     status_message, status_trace = _status_details(result)
+    tags = tuple(dict.fromkeys(labels(result, "tag")))
+    steps = _steps(raw_results, result)
+    runtime = runtime_evidence_for_result(raw_results, result)
+    coverage = coverage_footprints.get(runtime.nodeid) if runtime is not None else None
     return LivingExample(
         name=_example_name(result, story),
         status=_status(result),
@@ -192,8 +203,8 @@ def _example(
         rule=rule,
         story=story,
         requirements=tuple(dict.fromkeys(labels(result, "requirement"))),
-        tags=tuple(dict.fromkeys(labels(result, "tag"))),
-        steps=_steps(raw_results, result),
+        tags=tags,
+        steps=steps,
         attachments=_attachments(raw_results, result),
         duration_ms=_duration_ms(result),
         started_ms=_started_ms(result),
@@ -204,6 +215,12 @@ def _example(
         source_exists=source_exists,
         status_message=status_message,
         status_trace=status_trace,
+        boundary=infer_boundary(
+            tags=tags,
+            steps=steps,
+            runtime=runtime,
+            coverage=coverage,
+        ),
     )
 
 
@@ -212,11 +229,13 @@ def load_examples(
     raw_results: Path,
     *,
     result_links: Mapping[ExecutionKey, str] | None = None,
+    coverage: Path | None = None,
 ) -> tuple[LivingExample, ...]:
     """Load the exact current BDD executions shared with the forensic Allure view."""
     links = result_links or {}
+    coverage_footprints = load_coverage_footprints(coverage)
     examples = [
-        _example(root, raw_results, current.data, links)
+        _example(root, raw_results, current.data, links, coverage_footprints)
         for current in current_results(raw_results)
         if "bdd" in labels(current.data, "layer")
     ]

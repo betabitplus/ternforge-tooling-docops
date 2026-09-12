@@ -6,6 +6,7 @@ import argparse
 from pathlib import Path
 
 from ternforge_docops._internal import (
+    VerificationEvidencePaths,
     build_dossier,
     build_html,
     build_portal,
@@ -40,6 +41,11 @@ def _parser() -> argparse.ArgumentParser:
     html.add_argument(
         "--junit", type=Path, help="Pre-generated JUnit evidence to import."
     )
+    html.add_argument(
+        "--coverage",
+        type=Path,
+        help="coverage.py JSON with per-test contexts from --show-contexts.",
+    )
     html.add_argument("--output", type=Path, help="Output directory for rendered HTML.")
     html.add_argument(
         "--live-examples",
@@ -52,6 +58,11 @@ def _parser() -> argparse.ArgumentParser:
     )
     dossier.add_argument(
         "--junit", type=Path, help="Pre-generated JUnit evidence to import."
+    )
+    dossier.add_argument(
+        "--coverage",
+        type=Path,
+        help="coverage.py JSON with per-test contexts from --show-contexts.",
     )
     dossier.add_argument(
         "--output", type=Path, help="Output directory for dossier build files."
@@ -67,6 +78,11 @@ def _parser() -> argparse.ArgumentParser:
     )
     portal.add_argument(
         "--junit", type=Path, help="Pre-generated JUnit evidence to import."
+    )
+    portal.add_argument(
+        "--coverage",
+        type=Path,
+        help="coverage.py JSON with per-test contexts from --show-contexts.",
     )
     portal.add_argument("--output", type=Path, help="Output directory for the portal.")
     portal.add_argument(
@@ -154,28 +170,30 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "check":
         return _check_resources(root)
     if args.command == "build":
-        junit = _resolve_optional_path(args.junit)
         build_output = _resolve_optional_path(args.output)
+        allure_results = _resolve_optional_path(getattr(args, "allure_results", None))
+        evidence = VerificationEvidencePaths(
+            junit=_resolve_optional_path(args.junit),
+            allure_results=allure_results,
+            coverage=_resolve_optional_path(args.coverage),
+        )
         if args.build_action == "html":
             output = build_html(
                 root,
-                junit=junit,
+                evidence=evidence,
                 output=build_output,
                 live_examples=args.live_examples,
             )
         elif args.build_action == "dossier":
-            allure_results = _resolve_optional_path(args.allure_results)
             output = build_dossier(
                 root,
-                junit=junit,
-                allure_results=allure_results,
+                evidence=evidence,
                 output=build_output,
             )
         else:
             output = build_portal(
                 root,
-                allure_results=args.allure_results.resolve(),
-                junit=junit,
+                evidence=evidence,
                 output=build_output,
                 live_examples=args.live_examples,
             )

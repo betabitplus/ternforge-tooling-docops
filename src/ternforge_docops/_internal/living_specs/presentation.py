@@ -9,12 +9,14 @@ from pathlib import PurePosixPath
 
 from ternforge_docops._internal.living_specs.detail import (
     render_example,
+    render_verification_boundary,
     status_icon,
     status_summary,
 )
 from ternforge_docops._internal.living_specs.models import (
     LivingExample,
     LivingSpecificationPage,
+    LivingVerificationBoundary,
 )
 from ternforge_docops._internal.living_specs.rst import append_rst, heading, rst_inline
 
@@ -165,6 +167,74 @@ def _render_overview(
         append_rst(lines, 0)
 
 
+def _render_story_provenance(
+    lines: list[str],
+    examples: list[LivingExample],
+) -> None:
+    """Render requirement links and graph provenance for one scenario."""
+    requirements = tuple(
+        dict.fromkeys(req for example in examples for req in example.requirements)
+    )
+    if not requirements:
+        return
+    links = ", ".join(f":need:`{rst_inline(req)}`" for req in requirements)
+    append_rst(lines, 3, f"**Verifies:** {links}")
+    append_rst(lines, 0)
+    append_rst(lines, 3, ".. dropdown:: Contract provenance")
+    append_rst(lines, 0)
+    append_rst(
+        lines,
+        6,
+        f".. ternforge-contract-provenance:: {','.join(requirements)}",
+    )
+    append_rst(lines, 0)
+
+
+def _story_boundaries(
+    examples: list[LivingExample],
+) -> tuple[LivingVerificationBoundary, ...]:
+    """Return distinct verification boundaries attached to scenario examples."""
+    return tuple(
+        dict.fromkeys(
+            example.boundary for example in examples if example.boundary is not None
+        )
+    )
+
+
+def _render_story_examples(
+    lines: list[str],
+    examples: list[LivingExample],
+    boundaries: tuple[LivingVerificationBoundary, ...],
+    *,
+    context: _RenderContext,
+) -> None:
+    """Render a single scenario example or a provider/example tab set."""
+    if len(examples) == 1 and examples[0].name == "Scenario":
+        render_example(
+            lines,
+            examples[0],
+            3,
+            link_prefix=context.link_prefix,
+            repository_source_base=context.repository_source_base,
+        )
+        return
+    append_rst(lines, 3, ".. tab-set::")
+    append_rst(lines, 0)
+    for example in examples:
+        label = f"{status_icon(example.status)} {example.name}"
+        append_rst(lines, 6, f".. tab-item:: {rst_inline(label)}")
+        append_rst(lines, 0)
+        if len(boundaries) > 1 and example.boundary is not None:
+            render_verification_boundary(lines, example.boundary, 9)
+        render_example(
+            lines,
+            example,
+            9,
+            link_prefix=context.link_prefix,
+            repository_source_base=context.repository_source_base,
+        )
+
+
 def _render_story(
     lines: list[str],
     epic: str,
@@ -183,43 +253,11 @@ def _render_story(
     append_rst(lines, 0)
     append_rst(lines, 3, f"{outcome} **{count}**")
     append_rst(lines, 0)
-    requirements = tuple(
-        dict.fromkeys(req for example in ordered for req in example.requirements)
-    )
-    if requirements:
-        links = ", ".join(f":need:`{rst_inline(req)}`" for req in requirements)
-        append_rst(lines, 3, f"**Verifies:** {links}")
-        append_rst(lines, 0)
-        append_rst(lines, 3, ".. dropdown:: Contract provenance")
-        append_rst(lines, 0)
-        append_rst(
-            lines,
-            6,
-            f".. ternforge-contract-provenance:: {','.join(requirements)}",
-        )
-        append_rst(lines, 0)
-    if len(ordered) == 1 and ordered[0].name == "Scenario":
-        render_example(
-            lines,
-            ordered[0],
-            3,
-            link_prefix=context.link_prefix,
-            repository_source_base=context.repository_source_base,
-        )
-        return
-    append_rst(lines, 3, ".. tab-set::")
-    append_rst(lines, 0)
-    for example in ordered:
-        label = f"{status_icon(example.status)} {example.name}"
-        append_rst(lines, 6, f".. tab-item:: {rst_inline(label)}")
-        append_rst(lines, 0)
-        render_example(
-            lines,
-            example,
-            9,
-            link_prefix=context.link_prefix,
-            repository_source_base=context.repository_source_base,
-        )
+    _render_story_provenance(lines, ordered)
+    boundaries = _story_boundaries(ordered)
+    if len(boundaries) == 1:
+        render_verification_boundary(lines, boundaries[0], 3)
+    _render_story_examples(lines, ordered, boundaries, context=context)
 
 
 def _render_scenario_index(

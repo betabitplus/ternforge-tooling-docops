@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
+from ternforge_docops._internal.verification.assurance import VerificationBoundary
+
 
 @dataclass(frozen=True)
 class LivingAttachment:
@@ -52,6 +54,9 @@ class LivingStep:
     contracts: tuple[LivingContract, ...] = ()
 
 
+LivingVerificationBoundary = VerificationBoundary
+
+
 @dataclass(frozen=True)
 class LivingExample:
     """One current executed BDD example after history de-duplication."""
@@ -76,6 +81,7 @@ class LivingExample:
     source_exists: bool
     status_message: str
     status_trace: str
+    boundary: LivingVerificationBoundary | None = None
 
 
 @dataclass(frozen=True)

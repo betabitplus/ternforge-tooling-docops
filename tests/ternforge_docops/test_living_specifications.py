@@ -11,6 +11,19 @@ from ternforge_docops._internal.living_specs import (
     publish_living_assets,
     render_living_specifications,
 )
+from ternforge_docops._internal.living_specs.boundary import infer_boundary
+from ternforge_docops._internal.living_specs.models import (
+    LivingImplementation,
+    LivingStep,
+)
+from ternforge_docops._internal.verification.coverage_evidence import (
+    CoverageFile,
+    CoverageFootprint,
+)
+from ternforge_docops._internal.verification.evidence import (
+    VerificationObservation,
+    VerificationRuntimeEvidence,
+)
 
 _BDD_IMPLEMENTATION_TYPE = "application/vnd.ternforge.bdd-implementation+json"
 _CONTRACT_TYPE = "application/vnd.ternforge.contract+json"
@@ -255,7 +268,10 @@ def _write_rich_evidence_files(raw: Path) -> None:
     _write_result(raw / "current-result.json", stop=200, status="passed")
 
 
-def _assert_rich_feature_page(docname: str, source: str) -> None:
+def _assert_rich_feature_page(  # noqa: PLR0915
+    docname: str,
+    source: str,
+) -> None:
     """Assert the layered feature-page narrative generated from rich evidence."""
     assert docname == "specifications/_generated/structured-output/images"
     assert "Structured image understanding" in source
@@ -264,6 +280,17 @@ def _assert_rich_feature_page(docname: str, source: str) -> None:
     assert ":need:`REQ_IMAGE_INPUT`" in source
     assert ".. dropdown:: Contract provenance" in source
     assert ".. ternforge-contract-provenance:: REQ_IMAGE_INPUT" in source
+    assert ".. card:: Verification boundary" in source
+    assert (
+        "**Path:** ``LLMRouter.query → production code ┃ hermetic local resources``"
+        in source
+    )
+    assert "**Real path:**" in source
+    assert "**Substitute:**" in source
+    assert "**Not covered:**" in source
+    assert ".. dropdown:: How this scenario establishes the proof" in source
+    assert "**Injected condition:**" in source
+    assert "**Observed proof:**" in source
     assert ".. tab-item:: ✓ QwenChat" in source
     assert (
         ":bdg-link-secondary-line:`Execution evidence ↗ "
@@ -353,6 +380,170 @@ def test_living_specs_render_current_narrative_and_rich_evidence(
     page = report.pages[0]
     _assert_rich_feature_page(page.docname, page.source)
     assert [asset.output_name for asset in report.assets] == ["input.png"]
+
+
+def _boundary_step(
+    name: str,
+    *,
+    source: str,
+    path: str = "tests/bdd/test_demo.py",
+) -> LivingStep:
+    """Create one captured BDD step for boundary-inference tests."""
+    return LivingStep(
+        name=name,
+        status="passed",
+        attachments=(),
+        implementation=LivingImplementation(
+            keyword=name.split(" ", 1)[0],
+            text=name.partition(" ")[2],
+            function="step_impl",
+            path=path,
+            start_line=1,
+            end_line=max(1, len(source.splitlines())),
+            source=source,
+        ),
+    )
+
+
+def test_boundary_uses_exact_scripted_http_binding() -> None:
+    """A local scripted provider is explicit even when the scenario is hermetic."""
+    steps = (
+        _boundary_step(
+            "Given a provider rejects a request permanently",
+            source=(
+                "def given():\n"
+                "    return [\n"
+                "        ScriptedResponse(status_code=400),\n"
+                "        ScriptedResponse(status_code=200),\n"
+                "    ]"
+            ),
+        ),
+        _boundary_step(
+            "When the request is executed",
+            source=(
+                "def run(case):\n"
+                "    with ScriptedHTTPServer(port=0) as server:\n"
+                "        return run_retry_worker(server_base_url=server.base_url)"
+            ),
+        ),
+        _boundary_step(
+            "Then the provider is not retried",
+            source=(
+                "def then(result, case):\n"
+                "    assert result.ok is False\n"
+                "    assert result.error_type == 'ProviderError'\n"
+                "    assert case['request_count'] == 1"
+            ),
+        ),
+    )
+
+    boundary = infer_boundary(tags=("hermetic",), steps=steps)
+
+    assert boundary is not None
+    assert boundary.path == (
+        "run_retry_worker → production code → HTTP client ┃ scripted HTTP server"
+    )
+    assert "ScriptedHTTPServer" in boundary.substitute
+    assert "Live provider infrastructure" in boundary.not_covered
+    assert boundary.injected_condition == (
+        "a provider rejects a request permanently · scripted HTTP responses: 400 → 200"
+    )
+    assert boundary.observed_proof == (
+        "the provider is not retried · public result fails · "
+        "ProviderError · 1 provider request"
+    )
+
+
+def test_boundary_uses_explicit_vcr_tag() -> None:
+    """An explicit VCR scenario reports replay rather than generic hermetic scope."""
+    steps = (
+        _boundary_step("Given a recorded provider case", source="def given(): pass"),
+        _boundary_step(
+            "When the route executes",
+            source="def run(router):\n    return router.query('hello')",
+        ),
+        _boundary_step("Then the response is normalized", source="def then(): pass"),
+    )
+
+    boundary = infer_boundary(tags=("hermetic", "vcr"), steps=steps)
+
+    assert boundary is not None
+    assert boundary.path == (
+        "LLMRouter.query → production code → HTTP client ┃ recorded HTTP replay"
+    )
+    assert "VCR" in boundary.substitute
+    assert "live-provider availability" in boundary.not_covered
+
+
+def test_boundary_prefers_captured_runtime_evidence_over_source_guessing() -> None:
+    """Runtime substitute and coverage facts override contradictory source hints."""
+    steps = (
+        _boundary_step(
+            "Given a provider case",
+            source="def given(): return ScriptedResponse(status_code=200)",
+        ),
+        _boundary_step(
+            "When the route executes",
+            source=(
+                "def run(router):\n"
+                "    with ScriptedHTTPServer(port=0) as server:\n"
+                "        return router.query('hello')"
+            ),
+        ),
+        _boundary_step(
+            "Then the response is normalized",
+            source="def then(result): assert result.ok is True",
+        ),
+    )
+    runtime = VerificationRuntimeEvidence(
+        nodeid="tests/bdd/test_demo.py::test_route",
+        observations=(
+            VerificationObservation(
+                name="Ternforge test execution",
+                kind="test-execution",
+                payload={
+                    "nodeid": "tests/bdd/test_demo.py::test_route",
+                    "path": "tests/bdd/test_demo.py",
+                    "verification_kind": "bdd",
+                    "fixtures": [],
+                    "markers": ["vcr", "hermetic"],
+                },
+            ),
+        ),
+    )
+    coverage = CoverageFootprint(
+        nodeid=runtime.nodeid,
+        files=(
+            CoverageFile(
+                path="src/demo/_internal/runtime/router.py",
+                lines=(10, 11, 12),
+                phases=("run",),
+            ),
+            CoverageFile(
+                path="src/demo/_internal/providers/openai.py",
+                lines=(20, 21),
+                phases=("run",),
+            ),
+        ),
+    )
+
+    boundary = infer_boundary(
+        tags=("hermetic",),
+        steps=steps,
+        runtime=runtime,
+        coverage=coverage,
+    )
+
+    assert boundary is not None
+    assert boundary.path == (
+        "LLMRouter.query → runtime.router → providers.openai → HTTP client ┃ "
+        "recorded HTTP replay"
+    )
+    assert "VCR" in boundary.substitute
+    assert boundary.network == "recorded HTTP replay"
+    assert boundary.external == "recorded provider interaction"
+    assert boundary.provenance == "captured runtime evidence"
+    assert "scripted HTTP server" not in boundary.path
 
 
 def test_living_specs_publish_only_linked_binary_assets(tmp_path: Path) -> None:

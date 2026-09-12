@@ -104,12 +104,14 @@ def render_living_specifications(
     raw_results: Path,
     *,
     result_links: Mapping[ExecutionKey, str] | None = None,
+    coverage: Path | None = None,
 ) -> LivingSpecificationsReport:
     """Render current BDD evidence as narrative-first, theme-native RST."""
     examples = load_examples(
         root.resolve(),
         raw_results.resolve(),
         result_links=result_links,
+        coverage=coverage,
     )
     if not examples:
         return LivingSpecificationsReport(source=_EMPTY_SOURCE, assets=())

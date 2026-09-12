@@ -10,10 +10,19 @@ from ternforge_docops._internal.living_specs.models import (
     LivingContract,
     LivingImplementation,
 )
+from ternforge_docops._internal.verification.evidence import (
+    VERIFICATION_OBSERVATION_MEDIA_TYPE,
+)
 
 BDD_IMPLEMENTATION_TYPE = "application/vnd.ternforge.bdd-implementation+json"
 CONTRACT_TYPE = "application/vnd.ternforge.contract+json"
-INTERNAL_ATTACHMENT_TYPES = frozenset({BDD_IMPLEMENTATION_TYPE, CONTRACT_TYPE})
+INTERNAL_ATTACHMENT_TYPES = frozenset(
+    {
+        BDD_IMPLEMENTATION_TYPE,
+        CONTRACT_TYPE,
+        VERIFICATION_OBSERVATION_MEDIA_TYPE,
+    }
+)
 
 
 def _safe_source_name(value: dict[str, Any]) -> str:

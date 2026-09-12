@@ -129,7 +129,7 @@ def _project_constraints(
     constraints: Mapping[str, Mapping[str, object]],
     evidence: Mapping[str, frozenset[str]],
 ) -> dict[str, SpecificationHealth]:
-    """Project accepted engineering constraints."""
+    """Project accepted technical requirements."""
     return {
         need_id: _contract_health(
             need,
@@ -146,7 +146,7 @@ def _project_requirements(
     evidence: Mapping[str, frozenset[str]],
     result: Mapping[str, SpecificationHealth],
 ) -> dict[str, SpecificationHealth]:
-    """Project accepted requirements including active constraint descendants."""
+    """Project accepted requirements including active technical requirements."""
     projected: dict[str, SpecificationHealth] = {}
     for need_id, need in requirements.items():
         child_ids = tuple(
@@ -160,7 +160,7 @@ def _project_requirements(
         projected[need_id] = _contract_health(
             need,
             evidence,
-            missing_parent="Missing feature parent",
+            missing_parent="Missing capability parent",
             blocked_by=blocked,
         )
     return projected
@@ -173,7 +173,7 @@ def _feature_health(
     requirements: Mapping[str, Mapping[str, object]],
     result: Mapping[str, SpecificationHealth],
 ) -> SpecificationHealth:
-    """Project one Feature from authored and active Requirement descendants."""
+    """Project one Capability from authored and active Requirement descendants."""
     all_children = tuple(
         child_id
         for child_id in _ids(need.get("derives_back"))
@@ -186,7 +186,7 @@ def _feature_health(
         child_id for child_id in active_children if not result[child_id].deep_covered
     )
     if not all_children:
-        reason = "Missing product requirement decomposition"
+        reason = "Missing requirement decomposition"
     elif not active_children:
         reason = "No accepted requirement"
     else:
@@ -208,7 +208,7 @@ def _project_features(
     requirements: Mapping[str, Mapping[str, object]],
     result: Mapping[str, SpecificationHealth],
 ) -> dict[str, SpecificationHealth]:
-    """Project all Features after Requirement health is known."""
+    """Project all Capabilities after Requirement health is known."""
     return {
         need_id: _feature_health(need_id, need, by_id, requirements, result)
         for need_id, need in features.items()
@@ -221,7 +221,7 @@ def _goal_health(
     features: Mapping[str, Mapping[str, object]],
     result: Mapping[str, SpecificationHealth],
 ) -> SpecificationHealth:
-    """Project one Goal from Feature descendants."""
+    """Project one Goal from Capability descendants."""
     child_ids = tuple(
         child_id for child_id in _ids(need.get("derives_back")) if child_id in features
     )
@@ -236,7 +236,7 @@ def _goal_health(
         direct_evidence_covered=None,
         deep_covered=structural and not blocked,
         blocked_by=blocked,
-        gap_reason=None if structural else "Missing feature decomposition",
+        gap_reason=None if structural else "Missing capability decomposition",
     )
 
 
