@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.13.3](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.13.2...v0.13.3) (2026-09-12)
+
+
+### Bug Fixes
+
+* stabilize SimplePDF rendering ([#87](https://github.com/betabitplus/ternforge-tooling-docops/issues/87)) ([639f570](https://github.com/betabitplus/ternforge-tooling-docops/commit/639f570298c041c4e84c904332cb99e6d0c528c4))
+
 ## [0.13.2](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.13.1...v0.13.2) (2026-09-12)
 
 
