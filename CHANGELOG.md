@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.13.2](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.13.1...v0.13.2) (2026-09-12)
+
+
+### Bug Fixes
+
+* normalize SimplePDF internal anchors ([#85](https://github.com/betabitplus/ternforge-tooling-docops/issues/85)) ([f4a563f](https://github.com/betabitplus/ternforge-tooling-docops/commit/f4a563ff36371904735283999ba046cc7549eee7))
+
 ## [0.13.1](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.13.0...v0.13.1) (2026-09-12)
 
 
