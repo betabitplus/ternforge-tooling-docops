@@ -153,6 +153,56 @@ def test_accepted_contract_still_requires_declared_evidence(tmp_path: Path) -> N
     assert "sn_schema_violation.network_contains_too_few" in result.stderr
 
 
+def test_supplemental_verification_evidence_is_allowed(tmp_path: Path) -> None:
+    """Required evidence is a minimum contract, not a verification-kind whitelist."""
+    source = """Supplemental verification
+==========================
+
+.. goal:: Parent goal
+   :id: GOAL_PARENT
+
+.. feature:: Parent feature
+   :id: FEAT_PARENT
+   :derives: GOAL_PARENT
+
+.. req:: Accepted requirement
+   :id: REQ_ACCEPTED
+   :status: accepted
+   :revision: 1
+   :required_evidence: bdd
+   :derives: FEAT_PARENT
+
+.. test-file:: Execution evidence
+   :id: TEST_FILE
+   :file: evidence.xml
+   :auto_suites:
+   :auto_cases:
+"""
+    evidence = """<testsuites>
+<testsuite name="supplemental">
+<testcase classname="tests.test_demo" name="test_required_bdd">
+<properties>
+<property name="verification_kind" value="bdd"/>
+<property name="verifies" value="REQ_ACCEPTED[revision==1]"/>
+</properties>
+</testcase>
+<testcase classname="tests.test_demo" name="test_supplemental_unit">
+<properties>
+<property name="verification_kind" value="unit"/>
+<property name="verifies" value="REQ_ACCEPTED[revision==1]"/>
+</properties>
+</testcase>
+</testsuite>
+</testsuites>
+"""
+
+    result = _run_graph_build(tmp_path, source, evidence=evidence)
+
+    assert result.returncode == 0
+    assert "requested-bdd" not in result.stderr
+    assert "unwanted-unit" not in result.stderr
+
+
 def test_sphinx_extension_builds_current_graph(tmp_path: Path) -> None:  # noqa: PLR0915
     """A consumer builds requirements without copying the graph ontology."""
     docs = tmp_path / "docs"
