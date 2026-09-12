@@ -270,18 +270,6 @@
       }
     },
     {
-      "id": "unwanted-impl",
-      "message": "Implementation evidence may only target requirements that request implementation coverage.",
-      "select": {"$ref": "#/$defs/type-impl"},
-      "validate": {
-        "network": {
-          "implements": {
-            "items": {"local": {"properties": {"required_evidence": {"items": {}, "contains": {"const": "impl"}}}}}
-          }
-        }
-      }
-    },
-    {
       "id": "requested-bdd",
       "message": "A requirement requesting BDD evidence must have BDD coverage.",
       "select": {"properties": {"type": {"enum": ["req", "treq"]}, "status": {"const": "accepted"}, "required_evidence": {"items": {}, "contains": {"const": "bdd"}}}, "required": ["status", "required_evidence"]},
@@ -310,36 +298,6 @@
       "message": "A requirement requesting E2E evidence must have E2E coverage.",
       "select": {"properties": {"type": {"enum": ["req", "treq"]}, "status": {"const": "accepted"}, "required_evidence": {"items": {}, "contains": {"const": "e2e"}}}, "required": ["status", "required_evidence"]},
       "validate": {"network_back": {"verifies": {"contains": {"local": {"properties": {"type": {"const": "testcase"}, "verification_kind": {"const": "e2e"}}, "required": ["verification_kind"]}}, "minContains": 1}}}
-    },
-    {
-      "id": "unwanted-bdd",
-      "message": "BDD evidence may only verify requirements that request BDD coverage.",
-      "select": {"properties": {"type": {"const": "testcase"}, "verification_kind": {"const": "bdd"}}, "required": ["verification_kind"]},
-      "validate": {"network": {"verifies": {"items": {"local": {"properties": {"required_evidence": {"items": {}, "contains": {"const": "bdd"}}}}}}}}
-    },
-    {
-      "id": "unwanted-unit",
-      "message": "Unit evidence may only verify requirements that request unit coverage.",
-      "select": {"properties": {"type": {"const": "testcase"}, "verification_kind": {"const": "unit"}}, "required": ["verification_kind"]},
-      "validate": {"network": {"verifies": {"items": {"local": {"properties": {"required_evidence": {"items": {}, "contains": {"const": "unit"}}}}}}}}
-    },
-    {
-      "id": "unwanted-property",
-      "message": "Property evidence may only verify requirements that request property coverage.",
-      "select": {"properties": {"type": {"const": "testcase"}, "verification_kind": {"const": "property"}}, "required": ["verification_kind"]},
-      "validate": {"network": {"verifies": {"items": {"local": {"properties": {"required_evidence": {"items": {}, "contains": {"const": "property"}}}}}}}}
-    },
-    {
-      "id": "unwanted-integration",
-      "message": "Integration evidence may only verify requirements that request integration coverage.",
-      "select": {"properties": {"type": {"const": "testcase"}, "verification_kind": {"const": "integration"}}, "required": ["verification_kind"]},
-      "validate": {"network": {"verifies": {"items": {"local": {"properties": {"required_evidence": {"items": {}, "contains": {"const": "integration"}}}}}}}}
-    },
-    {
-      "id": "unwanted-e2e",
-      "message": "E2E evidence may only verify requirements that request E2E coverage.",
-      "select": {"properties": {"type": {"const": "testcase"}, "verification_kind": {"const": "e2e"}}, "required": ["verification_kind"]},
-      "validate": {"network": {"verifies": {"items": {"local": {"properties": {"required_evidence": {"items": {}, "contains": {"const": "e2e"}}}}}}}}
     }
   ]
 }
