@@ -9,6 +9,7 @@ from sphinx_needs.api import add_field
 
 from ternforge_docops._internal import (
     configure_experiment_mounts,
+    configure_simplepdf_anchors,
     graph_config_path,
     publish_experiment_inputs,
     register_review_views,
@@ -138,6 +139,7 @@ def setup(app: Sphinx) -> dict[str, Any]:
     app.connect("config-inited", configure_experiment_mounts, priority=5)
     app.connect("config-inited", _configure_graph, priority=6)
     app.connect("config-inited", _ensure_source_url_field, priority=12)
+    app.connect("builder-inited", configure_simplepdf_anchors, priority=100)
     app.connect("builder-inited", publish_experiment_inputs, priority=600)
     return {
         "version": "1",

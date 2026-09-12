@@ -16,6 +16,7 @@ from ternforge_docops._internal.documentation import (
     build_dossier as build_dossier,
     build_html as build_html,
     build_portal as build_portal,
+    configure_simplepdf_anchors as configure_simplepdf_anchors,
 )
 from ternforge_docops._internal.experiments import (
     capture_experiment as capture_experiment,
