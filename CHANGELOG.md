@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.13.1](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.13.0...v0.13.1) (2026-09-12)
+
+
+### Bug Fixes
+
+* allow complementary verification evidence ([#83](https://github.com/betabitplus/ternforge-tooling-docops/issues/83)) ([6b622f9](https://github.com/betabitplus/ternforge-tooling-docops/commit/6b622f944c59a174d2b42ebd2de368d51dd3aefa))
+
 ## [0.13.0](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.12.0...v0.13.0) (2026-09-12)
 
 
