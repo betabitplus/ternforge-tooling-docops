@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.12.0](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.11.0...v0.12.0) (2026-09-12)
+
+
+### Features
+
+* model boundary interactions in assurance ([#79](https://github.com/betabitplus/ternforge-tooling-docops/issues/79)) ([72e57d4](https://github.com/betabitplus/ternforge-tooling-docops/commit/72e57d45b818fe45aefa654fb8c72f8a35a98406))
+
 ## [0.11.0](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.10.3...v0.11.0) (2026-09-12)
 
 
