@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.14.1](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.14.0...v0.14.1) (2026-09-12)
+
+
+### Bug Fixes
+
+* expose evidence producer trust drilldown ([#92](https://github.com/betabitplus/ternforge-tooling-docops/issues/92)) ([36a84a7](https://github.com/betabitplus/ternforge-tooling-docops/commit/36a84a7401ef12d4c1c49e58af6dab633ef39d08))
+
 ## [0.14.0](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.13.3...v0.14.0) (2026-09-12)
 
 
