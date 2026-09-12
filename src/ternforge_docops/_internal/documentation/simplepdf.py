@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
+from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, cast
 
 from bs4 import BeautifulSoup
@@ -17,6 +19,29 @@ class _SimplePdfBuilder(Protocol):
 
     name: str
     _toctree_fix: Callable[[str], str]
+
+
+_GENERIC_MONOSPACE_FONT_FACE = re.compile(
+    r"@font-face\s*\{(?=[^{}]*\bfont-family\s*:\s*monospace\s*;)[^{}]*\}",
+    flags=re.IGNORECASE,
+)
+
+
+def _strip_generic_monospace_font_faces(css: str) -> str:
+    """Drop upstream font-face rules known to crash WeasyPrint/Pango."""
+    return _GENERIC_MONOSPACE_FONT_FACE.sub("", css)
+
+
+def _patch_simplepdf_theme_css(app: Sphinx) -> None:
+    """Remove the upstream generic monospace font-face crash trigger."""
+    css_path = Path(app.outdir) / "_static" / "main.css"
+    if not css_path.is_file():
+        return
+
+    original = css_path.read_text(encoding="utf-8")
+    patched = _strip_generic_monospace_font_faces(original)
+    if patched != original:
+        css_path.write_text(patched, encoding="utf-8")
 
 
 def _unique_scoped_id(document_id: str, fragment: str, used_ids: set[str]) -> str:
@@ -125,6 +150,7 @@ def configure_simplepdf_anchors(app: Sphinx) -> None:
     if getattr(app.builder, "name", None) != "simplepdf":
         return
 
+    _patch_simplepdf_theme_css(app)
     builder = cast("_SimplePdfBuilder", app.builder)
     original = builder._toctree_fix
 

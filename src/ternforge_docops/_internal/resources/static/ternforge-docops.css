@@ -104,15 +104,20 @@ body:has(.ternforge-specification-map-shell) .bd-footer {
 }
 
 .ternforge-review-layout {
-  display: grid;
-  grid-template-columns: 3rem minmax(0, 1fr);
-  gap: 1rem;
   width: min(100%, 98rem);
   margin: 0 auto 4rem;
 }
 
-.ternforge-review-layout:has(.ternforge-review-navigation[open]) {
-  grid-template-columns: 17rem minmax(0, 1fr);
+@media screen {
+  .ternforge-review-layout {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr);
+    gap: 1rem;
+  }
+
+  .ternforge-review-layout:has(.ternforge-review-navigation[open]) {
+    grid-template-columns: 17rem minmax(0, 1fr);
+  }
 }
 
 .ternforge-traceability-reader {
@@ -122,13 +127,18 @@ body:has(.ternforge-specification-map-shell) .bd-footer {
 }
 
 .ternforge-review-navigation {
-  position: sticky;
-  top: calc(var(--pst-header-height) + 3rem);
-  align-self: start;
-  max-height: calc(100vh - var(--pst-header-height) - 4rem);
-  overflow: hidden;
   border-right: 1px solid var(--pst-color-border);
   background: var(--pst-color-background);
+}
+
+@media screen {
+  .ternforge-review-navigation {
+    position: sticky;
+    top: calc(var(--pst-header-height) + 3rem);
+    align-self: start;
+    max-height: calc(100vh - var(--pst-header-height) - 4rem);
+    overflow: hidden;
+  }
 }
 
 .ternforge-review-navigation > summary {
@@ -163,9 +173,20 @@ body:has(.ternforge-specification-map-shell) .bd-footer {
 }
 
 .ternforge-review-navigation nav {
-  max-height: calc(100vh - 8.5rem);
-  overflow-y: auto;
   padding: 0.25rem 0.75rem 1rem 0.25rem;
+}
+
+@media screen {
+  .ternforge-review-navigation nav {
+    max-height: calc(100vh - 8.5rem);
+    overflow-y: auto;
+  }
+}
+
+@media print {
+  .ternforge-review-navigation {
+    display: none;
+  }
 }
 
 .ternforge-review-nav-goals,

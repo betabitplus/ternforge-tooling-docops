@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import Counter
+from pathlib import Path
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, cast
 
@@ -83,7 +84,9 @@ def test_normalized_internal_links_resolve_to_unique_ids() -> None:
     assert all(href[1:] in final_ids for href in internal_hrefs)
 
 
-def test_simplepdf_builder_hook_normalizes_after_upstream_repair() -> None:
+def test_simplepdf_builder_hook_normalizes_after_upstream_repair(
+    tmp_path: Path,
+) -> None:
     """The builder hook keeps upstream repair and then normalizes its HTML."""
 
     class FakeSimplePdfBuilder:
@@ -97,7 +100,7 @@ def test_simplepdf_builder_hook_normalizes_after_upstream_repair() -> None:
             return html
 
     builder = FakeSimplePdfBuilder()
-    app = cast("Sphinx", SimpleNamespace(builder=builder))
+    app = cast("Sphinx", SimpleNamespace(builder=builder, outdir=str(tmp_path)))
 
     configure_simplepdf_anchors(app)
     normalized = builder._toctree_fix(
@@ -112,3 +115,45 @@ def test_simplepdf_builder_hook_normalizes_after_upstream_repair() -> None:
     assert builder.calls == 1
     assert soup.find(id="document-alpha--shared") is not None
     assert soup.find("a", string="target")["href"] == "#document-alpha--shared"
+
+
+def test_simplepdf_builder_hook_removes_generic_monospace_font_faces(
+    tmp_path: Path,
+) -> None:
+    """Known crashing upstream generic font-face rules are removed only for PDF."""
+
+    class FakeSimplePdfBuilder:
+        name = "simplepdf"
+
+        @staticmethod
+        def _toctree_fix(html: str) -> str:
+            return html
+
+    static = tmp_path / "_static"
+    static.mkdir()
+    css_path = static / "main.css"
+    css_path.write_text(
+        """
+        @font-face {
+          font-family: monospace;
+          src: url(fonts/FiraMono-Regular.ttf);
+        }
+        @font-face {
+          font-family: CustomMono;
+          src: url(fonts/CustomMono-Regular.ttf);
+        }
+        pre { font-family: monospace; }
+        """,
+        encoding="utf-8",
+    )
+    app = cast(
+        "Sphinx",
+        SimpleNamespace(builder=FakeSimplePdfBuilder(), outdir=str(tmp_path)),
+    )
+
+    configure_simplepdf_anchors(app)
+    patched = css_path.read_text(encoding="utf-8")
+
+    assert "FiraMono-Regular.ttf" not in patched
+    assert "CustomMono-Regular.ttf" in patched
+    assert "pre { font-family: monospace; }" in patched
