@@ -16,7 +16,7 @@ jobs:
     environment: release
     steps:
       - name: Run release automation
-        uses: betabitplus/ternforge-infra-ci/.github/actions/release@f47ec5020e61790a5d5266e5c770380c4f2f51d2 # v5.8.0
+        uses: betabitplus/ternforge-infra-ci/.github/actions/release@a994431aa8a90c76b1d07300a64926638496c696 # v5.9.1
         with:
           app-client-id: ${{ vars.TERNFORGE_RELEASE_CLIENT_ID }}
           app-private-key: ${{ secrets.TERNFORGE_RELEASE_PRIVATE_KEY }}
