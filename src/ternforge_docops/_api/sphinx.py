@@ -71,6 +71,10 @@ def _configure_presentation(config: Config) -> None:
     """Apply shared HTML, PDF, and Graphviz presentation defaults."""
     if config.html_theme == "alabaster":
         config.html_theme = "pydata_sphinx_theme"
+    if config.html_theme == "pydata_sphinx_theme":
+        html_context = dict(config.html_context)
+        html_context.setdefault("default_mode", "auto")
+        config.html_context = html_context
     package_static = str(static_dir_path())
     if package_static not in config.html_static_path:
         config.html_static_path.append(package_static)
