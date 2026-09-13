@@ -57,6 +57,16 @@ def _run_graph_build(
     )
 
 
+def test_shared_pydata_theme_defaults_to_auto_mode(tmp_path: Path) -> None:
+    """A fresh browser must not start with an invalid empty PyData theme mode."""
+    result = _run_graph_build(tmp_path, "Portal\n======\n")
+
+    assert result.returncode == 0
+    html = (tmp_path / "html" / "index.html").read_text(encoding="utf-8")
+    assert 'localStorage.getItem("mode") || "auto"' in html
+    assert 'localStorage.getItem("theme") || "auto"' in html
+
+
 @pytest.mark.parametrize(
     ("source", "expected_rule"),
     [
