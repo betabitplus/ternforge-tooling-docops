@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.14.2](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.14.1...v0.14.2) (2026-09-13)
+
+
+### Bug Fixes
+
+* default PyData theme mode to auto ([#95](https://github.com/betabitplus/ternforge-tooling-docops/issues/95)) ([5a0a875](https://github.com/betabitplus/ternforge-tooling-docops/commit/5a0a8751ac2fe61f1f3b3e1a4d1e77a6f02c3574))
+
 ## [0.14.1](https://github.com/betabitplus/ternforge-tooling-docops/compare/v0.14.0...v0.14.1) (2026-09-12)
 
 
