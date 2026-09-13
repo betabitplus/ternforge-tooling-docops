@@ -42,7 +42,7 @@ dependencies = [
   "sphinx-mounts>=0.2,<0.3",
   "sphinx-needs>=8.4,<9",
   "sphinx-simplepdf>=1.7,<2",
-  "sphinx-test-reports>=1.4,<2",
+  "sphinx-test-reports>=2,<3",
   "sphinxcontrib-mermaid>=2.1",
 ]
 # --- Project URLs ---

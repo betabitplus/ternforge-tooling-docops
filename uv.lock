@@ -3556,17 +3556,14 @@ wheels = [
 
 [[package]]
 name = "sphinx-test-reports"
-version = "1.4.0"
+version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "lxml" },
-    { name = "packaging" },
-    { name = "sphinx" },
-    { name = "sphinx-needs" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/67/e1/1e1fe898f7ec7ce651ca8738548459a721fdb9d170c4a96f3faccdce9cb0/sphinx_test_reports-1.4.0.tar.gz", hash = "sha256:8a7918946453802380a352b4685f3bdb59efd98cb026921145381c5f558c0a4b", size = 20125, upload-time = "2026-06-16T19:58:05.682Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2c/37/4fc6e821fe200dbb07289c50d9dbbdab70f2c0e70ec73ca8c73af08e2e00/sphinx_test_reports-2.0.0.tar.gz", hash = "sha256:d263a9b888f7bdcd6b08085df820e836fe33fa596f9338ad7a54d38ee0be3add", size = 64112, upload-time = "2026-09-11T08:30:51.418Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8d/b3/283af1e4ad11c88aee669cc170849b028170ec56b6bb6e24e62db3fbdae6/sphinx_test_reports-1.4.0-py3-none-any.whl", hash = "sha256:1ac7af2bc437a4ff3da580d8f7b49eef8f534d4973b8880880833751fa96a794", size = 27336, upload-time = "2026-06-16T19:58:04.399Z" },
+    { url = "https://files.pythonhosted.org/packages/e9/ea/4740444b5a3039218338985e70ac08dae2a7e04bee0e8759bee7f6039583/sphinx_test_reports-2.0.0-py3-none-any.whl", hash = "sha256:38407f6e3b71e7a58241daa096dfb1705822acf258f745ef0b2d239436e86acb", size = 76487, upload-time = "2026-09-11T08:30:49.905Z" },
 ]
 
 [[package]]
@@ -3832,7 +3829,7 @@ requires-dist = [
     { name = "sphinx-mounts", specifier = ">=0.2,<0.3" },
     { name = "sphinx-needs", specifier = ">=8.4,<9" },
     { name = "sphinx-simplepdf", specifier = ">=1.7,<2" },
-    { name = "sphinx-test-reports", specifier = ">=1.4,<2" },
+    { name = "sphinx-test-reports", specifier = ">=2,<3" },
     { name = "sphinxcontrib-mermaid", specifier = ">=2.1" },
 ]
 
