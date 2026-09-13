@@ -303,7 +303,7 @@ repos:
     hooks:
       - id: pyproject-fmt
         name: pyproject-fmt
-        entry: uv run pyproject-fmt --keep-full-version --skip-wrap-for-keys "*" pyproject.toml
+        entry: uv run pyproject-fmt --keep-full-version --skip-wrap-for-keys "*" --max-supported-python 3.14 pyproject.toml
         language: system
         pass_filenames: false
         files: pyproject\.toml$
