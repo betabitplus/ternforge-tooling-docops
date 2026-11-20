@@ -3509,15 +3509,17 @@ wheels = [
 
 [[package]]
 name = "sphinx-mounts"
-version = "0.2.0"
+version = "0.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "docutils" },
     { name = "ignore-python" },
     { name = "sphinx" },
+    { name = "ub-project" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ed/06/85e09e90824dbf9b81c4f60fe156855d13249c1f1f7b208452b75d8fdc34/sphinx_mounts-0.2.0.tar.gz", hash = "sha256:7c19e867b463bccbff35281e2c6c20dfaa75d4fa88eef6abe97c9c371df6914b", size = 98441, upload-time = "2026-08-27T11:42:44.383Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a2/b4/a635e08c6080aea0c40e42cbfc2987d999be55757ff202912db0fa3cd800/sphinx_mounts-0.4.0.tar.gz", hash = "sha256:9ff350baa4d2c9b82fd0bda27b5000059822afee91663d29eb3fe7c562b271a9", size = 99369, upload-time = "2026-11-19T13:01:43.827Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c4/4c/c92fe023dec5204dae85690fc110b47d0c6a0fe9e57c2f8b8d82228ef168/sphinx_mounts-0.2.0-py3-none-any.whl", hash = "sha256:9e43cba60834bb648a7d3f0f43bb3fbbf9743e69933a89081a90a30d6d42d230", size = 100201, upload-time = "2026-08-27T11:42:43.045Z" },
+    { url = "https://files.pythonhosted.org/packages/24/f4/1550389f506b5ac9bedd5b6db083e0c2c2736eece8a0f01d3ff45d1ff73e/sphinx_mounts-0.4.0-py3-none-any.whl", hash = "sha256:9bf5d1831d0cc50fd589a90014d81a2c233698f049e843516a0591468c665aa2", size = 102419, upload-time = "2026-11-19T13:01:42.633Z" },
 ]
 
 [[package]]
@@ -3829,7 +3831,7 @@ requires-dist = [
     { name = "sphinx-design", specifier = ">=0.6,<1" },
     { name = "sphinx-gallery", specifier = ">=0.21,<1" },
     { name = "sphinx-llm", specifier = ">=1,<2" },
-    { name = "sphinx-mounts", specifier = ">=0.2,<0.3" },
+    { name = "sphinx-mounts", specifier = ">=0.4,<0.5" },
     { name = "sphinx-needs", specifier = ">=8.4,<9" },
     { name = "sphinx-simplepdf", specifier = ">=1.7,<2" },
     { name = "sphinx-test-reports", specifier = ">=1.4,<2" },
@@ -4224,6 +4226,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/a3/26/b09b8010994eccc3c09092e6b34058f36a460eea2d4c3e8b910c695975a0/typing_inspection-0.4.4.tar.gz", hash = "sha256:547274fa6b0a561ccf549cc9524b999a578e737d015d8709d021f9d0d13bea47", size = 76928, upload-time = "2026-08-12T12:37:25.997Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/67/81/4add07e5172b7ac40d8ed5ff580409a7801a4fe26d529bdd915401dabfbe/typing_inspection-0.4.4-py3-none-any.whl", hash = "sha256:65b8397ba37ccbce054456aaccddfc91e6e3083c92824df348d96ca832f3f147", size = 14750, upload-time = "2026-08-12T12:37:24.648Z" },
+]
+
+[[package]]
+name = "ub-project"
+version = "1.3.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "tomli", marker = "python_full_version < '3.15'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0a/1b/f8fcaf2f6566243f62258b21cc9e4321c2db32430a32c5ba6d64b62780a9/ub_project-1.3.0.tar.gz", hash = "sha256:17ac4adfceddb3256dd671ae75f804233641c3f3efa44bc1195f47d93a0c371f", size = 15509, upload-time = "2026-11-19T12:58:29.604Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/51/1c/d60d7658b44e26aba2cac9dbbca9af4e55d0162e7f7ea1d6f8bdb99899c1/ub_project-1.3.0-py3-none-any.whl", hash = "sha256:fe849be49ef57ae9d85de2a84875fec65032d3600fb8c94bf4b94eb0d6a1388a", size = 16909, upload-time = "2026-11-19T12:58:28.58Z" },
 ]
 
 [[package]]
